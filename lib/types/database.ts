@@ -8,7 +8,7 @@
  */
 
 import { InferSelectModel, InferInsertModel, Table } from 'drizzle-orm'
-import { CalculationType, StandardsFramework, ValidationResult } from './calculations'
+import { CalculationType, StandardsFramework, ValidationResult, CalculationSession } from './calculations'
 
 /**
  * User entity (from Better Auth)
@@ -45,38 +45,6 @@ export interface Session {
   expiresAt: Date
   /** Session creation timestamp */
   createdAt: Date
-}
-
-/**
- * Calculation session entity (custom)
- *
- * Stores individual calculation results for:
- * - Anonymous users (userId = null, temporary localStorage)
- * - Authenticated users (userId = UUID, persisted to database)
- */
-export interface CalculationSession {
-  /** UUID primary key */
-  id: string
-  /** User ID foreign key (null for anonymous) */
-  userId: string | null
-  /** Calculation type */
-  calculationType: CalculationType
-  /** Standards framework used */
-  standards: StandardsFramework
-  /** Calculation title/name (optional, user-provided) */
-  title?: string | null
-  /** Raw input data (JSON) */
-  inputs: Record<string, unknown>
-  /** Raw result data (JSON) */
-  results: Record<string, unknown>
-  /** Validation warnings (JSON array) */
-  warnings: ValidationResult[]
-  /** Creation timestamp */
-  createdAt: Date
-  /** Last update timestamp */
-  updatedAt: Date
-  /** Soft delete timestamp (for 2-year retention per FR-020) */
-  deletedAt?: Date | null
 }
 
 /**
