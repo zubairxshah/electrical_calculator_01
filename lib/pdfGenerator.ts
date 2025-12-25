@@ -100,7 +100,7 @@ export async function generateCalculationPDF(
   doc.setFontSize(16)
   doc.setFont('helvetica', 'bold')
   doc.setTextColor(0, 0, 0)
-  const title = getCalculationTitle(calculation.type)
+  const title = getCalculationTitle(calculation.calculationType)
   doc.text(title, margin, yPosition)
   yPosition += 10
 
@@ -108,11 +108,11 @@ export async function generateCalculationPDF(
   doc.setFontSize(9)
   doc.setFont('helvetica', 'normal')
   doc.setTextColor(64, 64, 64)
-  doc.text(`Date: ${new Date(calculation.timestamp).toLocaleString()}`, margin, yPosition)
+  doc.text(`Date: ${new Date(calculation.createdAt).toLocaleString()}`, margin, yPosition)
   yPosition += 5
   doc.text(`Standards: ${standards === 'IEC' ? 'IEC/SI Units' : 'NEC/US Units'}`, margin, yPosition)
   yPosition += 5
-  doc.text(`Standards Used: ${calculation.validations.map(v => v.standardReference).filter(Boolean).join(', ')}`, margin, yPosition)
+  doc.text(`Standards Used: ${calculation.warnings?.map((v: any) => v.standardReference).filter(Boolean).join(', ') || 'N/A'}`, margin, yPosition)
   yPosition += 10
 
   // Input Parameters Section
@@ -124,7 +124,7 @@ export async function generateCalculationPDF(
 
   doc.setFontSize(9)
   doc.setFont('helvetica', 'normal')
-  const inputs = formatInputsForPDF(calculation.inputs, calculation.type, standards)
+  const inputs = formatInputsForPDF(calculation.inputs, calculation.calculationType, standards)
   for (const [key, value] of Object.entries(inputs)) {
     doc.text(`${key}: ${value}`, margin + 5, yPosition)
     yPosition += 5
@@ -152,8 +152,8 @@ export async function generateCalculationPDF(
   yPosition += 5
 
   // Warnings Section (if any)
-  if (calculation.validations.length > 0) {
-    yPosition = addWarningsSection(doc, calculation.validations, yPosition, margin, pageWidth)
+  if (calculation.warnings && calculation.warnings.length > 0) {
+    yPosition = addWarningsSection(doc, calculation.warnings, yPosition, margin, pageWidth)
   }
 
   // Chart (if provided)
@@ -292,7 +292,7 @@ function addFormulasSection(
   doc.setFont('helvetica', 'normal')
 
   // Type-specific formulas
-  const formulas = getFormulasForType(calculation.type)
+  const formulas = getFormulasForType(calculation.calculationType)
   for (const formula of formulas) {
     doc.text(formula, margin + 5, yPosition, { maxWidth: pageWidth - 2 * margin - 10 })
     yPosition += 6
