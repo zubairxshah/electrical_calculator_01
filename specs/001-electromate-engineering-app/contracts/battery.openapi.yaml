@@ -1,0 +1,397 @@
+openapi: 3.0.3
+info:
+  title: ElectroMate Battery Calculator API
+  description: API for battery backup time calculations and persistence
+  version: 1.0.0
+  contact:
+    name: MZS CodeWorks
+
+servers:
+  - url: http://localhost:3000/api
+    description: Local development
+  - url: https://electromate.app/api
+    description: Production
+
+paths:
+  /calculations/battery:
+    get:
+      summary: List battery calculations for authenticated user
+      description: Retrieve all battery calculations for the authenticated user, ordered by creation date descending
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: projectId
+          in: query
+          description: Filter by project ID
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: limit
+          in: query
+          description: Maximum number of results
+          required: false
+          schema:
+            type: integer
+            default: 50
+            minimum: 1
+            maximum: 100
+        - name: offset
+          in: query
+          description: Pagination offset
+          required: false
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  calculations:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/BatteryCalculation'
+                  total:
+                    type: integer
+                  hasMore:
+                    type: boolean
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+    post:
+      summary: Save new battery calculation
+      description: Create new battery calculation for authenticated user
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BatteryCalculationCreate'
+      responses:
+        '201':
+          description: Calculation created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatteryCalculation'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /calculations/battery/{id}:
+    get:
+      summary: Get specific battery calculation
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatteryCalculation'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      summary: Delete battery calculation
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Calculation deleted successfully
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /calculations/battery/migrate:
+    post:
+      summary: Migrate localStorage calculations to database
+      description: Bulk import calculations from anonymous localStorage to authenticated user account (FR-016b)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                calculations:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/BatteryCalculationCreate'
+      responses:
+        '200':
+          description: Migration successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  count:
+                    type: integer
+                    description: Number of calculations migrated
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+components:
+  schemas:
+    BatteryCalculation:
+      type: object
+      required:
+        - id
+        - userId
+        - inputs
+        - results
+        - createdAt
+        - standardsUsed
+        - unitSystem
+        - isValid
+      properties:
+        id:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+          nullable: true
+          description: NULL for anonymous calculations
+        inputs:
+          $ref: '#/components/schemas/BatteryInputs'
+        results:
+          $ref: '#/components/schemas/BatteryResults'
+        createdAt:
+          type: string
+          format: date-time
+        standardsUsed:
+          type: array
+          items:
+            type: string
+          example: ["IEEE 485-2020"]
+        unitSystem:
+          type: string
+          enum: [SI, NEC]
+          description: IEC/SI or North American units
+        projectId:
+          type: string
+          format: uuid
+          nullable: true
+        warnings:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationWarning'
+        isValid:
+          type: boolean
+
+    BatteryCalculationCreate:
+      type: object
+      required:
+        - inputs
+        - results
+        - standardsUsed
+        - unitSystem
+      properties:
+        inputs:
+          $ref: '#/components/schemas/BatteryInputs'
+        results:
+          $ref: '#/components/schemas/BatteryResults'
+        standardsUsed:
+          type: array
+          items:
+            type: string
+        unitSystem:
+          type: string
+          enum: [SI, NEC]
+        projectId:
+          type: string
+          format: uuid
+          nullable: true
+        warnings:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationWarning'
+
+    BatteryInputs:
+      type: object
+      required:
+        - voltage
+        - ampHours
+        - loadWatts
+        - efficiency
+        - agingFactor
+      properties:
+        voltage:
+          type: number
+          minimum: 1
+          maximum: 2000
+          description: DC system voltage (V)
+          example: 48
+        ampHours:
+          type: number
+          minimum: 1
+          maximum: 10000
+          description: Battery capacity (Ah)
+          example: 200
+        loadWatts:
+          type: number
+          minimum: 1
+          maximum: 1000000
+          description: Load power (W)
+          example: 2000
+        efficiency:
+          type: number
+          minimum: 0.1
+          maximum: 1.0
+          description: System efficiency (dimensionless)
+          example: 0.9
+        agingFactor:
+          type: number
+          minimum: 0.5
+          maximum: 1.0
+          description: Battery aging factor (dimensionless)
+          example: 0.8
+
+    BatteryResults:
+      type: object
+      required:
+        - backupTime
+        - energyStored
+        - dischargeRate
+        - isDangerous
+      properties:
+        backupTime:
+          type: number
+          description: Backup time (hours)
+          example: 3.456
+        energyStored:
+          type: number
+          description: Energy stored (Wh)
+          example: 7680
+        dischargeRate:
+          type: number
+          description: C-rate (dimensionless)
+          example: 0.26
+        isDangerous:
+          type: boolean
+          description: True if discharge rate >1C (VRLA limit)
+          example: false
+
+    ValidationWarning:
+      type: object
+      required:
+        - field
+        - message
+        - severity
+      properties:
+        field:
+          type: string
+          description: Input field that triggered warning
+          example: loadWatts
+        message:
+          type: string
+          description: User-facing warning message
+          example: Discharge rate >1C exceeds safe limits for VRLA batteries
+        severity:
+          type: string
+          enum: [danger, warning, info]
+        standardReference:
+          type: string
+          nullable: true
+          description: Standard section reference
+          example: IEEE 485-2020 Section 4.2
+
+  responses:
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: Unauthorized
+
+    ValidationError:
+      description: Input validation failed
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              validationErrors:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    field:
+                      type: string
+                    message:
+                      type: string
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: Calculation not found
+
+    ServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: BetterAuth session token
+
+security:
+  - bearerAuth: []

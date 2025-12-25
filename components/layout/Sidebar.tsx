@@ -1,0 +1,187 @@
+'use client'
+
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import { cn } from '@/lib/utils'
+import { Battery, Zap, Cable, Sun, Settings, X } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+
+/**
+ * Sidebar Navigation Component
+ *
+ * Provides navigation to all calculator tools with engineering-themed design
+ * Highlights active route for user orientation
+ */
+
+const navigationItems = [
+  {
+    name: 'Battery Calculator',
+    href: '/battery',
+    icon: Battery,
+    description: 'Backup time & capacity sizing',
+    priority: 'P1',
+  },
+  {
+    name: 'UPS Sizing',
+    href: '/ups',
+    icon: Zap,
+    description: 'UPS capacity & battery requirements',
+    priority: 'P1',
+  },
+  {
+    name: 'Cable Sizing',
+    href: '/cables',
+    icon: Cable,
+    description: 'Conductor sizing & voltage drop',
+    priority: 'P1',
+  },
+  {
+    name: 'Solar Array',
+    href: '/solar',
+    icon: Sun,
+    description: 'Panel array configuration',
+    priority: 'P2',
+  },
+  {
+    name: 'Charge Controller',
+    href: '/charge-controller',
+    icon: Settings,
+    description: 'Controller sizing & selection',
+    priority: 'P2',
+  },
+]
+
+interface SidebarProps {
+  isOpen?: boolean
+  onClose?: () => void
+}
+
+export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
+  const pathname = usePathname()
+
+  return (
+    <>
+      {/* Backdrop (mobile only, shown when sidebar open) */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 md:hidden transition-opacity duration-250"
+          onClick={onClose}
+          aria-hidden="true"
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside
+        id="mobile-sidebar"
+        className={cn(
+          'fixed left-0 top-0 h-screen w-64 border-r bg-card z-50',
+          // Mobile: overlay with slide animation
+          'transform transition-transform duration-300 ease-in-out',
+          isOpen ? 'translate-x-0' : '-translate-x-full',
+          // Desktop: always visible, no transform
+          'md:translate-x-0'
+        )}
+        role="navigation"
+        aria-label="Main navigation"
+      >
+        <div className="flex h-full flex-col">
+          {/* Logo/Branding with Close Button on Mobile */}
+          <div className="border-b p-6 flex items-center justify-between">
+            <Link href="/" className="flex items-center space-x-2">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                <Zap className="h-6 w-6" />
+              </div>
+              <div>
+                <h1 className="text-lg font-bold">ElectroMate</h1>
+                <p className="text-xs text-muted-foreground">Engineering Calculations</p>
+              </div>
+            </Link>
+
+            {/* Close button (mobile only) */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onClose}
+              className="md:hidden h-11 w-11"
+              aria-label="Close navigation menu"
+            >
+              <X className="h-5 w-5" />
+            </Button>
+          </div>
+
+          {/* Navigation */}
+          <nav className="flex-1 space-y-1 p-4">
+            {navigationItems.map((item) => {
+              const isActive = pathname === item.href
+              const Icon = item.icon
+
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={onClose}
+                  className={cn(
+                    'group flex items-start space-x-3 rounded-lg px-3 py-3 transition-all hover:bg-accent',
+                    isActive && 'bg-accent text-accent-foreground'
+                  )}
+                >
+                  <Icon
+                    className={cn(
+                      'mt-0.5 h-5 w-5 flex-shrink-0 text-muted-foreground transition-colors group-hover:text-accent-foreground',
+                      isActive && 'text-accent-foreground'
+                    )}
+                  />
+                  <div className="flex-1 space-y-0.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">{item.name}</span>
+                      <span
+                        className={cn(
+                          'text-xs font-medium',
+                          item.priority === 'P1'
+                            ? 'text-primary'
+                            : 'text-muted-foreground'
+                        )}
+                      >
+                        {item.priority}
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {item.description}
+                    </p>
+                  </div>
+                </Link>
+              )
+            })}
+          </nav>
+
+          {/* Footer Links */}
+          <div className="border-t p-4">
+            <div className="space-y-2 text-xs text-muted-foreground">
+              <Link
+                href="/about"
+                onClick={onClose}
+                className="block hover:text-foreground transition-colors"
+              >
+                About
+              </Link>
+              <Link
+                href="/standards"
+                onClick={onClose}
+                className="block hover:text-foreground transition-colors"
+              >
+                Standards Reference
+              </Link>
+              <Link
+                href="/help"
+                onClick={onClose}
+                className="block hover:text-foreground transition-colors"
+              >
+                Help & Documentation
+              </Link>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </>
+  )
+}

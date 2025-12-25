@@ -31,7 +31,49 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+Review `.specify/memory/constitution.md` and verify compliance with all applicable principles:
+
+### Calculation Accuracy (if applicable to engineering/calculation features)
+- [ ] All calculation formulas identified with applicable standards (IEEE, IEC, NEC, BS, NREL)
+- [ ] Test cases from published standards documented for accuracy validation
+- [ ] Accuracy tolerance thresholds specified (e.g., ±2% for battery calculations, ±0.1% for voltage drop)
+- [ ] Math.js or equivalent high-precision arithmetic library planned for implementation
+
+### Safety-First Validation (if applicable to safety-critical features)
+- [ ] Dangerous condition detection rules defined (e.g., discharge rates >1C, voltage drops >3%)
+- [ ] Real-time validation approach specified (target <100ms validation latency)
+- [ ] Warning UI treatment defined (red highlighting, explanatory text with code references)
+- [ ] Edge case validation planned (negative values, impossible conditions, physical limits)
+
+### Standards Compliance and Traceability (if applicable to regulated domains)
+- [ ] Standard versions specified (e.g., "NEC 2020", "IEC 60364-5-52:2009")
+- [ ] Standard references will be displayed in calculation outputs
+- [ ] PDF reports will include section numbers and formula citations
+- [ ] Version labeling strategy defined for standard updates
+
+### Test-First Development
+- [ ] TDD workflow confirmed for critical calculation logic (Red-Green-Refactor)
+- [ ] Test coverage requirements specified (nominal, boundary, edge, error cases)
+- [ ] User approval checkpoint planned for test case validation
+- [ ] Test framework and tooling selected
+
+### Professional Documentation (if applicable to client-facing tools)
+- [ ] PDF export requirements defined (inputs, formulas, references, timestamps)
+- [ ] Cross-browser compatibility targets specified (Chrome, Firefox, Safari, Edge)
+- [ ] Disclaimer text prepared for professional submission materials
+- [ ] Intermediate calculation steps approach defined (e.g., "Show Details" mode)
+
+### Progressive Enhancement
+- [ ] Feature prioritization confirmed (P1/P2/P3 from spec)
+- [ ] Each user story independently testable and deployable
+- [ ] No dependencies on incomplete higher-priority features
+- [ ] Incremental value delivery strategy defined
+
+### Other Constitution Principles
+- [ ] Dual standards support planned (if applicable: IEC/SI and NEC/North American units)
+- [ ] Security requirements addressed (input validation, authentication, data retention)
+- [ ] Code quality standards acknowledged (no hardcoded secrets, smallest viable diff)
+- [ ] Complexity justifications documented (if introducing abstraction layers or dependencies)
 
 ## Project Structure
 

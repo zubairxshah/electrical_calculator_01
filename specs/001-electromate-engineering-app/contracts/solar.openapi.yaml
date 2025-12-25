@@ -1,0 +1,157 @@
+openapi: 3.0.3
+info:
+  title: ElectroMate Solar Array Sizing API
+  description: API for solar panel array sizing calculations (NREL standards)
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:3000/api
+  - url: https://electromate.app/api
+
+paths:
+  /calculations/solar:
+    get:
+      summary: List solar calculations
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  calculations:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SolarCalculation'
+
+    post:
+      summary: Save solar calculation
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SolarCalculationCreate'
+      responses:
+        '201':
+          description: Created
+
+components:
+  schemas:
+    SolarCalculation:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        inputs:
+          $ref: '#/components/schemas/SolarInputs'
+        results:
+          $ref: '#/components/schemas/SolarResults'
+        createdAt:
+          type: string
+          format: date-time
+        standardsUsed:
+          type: array
+          items:
+            type: string
+          example: ["NREL Solar Resource Standards"]
+
+    SolarCalculationCreate:
+      type: object
+      required:
+        - inputs
+        - results
+        - standardsUsed
+      properties:
+        inputs:
+          $ref: '#/components/schemas/SolarInputs'
+        results:
+          $ref: '#/components/schemas/SolarResults'
+        standardsUsed:
+          type: array
+          items:
+            type: string
+
+    SolarInputs:
+      type: object
+      required:
+        - dailyEnergyKWh
+        - peakSunHours
+        - panelWattage
+        - performanceRatio
+      properties:
+        dailyEnergyKWh:
+          type: number
+          minimum: 0.1
+          maximum: 100000
+          description: Target daily energy (kWh/day)
+        peakSunHours:
+          type: number
+          minimum: 1
+          maximum: 12
+          description: Location PSH (hours/day)
+        panelWattage:
+          type: number
+          minimum: 50
+          maximum: 1000
+          description: Individual panel rating (Wp)
+        panelEfficiency:
+          type: number
+          minimum: 0.05
+          maximum: 0.30
+          description: Panel efficiency (0-1)
+        performanceRatio:
+          type: number
+          minimum: 0.5
+          maximum: 1.0
+          description: System performance ratio (typical 0.75-0.85)
+        systemVoltage:
+          type: number
+          minimum: 12
+          maximum: 1500
+          description: DC system voltage (V)
+
+    SolarResults:
+      type: object
+      required:
+        - requiredPanels
+        - totalArrayPower
+        - estimatedDailyGen
+        - estimatedAnnualGen
+      properties:
+        requiredPanels:
+          type: integer
+          description: Number of panels (rounded up)
+        totalArrayPower:
+          type: number
+          description: Total array power (kWp)
+        estimatedDailyGen:
+          type: number
+          description: Estimated daily generation (kWh/day)
+        estimatedAnnualGen:
+          type: number
+          description: Estimated annual generation (kWh/year)
+        arrayAreaM2:
+          type: number
+          description: Required roof/ground area (m²)
+        openCircuitVoltage:
+          type: number
+          description: Array V_oc (V)
+        shortCircuitCurrent:
+          type: number
+          description: Array I_sc (A)
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

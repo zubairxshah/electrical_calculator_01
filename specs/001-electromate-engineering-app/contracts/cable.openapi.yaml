@@ -1,0 +1,183 @@
+openapi: 3.0.3
+info:
+  title: ElectroMate Cable Sizing API
+  description: API for cable sizing and voltage drop calculations (NEC/IEC 60364)
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:3000/api
+  - url: https://electromate.app/api
+
+paths:
+  /calculations/cable:
+    get:
+      summary: List cable calculations
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  calculations:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CableCalculation'
+
+    post:
+      summary: Save cable calculation
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CableCalculationCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CableCalculation'
+
+components:
+  schemas:
+    CableCalculation:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        inputs:
+          $ref: '#/components/schemas/CableInputs'
+        results:
+          $ref: '#/components/schemas/CableResults'
+        createdAt:
+          type: string
+          format: date-time
+        standardsUsed:
+          type: array
+          items:
+            type: string
+          example: ["NEC 2020 Table 310.15(B)(16)", "IEC 60364-5-52:2009"]
+
+    CableCalculationCreate:
+      type: object
+      required:
+        - inputs
+        - results
+        - standardsUsed
+      properties:
+        inputs:
+          $ref: '#/components/schemas/CableInputs'
+        results:
+          $ref: '#/components/schemas/CableResults'
+        standardsUsed:
+          type: array
+          items:
+            type: string
+
+    CableInputs:
+      type: object
+      required:
+        - systemVoltage
+        - current
+        - length
+        - conductorMaterial
+        - installationMethod
+        - ambientTemp
+      properties:
+        systemVoltage:
+          type: number
+          enum: [120, 208, 240, 277, 480, 600, 2400, 4160, 13800]
+          description: System voltage (V) from predefined list (FR-007a)
+        current:
+          type: number
+          minimum: 0.1
+          maximum: 10000
+          description: Circuit current (A)
+        length:
+          type: number
+          minimum: 0.1
+          maximum: 10000
+          description: Cable length (meters or feet)
+        conductorMaterial:
+          type: string
+          enum: [copper, aluminum]
+        installationMethod:
+          type: string
+          enum: [conduit, cable-tray, direct-burial, free-air]
+        ambientTemp:
+          type: number
+          minimum: -40
+          maximum: 90
+          description: Ambient temperature (°C)
+          default: 30
+        circuitType:
+          type: string
+          enum: [single-phase, three-phase]
+        numberOfConductors:
+          type: integer
+          minimum: 1
+          maximum: 50
+          description: For grouping derating
+
+    CableResults:
+      type: object
+      required:
+        - selectedCableSize
+        - voltageDrop
+        - voltageDropPercent
+        - isViolation
+      properties:
+        selectedCableSize:
+          type: string
+          description: Cable size (mm² or AWG)
+          example: 6 mm² (10 AWG)
+        voltageDrop:
+          type: number
+          description: Voltage drop (V)
+        voltageDropPercent:
+          type: number
+          description: Percentage of system voltage
+        isViolation:
+          type: boolean
+          description: True if >3% (conservative limit)
+        ampacityBeforeDerating:
+          type: number
+        ampacityAfterDerating:
+          type: number
+        deratingFactors:
+          type: object
+          properties:
+            temperatureFactor:
+              type: number
+            groupingFactor:
+              type: number
+            totalFactor:
+              type: number
+        alternativeSizes:
+          type: array
+          items:
+            type: string
+          description: Larger cable options if violation
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

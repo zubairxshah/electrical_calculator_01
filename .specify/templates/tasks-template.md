@@ -157,6 +157,61 @@ Examples of foundational tasks (adjust based on your project):
 - [ ] TXXX Security hardening
 - [ ] TXXX Run quickstart.md validation
 
+## Phase N+1: Constitution Compliance Verification
+
+**Purpose**: Validate implementation against constitutional principles (`.specify/memory/constitution.md`)
+
+### Calculation Accuracy Validation (if applicable)
+- [ ] TXXX [P] Verify all calculation formulas against published standard test cases
+- [ ] TXXX [P] Validate accuracy meets specified tolerances (e.g., ±2% for battery, ±0.1% for voltage drop)
+- [ ] TXXX Document standard versions used in code comments and documentation
+- [ ] TXXX Add automated tests comparing results to standard examples
+
+### Safety Validation (if applicable)
+- [ ] TXXX [P] Test dangerous condition detection (e.g., discharge rates >1C, voltage drops >10%)
+- [ ] TXXX Verify real-time validation performance (<100ms target)
+- [ ] TXXX Test warning UI rendering (red highlighting, explanatory text)
+- [ ] TXXX Validate edge case handling (negative values, impossible conditions)
+
+### Standards Compliance (if applicable)
+- [ ] TXXX [P] Verify standard references display correctly in outputs
+- [ ] TXXX Test PDF report generation with section numbers and formula citations
+- [ ] TXXX Validate version labeling for applicable standards (e.g., "NEC 2020")
+- [ ] TXXX Verify disclaimer text included in professional outputs
+
+### Test Coverage Verification
+- [ ] TXXX Review test coverage against TDD requirements (nominal, boundary, edge, error cases)
+- [ ] TXXX Verify Red-Green-Refactor cycle was followed for critical logic
+- [ ] TXXX Validate user approval checkpoints were completed for test scenarios
+- [ ] TXXX Document any test coverage gaps with justification
+
+### Professional Documentation (if applicable)
+- [ ] TXXX Test PDF export functionality across target browsers (Chrome, Firefox, Safari, Edge)
+- [ ] TXXX Verify all required elements in PDF (inputs, formulas, references, timestamps)
+- [ ] TXXX Test "Show Details" or intermediate calculation display modes
+- [ ] TXXX Validate 95% cross-browser compatibility target
+
+### Progressive Enhancement Verification
+- [ ] TXXX Confirm each user story independently testable and deployable
+- [ ] TXXX Verify P1 features complete before P2/P3 work began
+- [ ] TXXX Validate no dependencies on incomplete higher-priority features
+- [ ] TXXX Test incremental value delivery (each story adds standalone value)
+
+### Security & Code Quality (if applicable)
+- [ ] TXXX [P] Verify no hardcoded secrets in codebase (use .env check)
+- [ ] TXXX Validate input validation for all user inputs
+- [ ] TXXX Test authentication flows with BetterAuth integration
+- [ ] TXXX Verify data retention policy implementation (e.g., 2-year retention with warnings)
+- [ ] TXXX Confirm HTTPS enforcement in production configuration
+
+### Dual Standards Support (if applicable)
+- [ ] TXXX [P] Test unit conversion accuracy between IEC/SI and NEC/North American
+- [ ] TXXX Verify voltage system coverage (LV AC, MV, DC systems)
+- [ ] TXXX Test cable table lookups for both IEC 60364-5-52 and NEC standards
+- [ ] TXXX Validate preserved accuracy across unit conversions (per SC-015)
+
+**Checkpoint**: Constitution compliance verified - ready for code review and deployment
+
 ---
 
 ## Dependencies & Execution Order
