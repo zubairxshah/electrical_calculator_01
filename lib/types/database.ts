@@ -7,7 +7,7 @@
  * @see specs/001-electromate-engineering-app/data-model.md
  */
 
-import { InferSelectModel, InferInsertModel } from 'drizzle-orm'
+import { InferSelectModel, InferInsertModel, Table } from 'drizzle-orm'
 import { CalculationType, StandardsFramework, ValidationResult } from './calculations'
 
 /**
@@ -193,13 +193,13 @@ export interface AuditLog {
  * Inferred select type (for reading from database)
  * Usage: type UserSelect = InferSelectModel<typeof usersTable>
  */
-export type SelectModel<T extends Record<string, any>> = InferSelectModel<T>
+export type SelectModel<T extends Table> = InferSelectModel<T>
 
 /**
  * Inferred insert type (for writing to database)
  * Usage: type UserInsert = InferInsertModel<typeof usersTable>
  */
-export type InsertModel<T extends Record<string, any>> = InferInsertModel<T>
+export type InsertModel<T extends Table> = InferInsertModel<T>
 
 /**
  * Database transaction type
