@@ -193,13 +193,13 @@ export interface AuditLog {
  * Inferred select type (for reading from database)
  * Usage: type UserSelect = InferSelectModel<typeof usersTable>
  */
-export type SelectModel<T extends Parameters<typeof InferSelectModel>[0]> = InferSelectModel<T>
+export type SelectModel<T extends Record<string, any>> = InferSelectModel<T>
 
 /**
  * Inferred insert type (for writing to database)
  * Usage: type UserInsert = InferInsertModel<typeof usersTable>
  */
-export type InsertModel<T extends Parameters<typeof InferInsertModel>[0]> = InferInsertModel<T>
+export type InsertModel<T extends Record<string, any>> = InferInsertModel<T>
 
 /**
  * Database transaction type
