@@ -136,6 +136,8 @@ export interface BatteryCalculatorInputs {
   temperature?: number
   /** Minimum voltage cutoff (V, typically 0.85 * nominal for lead-acid) */
   minVoltage?: number
+  /** Index signature for compatibility */
+  [key: string]: unknown
 }
 
 /**
@@ -206,6 +208,8 @@ export interface UPSCalculatorInputs {
   inputVoltage: number
   /** Battery voltage (VDC) */
   batteryVoltage: number
+  /** Index signature for compatibility */
+  [key: string]: unknown
 }
 
 /**
@@ -252,6 +256,8 @@ export interface CableSizingInputs {
   powerFactor: number
   /** Maximum allowed voltage drop percentage (typically 3% for branch, 5% total) */
   maxVoltageDrop: number
+  /** Index signature for compatibility */
+  [key: string]: unknown
 }
 
 /**
@@ -302,6 +308,8 @@ export interface SolarArrayInputs {
   systemEfficiency: number
   /** Desired days of autonomy (battery backup days) */
   daysOfAutonomy?: number
+  /** Index signature for compatibility */
+  [key: string]: unknown
 }
 
 /**
@@ -344,6 +352,8 @@ export interface ChargeControllerInputs {
   controllerType: ChargeControllerType
   /** Temperature compensation factor (V/°C per cell) */
   temperatureCompensation?: number
+  /** Index signature for compatibility */
+  [key: string]: unknown
 }
 
 /**
@@ -378,6 +388,8 @@ export interface BatteryComparisonInputs {
   temperatureRange: { min: number; max: number }
   /** Battery chemistries to compare */
   chemistriesToCompare: BatteryChemistry[]
+  /** Index signature for compatibility */
+  [key: string]: unknown
 }
 
 /**
