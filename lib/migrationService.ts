@@ -77,7 +77,7 @@ export async function migrateLocalStorageToDatabase(
                 unitSystem: (calc as any).unitSystem || 'IEC',
                 warnings: (calc as any).warnings || [],
                 isValid: (calc as any).isValid ?? true,
-                createdAt: new Date(calc.timestamp),
+                createdAt: new Date((calc as any).timestamp || (calc as any).createdAt || Date.now()),
               })
 
               result.migratedCount++
@@ -202,7 +202,7 @@ export function previewMigration(): Array<{
 
         if (calculations.length > 0) {
           const dates = calculations
-            .map((c) => new Date(c.timestamp).getTime())
+            .map((c) => new Date((c as any).timestamp || (c as any).createdAt || Date.now()).getTime())
             .sort((a, b) => a - b)
 
           preview.push({
