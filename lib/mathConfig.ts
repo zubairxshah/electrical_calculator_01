@@ -112,13 +112,10 @@ export function calculate(expression: string): math.BigNumber {
  * round(math.bignumber("48.001"), 0) // BigNumber 48
  */
 export function round(value: math.BigNumber, decimals: number = 2): math.BigNumber {
-  const multiplier = math.pow(math.bignumber(10), decimals)
-  return math.bignumber(
-    math.divide(
-      math.round(math.multiply(value, multiplier)),
-      multiplier
-    )
-  )
+  const multiplier = math.bignumber(math.pow(math.bignumber(10), decimals))
+  const multiplied = math.bignumber(math.multiply(value, multiplier))
+  const rounded = math.bignumber(math.round(multiplied))
+  return math.bignumber(math.divide(rounded, multiplier))
 }
 
 /**
