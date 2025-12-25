@@ -5,10 +5,12 @@
  * - Real-time validation feedback
  * - Unit display
  * - Error/warning messages
+ * - Decimal input support
  */
 
 'use client'
 
+import { useState, useEffect } from 'react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
@@ -21,6 +23,7 @@ export interface InputFieldProps {
   type?: 'text' | 'number'
   unit?: string
   placeholder?: string
+  step?: string
   validation?: FieldValidation
   required?: boolean
   disabled?: boolean
@@ -34,6 +37,7 @@ export function InputField({
   type = 'number',
   unit,
   placeholder,
+  step,
   validation,
   required,
   disabled,
@@ -41,6 +45,46 @@ export function InputField({
 }: InputFieldProps) {
   const hasError = validation && validation.severity === 'error'
   const hasWarning = validation && validation.severity === 'warning'
+
+  // Local state to handle decimal input (e.g., "0." while typing "0.9")
+  const [localValue, setLocalValue] = useState<string>(String(value))
+
+  // Sync local state when external value changes (but not while user is typing)
+  useEffect(() => {
+    const externalStr = String(value)
+    // Don't override if user is in the middle of typing:
+    // - partial decimal (ends with .)
+    // - empty field (user clearing to retype)
+    // - just "0" (user about to type 0.x)
+    const isTyping = localValue === '' || localValue === '0' || localValue.endsWith('.')
+    if (!isTyping) {
+      setLocalValue(externalStr)
+    }
+  }, [value])
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value
+    setLocalValue(newValue)
+
+    // Only propagate to parent when we have a valid complete number
+    // Don't propagate incomplete input that would fail validation:
+    // - empty string
+    // - ends with decimal point (user is typing)
+    // - just "0" followed by nothing (user might be typing "0.x")
+    if (newValue === '' || newValue.endsWith('.')) {
+      return
+    }
+
+    // Check if it looks like user is starting to type a decimal (e.g., "0" before "0.8")
+    if (newValue === '0') {
+      return
+    }
+
+    const num = parseFloat(newValue)
+    if (!isNaN(num)) {
+      onChange(newValue)
+    }
+  }
 
   return (
     <div className={cn('space-y-2', className)}>
@@ -52,9 +96,10 @@ export function InputField({
         <Input
           type="text"
           inputMode={type === 'number' ? 'decimal' : 'text'}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
+          value={localValue}
+          onChange={handleChange}
           placeholder={placeholder}
+          step={step}
           disabled={disabled}
           className={cn(
             'h-12', // Mobile-optimized height (48px) for better touch targets

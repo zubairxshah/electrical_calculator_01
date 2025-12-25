@@ -77,3 +77,12 @@ export function sessionMemoryExists(projectRoot?: string): boolean {
 
 // Re-export types for external use
 export * from './types';
+
+// Re-export parser for loading
+export { parseMarkdown } from './markdown-parser';
+
+// Re-export validator
+export { validateSessionMemory, containsSensitiveData } from './validator';
+
+// Re-export loader
+export { loadSessionMemory, quickLoad, checkStaleness } from './loader';

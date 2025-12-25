@@ -73,6 +73,7 @@ export function BatteryInputForm() {
         type="number"
         unit=""
         placeholder="0.9"
+        step="0.01"
         validation={getFieldValidation('efficiency')}
         required
       />
@@ -85,6 +86,7 @@ export function BatteryInputForm() {
         type="number"
         unit=""
         placeholder="0.8"
+        step="0.01"
         validation={getFieldValidation('agingFactor')}
         required
       />

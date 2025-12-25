@@ -56,18 +56,18 @@ export function Header({
           <div className="hidden sm:flex items-center space-x-2">
             <span className="text-sm text-muted-foreground">Standards:</span>
             <Select value={currentStandards} onValueChange={handleStandardsChange}>
-              <SelectTrigger className="w-32">
+              <SelectTrigger className="w-40">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="IEC">
-                  <div className="flex flex-col">
+              <SelectContent className="min-w-[180px]">
+                <SelectItem value="IEC" className="py-3">
+                  <div className="flex flex-col gap-0.5">
                     <span className="font-medium">IEC/SI</span>
                     <span className="text-xs text-muted-foreground">mm², meters, °C</span>
                   </div>
                 </SelectItem>
-                <SelectItem value="NEC">
-                  <div className="flex flex-col">
+                <SelectItem value="NEC" className="py-3">
+                  <div className="flex flex-col gap-0.5">
                     <span className="font-medium">NEC/US</span>
                     <span className="text-xs text-muted-foreground">AWG, feet, °F</span>
                   </div>
