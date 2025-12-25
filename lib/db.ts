@@ -57,7 +57,7 @@ export async function checkDatabaseConnection(): Promise<boolean> {
 export async function transaction<T>(
   callback: Parameters<typeof db.transaction>[0]
 ): Promise<T> {
-  return await db.transaction(callback)
+  return await db.transaction(callback) as Promise<T>
 }
 
 export default db
