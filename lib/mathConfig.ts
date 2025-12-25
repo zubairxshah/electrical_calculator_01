@@ -113,9 +113,11 @@ export function calculate(expression: string): math.BigNumber {
  */
 export function round(value: math.BigNumber, decimals: number = 2): math.BigNumber {
   const multiplier = math.pow(math.bignumber(10), decimals)
-  return math.divide(
-    math.round(math.multiply(value, multiplier)),
-    multiplier
+  return math.bignumber(
+    math.divide(
+      math.round(math.multiply(value, multiplier)),
+      multiplier
+    )
   )
 }
 
