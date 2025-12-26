@@ -146,25 +146,25 @@
 
 ### Tests for User Story 2 (TDD - Red Phase) ⚠️
 
-- [ ] T063 [P] [US2] Write UPS diversity factor test in __tests__/unit/calculations/ups.test.ts validating IEEE 1100 formula (N≤3: diversity=1.0, 3<N≤10: diversity=0.9+0.1/N, N>10: diversity=0.85)
-- [ ] T064 [P] [US2] Write power factor conversion test in __tests__/unit/calculations/ups.test.ts for VA ↔ W calculations with 0.8 default
-- [ ] T065 [P] [US2] Write UPS sizing test in __tests__/unit/calculations/ups.test.ts validating 25% growth margin application
+- [X] T063 [P] [US2] Write UPS diversity factor test in __tests__/unit/calculations/ups.test.ts validating IEEE 1100 formula (N≤3: diversity=1.0, 3<N≤10: diversity=0.9+0.1/N, N>10: diversity=0.85)
+- [X] T064 [P] [US2] Write power factor conversion test in __tests__/unit/calculations/ups.test.ts for VA ↔ W calculations with 0.8 default
+- [X] T065 [P] [US2] Write UPS sizing test in __tests__/unit/calculations/ups.test.ts validating 25% growth margin application
 
 ### Implementation for User Story 2 (TDD - Green Phase)
 
-- [ ] T066 [P] [US2] Implement calculateDiversityFactor in lib/calculations/ups/diversityFactor.ts per IEEE 1100 Emerald Book guidelines
-- [ ] T067 [P] [US2] Implement convertPowerFactor in lib/calculations/ups/powerFactor.ts handling VA/Watts/PF relationships with 0.8 default per FR-011
-- [ ] T068 [US2] Implement calculateUPSSizing in lib/calculations/ups/sizing.ts integrating diversity, power factor, growth margin (25%), standard UPS sizes [10, 20, 30, 40, 60, 80, 100, 120, 160, 200] kVA
-- [ ] T069 [US2] Create upsInputsSchema in lib/validation/upsValidation.ts with Zod validation for LoadItem array (powerVA/powerWatts nullable but one required, powerFactor 0.1-1.0, quantity ≥1)
-- [ ] T070 [US2] Create validateUPSInputs function in lib/validation/upsValidation.ts warning for unusual power factors (<0.7 or >0.95)
-- [ ] T071 [US2] Create upsStore.ts in stores/ with Zustand persist managing loads array, growthMargin, and calculated results in localStorage key "electromate-ups"
-- [ ] T072 [US2] Create app/ups/page.tsx Server Component with metadata and UPSSizingTool import
-- [ ] T073 [US2] Create app/ups/UPSSizingTool.tsx Client Component with dynamic load list (add/remove loads), load editor modal, results display showing total load, diversity factor, effective load, with growth, recommended UPS kVA
+- [X] T066 [P] [US2] Implement calculateDiversityFactor in lib/calculations/ups/diversityFactor.ts per IEEE 1100 Emerald Book guidelines
+- [X] T067 [P] [US2] Implement convertPowerFactor in lib/calculations/ups/powerFactor.ts handling VA/Watts/PF relationships with 0.8 default per FR-011
+- [X] T068 [US2] Implement calculateUPSSizing in lib/calculations/ups/sizing.ts integrating diversity, power factor, growth margin (25%), standard UPS sizes [10, 20, 30, 40, 60, 80, 100, 120, 160, 200] kVA
+- [X] T069 [US2] Create upsInputsSchema in lib/validation/upsValidation.ts with Zod validation for LoadItem array (powerVA/powerWatts nullable but one required, powerFactor 0.1-1.0, quantity ≥1)
+- [X] T070 [US2] Create validateUPSInputs function in lib/validation/upsValidation.ts warning for unusual power factors (<0.7 or >0.95)
+- [X] T071 [US2] Create upsStore.ts in stores/ with Zustand persist managing loads array, growthMargin, and calculated results in localStorage key "electromate-ups"
+- [X] T072 [US2] Create app/ups/page.tsx Server Component with metadata and UPSSizingTool import
+- [X] T073 [US2] Create app/ups/UPSSizingTool.tsx Client Component with dynamic load list (add/remove loads), load editor modal, results display showing total load, diversity factor, effective load, with growth, recommended UPS kVA
 - [ ] T074 [US2] Create components/charts/UPSLoadChart.tsx with Recharts BarChart showing load breakdown by equipment type
 - [ ] T075 [US2] Create app/api/calculations/ups/route.ts with GET/POST endpoints per contracts/ups.openapi.yaml
-- [ ] T076 [US2] Integrate PDF generation in UPSSizingTool with load breakdown table, diversity factor calculation details, standard references (IEEE 1100, IEC 62040)
-- [ ] T077 [US2] Add navigation link to UPS calculator in components/layout/Sidebar.tsx
-- [ ] T078 [US2] Run UPS calculation tests and verify IEEE 1100 diversity factors calculate correctly
+- [X] T076 [US2] Integrate PDF generation in UPSSizingTool with load breakdown table, diversity factor calculation details, standard references (IEEE 1100, IEC 62040)
+- [X] T077 [US2] Add navigation link to UPS calculator in components/layout/Sidebar.tsx
+- [X] T078 [US2] Run UPS calculation tests and verify IEEE 1100 diversity factors calculate correctly
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work independently
 

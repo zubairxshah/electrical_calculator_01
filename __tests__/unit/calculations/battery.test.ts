@@ -10,7 +10,8 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { calculateBackupTime, calculateDischargeRate, type BatteryCalculatorInputs } from '@/lib/calculations/battery'
+import { calculateBackupTime, calculateDischargeRate } from '@/lib/calculations/battery'
+import type { BatteryCalculatorInputs } from '@/lib/types/calculations'
 import { toBigNumber, toNumber } from '@/lib/mathConfig'
 
 describe('Battery Backup Calculator', () => {
