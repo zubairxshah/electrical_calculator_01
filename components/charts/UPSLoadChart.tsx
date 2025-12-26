@@ -55,6 +55,7 @@ interface ChartDataItem {
   quantity: number;
   powerFactor: number;
   fill: string;
+  [key: string]: string | number;
 }
 
 export function UPSLoadChart({
