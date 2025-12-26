@@ -62,6 +62,9 @@ export function CableSizingTool() {
   } = useCableStore();
 
   const [validationResult, setValidationResult] = useState<ReturnType<typeof validateCableInputs> | null>(null);
+  const [voltageMode, setVoltageMode] = useState<'preset' | 'custom'>('preset');
+  const [voltageType, setVoltageType] = useState<'AC' | 'DC'>('AC');
+  const [customVoltage, setCustomVoltage] = useState<number>(230);
 
   // Validate inputs on change
   useEffect(() => {
@@ -149,29 +152,133 @@ export function CableSizingTool() {
               </div>
             </div>
 
+            {/* Voltage Type and Mode Selection */}
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="voltage-type">Voltage Type</Label>
+                <Select
+                  value={voltageType}
+                  onValueChange={(value) => setVoltageType(value as 'AC' | 'DC')}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="AC">AC (Alternating Current)</SelectItem>
+                    <SelectItem value="DC">DC (Direct Current)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="voltage-mode">Voltage Input</Label>
+                <Select
+                  value={voltageMode}
+                  onValueChange={(value) => {
+                    setVoltageMode(value as 'preset' | 'custom');
+                    if (value === 'custom') {
+                      setSystemVoltage(customVoltage);
+                    }
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select mode" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="preset">Preset Voltages</SelectItem>
+                    <SelectItem value="custom">Custom Voltage</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
             {/* Voltage Selection */}
             <div className="space-y-2">
-              <Label htmlFor="voltage">System Voltage</Label>
-              <Select
-                value={String(systemVoltage)}
-                onValueChange={(value) => setSystemVoltage(parseInt(value))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select voltage" />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(SYSTEM_VOLTAGES).map(([category, voltages]) => (
-                    <SelectGroup key={category}>
-                      <SelectLabel>{category}</SelectLabel>
-                      {voltages.map((v) => (
-                        <SelectItem key={v} value={String(v)}>
-                          {formatVoltage(v)}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label htmlFor="voltage">System Voltage (V)</Label>
+              {voltageMode === 'preset' ? (
+                <Select
+                  value={String(systemVoltage)}
+                  onValueChange={(value) => setSystemVoltage(parseInt(value))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select voltage" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {voltageType === 'AC' ? (
+                      <>
+                        <SelectGroup>
+                          <SelectLabel>LV AC</SelectLabel>
+                          {SYSTEM_VOLTAGES['LV AC'].map((v) => (
+                            <SelectItem key={v} value={String(v)}>
+                              {formatVoltage(v)}
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                        <SelectGroup>
+                          <SelectLabel>MV</SelectLabel>
+                          {SYSTEM_VOLTAGES['MV'].map((v) => (
+                            <SelectItem key={v} value={String(v)}>
+                              {formatVoltage(v)}
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                      </>
+                    ) : (
+                      <>
+                        <SelectGroup>
+                          <SelectLabel>DC Telecom</SelectLabel>
+                          {SYSTEM_VOLTAGES['DC Telecom'].map((v) => (
+                            <SelectItem key={v} value={String(v)}>
+                              {formatVoltage(v)}
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                        <SelectGroup>
+                          <SelectLabel>DC Industrial</SelectLabel>
+                          {SYSTEM_VOLTAGES['DC Industrial'].map((v) => (
+                            <SelectItem key={v} value={String(v)}>
+                              {formatVoltage(v)}
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                        <SelectGroup>
+                          <SelectLabel>DC Solar</SelectLabel>
+                          {SYSTEM_VOLTAGES['DC Solar'].map((v) => (
+                            <SelectItem key={v} value={String(v)}>
+                              {formatVoltage(v)}
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                      </>
+                    )}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <div className="flex gap-2">
+                  <Input
+                    id="custom-voltage"
+                    type="number"
+                    min="1"
+                    max="50000"
+                    step="1"
+                    value={customVoltage}
+                    onChange={(e) => {
+                      const val = parseFloat(e.target.value) || 0;
+                      setCustomVoltage(val);
+                      setSystemVoltage(val);
+                    }}
+                    placeholder="Enter voltage"
+                  />
+                  <span className="flex items-center text-sm text-gray-500 whitespace-nowrap">
+                    V {voltageType}
+                  </span>
+                </div>
+              )}
+              {voltageMode === 'custom' && (
+                <p className="text-xs text-gray-500">
+                  Enter any voltage value between 1V and 50,000V
+                </p>
+              )}
             </div>
 
             {/* Current and Length */}

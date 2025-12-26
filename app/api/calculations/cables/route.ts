@@ -19,7 +19,7 @@ import { CONDUCTOR_MATERIALS, INSTALLATION_METHODS, CIRCUIT_TYPES, STANDARDS } f
 
 // Input validation schema matching OpenAPI spec
 const cableInputsSchema = z.object({
-  systemVoltage: z.number().positive(),
+  systemVoltage: z.number().positive().min(1).max(50000),
   current: z.number().positive().min(0.1).max(10000),
   length: z.number().positive().min(0.1).max(10000),
   conductorMaterial: z.enum(CONDUCTOR_MATERIALS),

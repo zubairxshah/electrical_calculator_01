@@ -69,11 +69,12 @@ export type InsulationRating = (typeof INSULATION_RATINGS)[number];
  * Validates all cable sizing inputs with appropriate ranges
  */
 export const cableInputsSchema = z.object({
-  /** System voltage from predefined list */
-  systemVoltage: z.number().refine(
-    (val) => ALL_VOLTAGES.includes(val),
-    { message: 'Invalid system voltage. Select from available options.' }
-  ),
+  /** System voltage - preset or custom value */
+  systemVoltage: z
+    .number()
+    .positive('Voltage must be positive')
+    .min(1, 'Voltage must be at least 1V')
+    .max(50000, 'Voltage cannot exceed 50,000V'),
 
   /** Circuit current (A) */
   current: z
