@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef, RefObject } from 'react'
 
 /**
  * Mobile menu state interface
@@ -14,6 +14,8 @@ export interface MobileMenuState {
   toggle: () => void
   /** Close the sidebar (convenience method) */
   close: () => void
+  /** Ref to attach to the trigger button for focus return */
+  triggerRef: RefObject<HTMLButtonElement | null>
 }
 
 /**
@@ -34,6 +36,8 @@ export interface MobileMenuState {
  */
 export function useMobileMenu(): MobileMenuState {
   const [isOpen, setIsOpen] = useState(false)
+  const triggerRef = useRef<HTMLButtonElement | null>(null)
+  const wasOpenRef = useRef(false)
 
   const toggle = useCallback(() => {
     setIsOpen((prev) => !prev)
@@ -42,6 +46,15 @@ export function useMobileMenu(): MobileMenuState {
   const close = useCallback(() => {
     setIsOpen(false)
   }, [])
+
+  // Return focus to trigger button when sidebar closes
+  useEffect(() => {
+    if (wasOpenRef.current && !isOpen) {
+      // Sidebar just closed - return focus to trigger button
+      triggerRef.current?.focus()
+    }
+    wasOpenRef.current = isOpen
+  }, [isOpen])
 
   // Close sidebar on Escape key press
   useEffect(() => {
@@ -75,5 +88,5 @@ export function useMobileMenu(): MobileMenuState {
     return () => window.removeEventListener('resize', handleResize)
   }, [isOpen, close])
 
-  return { isOpen, setIsOpen, toggle, close }
+  return { isOpen, setIsOpen, toggle, close, triggerRef }
 }

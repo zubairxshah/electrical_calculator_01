@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
@@ -58,25 +59,68 @@ interface SidebarProps {
 
 export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   const pathname = usePathname()
+  const sidebarRef = useRef<HTMLElement>(null)
+  const closeButtonRef = useRef<HTMLButtonElement>(null)
+
+  // Focus trap: cycle through focusable elements when Tab is pressed
+  useEffect(() => {
+    if (!isOpen) return
+
+    const sidebar = sidebarRef.current
+    if (!sidebar) return
+
+    // Focus close button when sidebar opens (for accessibility)
+    closeButtonRef.current?.focus()
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab') return
+
+      const focusableElements = sidebar.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      )
+      const firstElement = focusableElements[0]
+      const lastElement = focusableElements[focusableElements.length - 1]
+
+      if (e.shiftKey) {
+        // Shift+Tab: go to last element if at first
+        if (document.activeElement === firstElement) {
+          e.preventDefault()
+          lastElement?.focus()
+        }
+      } else {
+        // Tab: go to first element if at last
+        if (document.activeElement === lastElement) {
+          e.preventDefault()
+          firstElement?.focus()
+        }
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen])
 
   return (
     <>
       {/* Backdrop (mobile only, shown when sidebar open) */}
+      {/* GPU-accelerated opacity transition for smooth 60fps animation */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-40 md:hidden transition-opacity duration-250"
+          className="fixed inset-0 bg-black/50 z-40 md:hidden transition-opacity duration-300 ease-in-out"
           onClick={onClose}
           aria-hidden="true"
         />
       )}
 
       {/* Sidebar */}
+      {/* GPU-accelerated transform animation (uses compositor, not main thread) for smooth 60fps */}
       <aside
+        ref={sidebarRef}
         id="mobile-sidebar"
         className={cn(
           'fixed left-0 top-0 h-screen w-64 border-r bg-card z-50',
-          // Mobile: overlay with slide animation
-          'transform transition-transform duration-300 ease-in-out',
+          // Mobile: overlay with GPU-accelerated slide animation
+          'transform transition-transform duration-300 ease-in-out will-change-transform',
           isOpen ? 'translate-x-0' : '-translate-x-full',
           // Desktop: always visible, no transform
           'md:translate-x-0'
@@ -99,6 +143,7 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
 
             {/* Close button (mobile only) */}
             <Button
+              ref={closeButtonRef}
               variant="ghost"
               size="icon"
               onClick={onClose}

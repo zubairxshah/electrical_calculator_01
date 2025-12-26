@@ -15,10 +15,15 @@ const SENSITIVE_PATTERNS = [
   /APIKEY\s*[=:]\s*[^\s\n]+/gi,
   /api[_-]key["\s]*[:=]["\s]*[^\s"'\n]+/gi,
 
-  // Stripe API keys
-  /sk_(live|test)_[a-zA-Z0-9]{24,}/g,
-  /pk_(live|test)_[a-zA-Z0-9]{24,}/g,
-  /rk_(live|test)_[a-zA-Z0-9]{24,}/g,
+  // Stripe keys (variable assignments)
+  /STRIPE[_-]?KEY\s*[=:]\s*[^\s\n]+/gi,
+  /STRIPE[_-]?SECRET\s*[=:]\s*[^\s\n]+/gi,
+  /STRIPE[_-]?API[_-]?KEY\s*[=:]\s*[^\s\n]+/gi,
+
+  // Stripe API keys (standalone patterns)
+  /sk_(live|test)_[a-zA-Z0-9]+/g,
+  /pk_(live|test)_[a-zA-Z0-9]+/g,
+  /rk_(live|test)_[a-zA-Z0-9]+/g,
 
   // Passwords
   /PASSWORD\s*[=:]\s*[^\s\n]+/gi,

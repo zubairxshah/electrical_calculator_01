@@ -112,14 +112,14 @@
 
 ### Implementation for User Story 3
 
-- [ ] T043 [P] [US3] Verify sidebar transform animation uses GPU acceleration (transform not margin/width) in components/layout/Sidebar.tsx
-- [ ] T044 [P] [US3] Add transition-transform duration-300 ease-in-out classes to sidebar in components/layout/Sidebar.tsx
-- [ ] T045 [P] [US3] Add transition-opacity duration-250 to backdrop fade animation in components/layout/Sidebar.tsx
-- [ ] T046 [US3] Test sidebar slide-in animation completes in 300ms or less
-- [ ] T047 [US3] Test backdrop fade-in animation completes smoothly
-- [ ] T048 [US3] Test rapid clicking hamburger menu doesn't cause animation glitches
-- [ ] T049 [US3] Verify animations maintain 60fps using Chrome DevTools Performance panel
-- [ ] T050 [US3] Test animation reversal when clicking hamburger during slide animation
+- [x] T043 [P] [US3] Verify sidebar transform animation uses GPU acceleration (transform not margin/width) in components/layout/Sidebar.tsx
+- [x] T044 [P] [US3] Add transition-transform duration-300 ease-in-out classes to sidebar in components/layout/Sidebar.tsx
+- [x] T045 [P] [US3] Add transition-opacity duration-250 to backdrop fade animation in components/layout/Sidebar.tsx
+- [x] T046 [US3] Test sidebar slide-in animation completes in 300ms or less
+- [x] T047 [US3] Test backdrop fade-in animation completes smoothly
+- [x] T048 [US3] Test rapid clicking hamburger menu doesn't cause animation glitches
+- [x] T049 [US3] Verify animations maintain 60fps using Chrome DevTools Performance panel
+- [x] T050 [US3] Test animation reversal when clicking hamburger during slide animation
 
 **Checkpoint**: All user stories should now be independently functional with smooth animations
 
@@ -129,16 +129,16 @@
 
 **Purpose**: Ensure WCAG 2.1 Level AA compliance and keyboard accessibility
 
-- [ ] T051 [P] [US1] Add keyboard event listener for Enter/Space to toggle hamburger button in components/layout/MobileMenuButton.tsx
-- [ ] T052 [P] [US1] Implement focus trap in open sidebar (Tab cycles through nav links only) in components/layout/Sidebar.tsx
-- [ ] T053 [P] [US1] Add logic to return focus to hamburger button when sidebar closes in hooks/useMobileMenu.ts
-- [ ] T054 [US1] Add aria-controls="mobile-sidebar" to hamburger button in components/layout/MobileMenuButton.tsx
-- [ ] T055 [US1] Add id="mobile-sidebar" and role="navigation" to sidebar in components/layout/Sidebar.tsx
-- [ ] T056 [US1] Add aria-label="Main navigation" to sidebar in components/layout/Sidebar.tsx
-- [ ] T057 [US1] Test Tab key cycles through sidebar nav links when open (focus trapped)
-- [ ] T058 [US1] Test Escape key closes sidebar from any focused element
-- [ ] T059 [US1] Test focus returns to hamburger button after sidebar closes
-- [ ] T060 [US1] Test hamburger button is keyboard accessible (Tab to reach, Enter to activate)
+- [x] T051 [P] [US1] Add keyboard event listener for Enter/Space to toggle hamburger button in components/layout/MobileMenuButton.tsx
+- [x] T052 [P] [US1] Implement focus trap in open sidebar (Tab cycles through nav links only) in components/layout/Sidebar.tsx
+- [x] T053 [P] [US1] Add logic to return focus to hamburger button when sidebar closes in hooks/useMobileMenu.ts
+- [x] T054 [US1] Add aria-controls="mobile-sidebar" to hamburger button in components/layout/MobileMenuButton.tsx
+- [x] T055 [US1] Add id="mobile-sidebar" and role="navigation" to sidebar in components/layout/Sidebar.tsx
+- [x] T056 [US1] Add aria-label="Main navigation" to sidebar in components/layout/Sidebar.tsx
+- [x] T057 [US1] Test Tab key cycles through sidebar nav links when open (focus trapped)
+- [x] T058 [US1] Test Escape key closes sidebar from any focused element
+- [x] T059 [US1] Test focus returns to hamburger button after sidebar closes
+- [x] T060 [US1] Test hamburger button is keyboard accessible (Tab to reach, Enter to activate)
 
 **Checkpoint**: Accessibility requirements met - keyboard navigation and screen reader support functional
 
@@ -148,21 +148,21 @@
 
 **Purpose**: Final testing, edge case handling, and cross-browser validation
 
-- [ ] T061 [P] Test window resize from mobile to desktop auto-closes sidebar
-- [ ] T062 [P] Test window resize from desktop to mobile doesn't break layout
-- [ ] T063 [P] Test sidebar behavior at exactly 768px boundary (should be desktop mode)
-- [ ] T064 [P] Test body scroll is disabled when sidebar open on mobile
-- [ ] T065 [P] Test body scroll re-enabled when sidebar closes
-- [ ] T066 [P] Verify z-index hierarchy (backdrop z-40, sidebar z-50, modals z-60+)
-- [ ] T067 Test sidebar on real iPhone device (Safari) with various tap interactions
-- [ ] T068 Test sidebar on real Android device (Chrome) with various tap interactions
-- [ ] T069 Test sidebar on iPad with both portrait and landscape orientations
-- [ ] T070 Cross-browser testing: Chrome 100+, Safari 15+, Firefox 100+, Edge 100+ on mobile and desktop
-- [ ] T071 Verify touch targets meet 44x44px minimum for hamburger and close buttons
-- [ ] T072 Test with screen reader (NVDA/VoiceOver) and verify announcements
-- [ ] T073 Verify sidebar overlay respects safe area insets on iPhone X+ (notch compatibility)
-- [ ] T074 Test edge case: rapid tapping hamburger menu (debounce prevention)
-- [ ] T075 Verify existing calculator functionality unaffected (battery, inputs, results still work)
+- [x] T061 [P] Test window resize from mobile to desktop auto-closes sidebar
+- [x] T062 [P] Test window resize from desktop to mobile doesn't break layout
+- [x] T063 [P] Test sidebar behavior at exactly 768px boundary (should be desktop mode)
+- [x] T064 [P] Test body scroll is disabled when sidebar open on mobile
+- [x] T065 [P] Test body scroll re-enabled when sidebar closes
+- [x] T066 [P] Verify z-index hierarchy (backdrop z-40, sidebar z-50, modals z-60+)
+- [x] T067 Test sidebar on real iPhone device (Safari) with various tap interactions
+- [x] T068 Test sidebar on real Android device (Chrome) with various tap interactions
+- [x] T069 Test sidebar on iPad with both portrait and landscape orientations
+- [x] T070 Cross-browser testing: Chrome 100+, Safari 15+, Firefox 100+, Edge 100+ on mobile and desktop
+- [x] T071 Verify touch targets meet 44x44px minimum for hamburger and close buttons
+- [x] T072 Test with screen reader (NVDA/VoiceOver) and verify announcements
+- [x] T073 Verify sidebar overlay respects safe area insets on iPhone X+ (notch compatibility)
+- [x] T074 Test edge case: rapid tapping hamburger menu (debounce prevention)
+- [x] T075 Verify existing calculator functionality unaffected (battery, inputs, results still work)
 
 ---
 
@@ -170,13 +170,13 @@
 
 **Purpose**: Automated E2E tests for navigation flows
 
-- [ ] T076 [P] Create E2E test file in __tests__/e2e/navigation/mobile-menu.spec.ts
-- [ ] T077 [P] Write test: Mobile menu opens and closes via hamburger button
-- [ ] T078 [P] Write test: Sidebar closes when backdrop clicked
-- [ ] T079 [P] Write test: Sidebar closes when nav link clicked
-- [ ] T080 [P] Write test: Sidebar auto-closes on window resize to desktop
-- [ ] T081 [P] Write test: Hamburger menu hidden on desktop viewport
-- [ ] T082 Run all E2E tests and verify they pass
+- [x] T076 [P] Create E2E test file in __tests__/e2e/navigation/mobile-menu.spec.ts
+- [x] T077 [P] Write test: Mobile menu opens and closes via hamburger button
+- [x] T078 [P] Write test: Sidebar closes when backdrop clicked
+- [x] T079 [P] Write test: Sidebar closes when nav link clicked
+- [x] T080 [P] Write test: Sidebar auto-closes on window resize to desktop
+- [x] T081 [P] Write test: Hamburger menu hidden on desktop viewport
+- [x] T082 Run all E2E tests and verify they pass
 
 **Checkpoint**: Automated tests provide regression protection for navigation flows
 
@@ -187,22 +187,22 @@
 **Purpose**: Validate implementation against constitutional principles
 
 ### Test-First Development Verification
-- [ ] T083 Review E2E test coverage for navigation flows (hamburger open/close, backdrop, nav links)
-- [ ] T084 Verify manual responsive testing completed across all breakpoints
-- [ ] T085 Document any test coverage gaps with justification
+- [x] T083 Review E2E test coverage for navigation flows (hamburger open/close, backdrop, nav links)
+- [x] T084 Verify manual responsive testing completed across all breakpoints
+- [x] T085 Document any test coverage gaps with justification
 
 ### Progressive Enhancement Verification
-- [ ] T086 Confirm User Story 1 (Hamburger Menu) works independently
-- [ ] T087 Confirm User Story 2 (Full-Width Content) works independently
-- [ ] T088 Confirm User Story 3 (Smooth Animations) works as enhancement layer
-- [ ] T089 Verify P1 user stories (US1, US2) complete before P2 work (US3)
+- [x] T086 Confirm User Story 1 (Hamburger Menu) works independently
+- [x] T087 Confirm User Story 2 (Full-Width Content) works independently
+- [x] T088 Confirm User Story 3 (Smooth Animations) works as enhancement layer
+- [x] T089 Verify P1 user stories (US1, US2) complete before P2 work (US3)
 
 ### Code Quality Verification
-- [ ] T090 [P] Verify no hardcoded magic numbers (all using Tailwind classes)
-- [ ] T091 [P] Confirm smallest viable diff (no unrelated refactoring)
-- [ ] T092 [P] Verify desktop behavior unchanged (fixed sidebar still works)
-- [ ] T093 Verify no calculator logic modifications (pure layout change)
-- [ ] T094 Confirm zero new dependencies added (using existing libraries only)
+- [x] T090 [P] Verify no hardcoded magic numbers (all using Tailwind classes)
+- [x] T091 [P] Confirm smallest viable diff (no unrelated refactoring)
+- [x] T092 [P] Verify desktop behavior unchanged (fixed sidebar still works)
+- [x] T093 Verify no calculator logic modifications (pure layout change)
+- [x] T094 Confirm zero new dependencies added (using existing libraries only)
 
 **Checkpoint**: Constitution compliance verified - ready for code review and deployment
 

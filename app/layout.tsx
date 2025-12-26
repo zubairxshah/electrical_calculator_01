@@ -43,6 +43,7 @@ export default function RootLayout({
             <Header
               mobileMenuOpen={mobileMenu.isOpen}
               onMobileMenuToggle={mobileMenu.toggle}
+              triggerRef={mobileMenu.triggerRef}
             />
 
             {/* Page Content - Responsive padding */}

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, RefObject } from 'react'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
@@ -22,6 +22,8 @@ interface HeaderProps {
   onStandardsChange?: (standards: StandardsFramework) => void
   mobileMenuOpen?: boolean
   onMobileMenuToggle?: () => void
+  /** Ref for the mobile menu button to enable focus return */
+  triggerRef?: RefObject<HTMLButtonElement | null>
 }
 
 export function Header({
@@ -29,6 +31,7 @@ export function Header({
   onStandardsChange,
   mobileMenuOpen = false,
   onMobileMenuToggle,
+  triggerRef,
 }: HeaderProps) {
   const [currentStandards, setCurrentStandards] = useState<StandardsFramework>(standards)
 
@@ -44,7 +47,7 @@ export function Header({
         <div className="flex items-center space-x-3">
           {/* Mobile menu button (visible on mobile only) */}
           {onMobileMenuToggle && (
-            <MobileMenuButton onClick={onMobileMenuToggle} isOpen={mobileMenuOpen} />
+            <MobileMenuButton ref={triggerRef} onClick={onMobileMenuToggle} isOpen={mobileMenuOpen} />
           )}
 
           <h2 className="text-base md:text-lg font-semibold">Electrical Engineering Calculations</h2>
