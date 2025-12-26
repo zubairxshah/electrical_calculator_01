@@ -160,8 +160,8 @@
 - [X] T071 [US2] Create upsStore.ts in stores/ with Zustand persist managing loads array, growthMargin, and calculated results in localStorage key "electromate-ups"
 - [X] T072 [US2] Create app/ups/page.tsx Server Component with metadata and UPSSizingTool import
 - [X] T073 [US2] Create app/ups/UPSSizingTool.tsx Client Component with dynamic load list (add/remove loads), load editor modal, results display showing total load, diversity factor, effective load, with growth, recommended UPS kVA
-- [ ] T074 [US2] Create components/charts/UPSLoadChart.tsx with Recharts BarChart showing load breakdown by equipment type
-- [ ] T075 [US2] Create app/api/calculations/ups/route.ts with GET/POST endpoints per contracts/ups.openapi.yaml
+- [X] T074 [US2] Create components/charts/UPSLoadChart.tsx with Recharts BarChart showing load breakdown by equipment type
+- [X] T075 [US2] Create app/api/calculations/ups/route.ts with GET/POST endpoints per contracts/ups.openapi.yaml
 - [X] T076 [US2] Integrate PDF generation in UPSSizingTool with load breakdown table, diversity factor calculation details, standard references (IEEE 1100, IEC 62040)
 - [X] T077 [US2] Add navigation link to UPS calculator in components/layout/Sidebar.tsx
 - [X] T078 [US2] Run UPS calculation tests and verify IEEE 1100 diversity factors calculate correctly
@@ -178,31 +178,31 @@
 
 ### Tests for User Story 3 (TDD - Red Phase) ⚠️
 
-- [ ] T079 [P] [US3] Write voltage drop calculation test in __tests__/unit/calculations/cables.test.ts validating formula V_drop = I × L × (mV/A/m) / 1000 against IEC 60364 examples
-- [ ] T080 [P] [US3] Write cable ampacity lookup test in __tests__/unit/calculations/cables.test.ts verifying NEC Table 310.15(B)(16) data accuracy
-- [ ] T081 [P] [US3] Write derating factor test in __tests__/unit/calculations/cables.test.ts validating temperature and grouping corrections per NEC 310.15(B)(2)(a)
+- [X] T079 [P] [US3] Write voltage drop calculation test in __tests__/unit/calculations/cables.test.ts validating formula V_drop = I × L × (mV/A/m) / 1000 against IEC 60364 examples
+- [X] T080 [P] [US3] Write cable ampacity lookup test in __tests__/unit/calculations/cables.test.ts verifying NEC Table 310.15(B)(16) data accuracy
+- [X] T081 [P] [US3] Write derating factor test in __tests__/unit/calculations/cables.test.ts validating temperature and grouping corrections per NEC 310.15(B)(2)(a)
 
 ### Standards Data (Reference Tables)
 
-- [ ] T082 [P] [US3] Create lib/standards/cableTables.ts with NEC Table 310.15(B)(16) copper/aluminum ampacity data (1.5mm² to 500mm² / 14 AWG to 600 kcmil) with resistance values (mV/A/m and Ω/1000ft)
-- [ ] T083 [P] [US3] Create lib/standards/deratingTables.ts with temperature correction factors (NEC 310.15(B)(2)(a), IEC 60364-5-52 Table B.52.14) and grouping factors
-- [ ] T084 [P] [US3] Add IEC 60364-5-52 cable data to lib/standards/cableTables.ts for dual standards support per FR-007a
+- [X] T082 [P] [US3] Create lib/standards/cableTables.ts with NEC Table 310.15(B)(16) copper/aluminum ampacity data (1.5mm² to 500mm² / 14 AWG to 600 kcmil) with resistance values (mV/A/m and Ω/1000ft)
+- [X] T083 [P] [US3] Create lib/standards/deratingTables.ts with temperature correction factors (NEC 310.15(B)(2)(a), IEC 60364-5-52 Table B.52.14) and grouping factors
+- [X] T084 [P] [US3] Add IEC 60364-5-52 cable data to lib/standards/cableTables.ts for dual standards support per FR-007a
 
 ### Implementation for User Story 3 (TDD - Green Phase)
 
-- [ ] T085 [P] [US3] Implement calculateVoltageDrop in lib/calculations/cables/voltageDrop.ts using Math.js BigNumber with formula V_drop = I × L × R per NEC/IEC 60364
-- [ ] T086 [P] [US3] Implement lookupCableAmpacity in lib/calculations/cables/ampacity.ts with table lookup from lib/standards/cableTables.ts
-- [ ] T087 [P] [US3] Implement calculateDeratingFactors in lib/calculations/cables/deratingFactors.ts applying temperature and grouping corrections
-- [ ] T088 [US3] Implement recommendCableSize in lib/calculations/cables/cableSizing.ts integrating voltage drop check (3% limit per FR-009), ampacity check with derating, and cable size suggestions
-- [ ] T089 [US3] Create cableInputsSchema in lib/validation/cableValidation.ts with Zod validation including systemVoltage enum (120V, 208V, 240V, 277V, 480V, 600V, 2.4kV, 4.16kV, 13.8kV, 12V, 24V, 48V, 125V, 250V, up to 1500V DC) per FR-007a
-- [ ] T090 [US3] Create validateCableInputs function in lib/validation/cableValidation.ts checking dangerous conditions (voltage drop >10%, current exceeds derated ampacity)
-- [ ] T091 [US3] Create cableStore.ts in stores/ with Zustand persist managing systemVoltage, current, length, conductorMaterial, installationMethod, ambientTemp in localStorage key "electromate-cable"
-- [ ] T092 [US3] Create app/cables/page.tsx Server Component with metadata and CableSizingTool import
-- [ ] T093 [US3] Create app/cables/CableSizingTool.tsx Client Component with voltage dropdown (organized by LV AC/MV/DC categories), cable size selector from standards tables, results display with red highlighting for >3% violations
-- [ ] T094 [US3] Create app/api/calculations/cables/route.ts with GET/POST endpoints per contracts/cable.openapi.yaml
-- [ ] T095 [US3] Integrate PDF generation in CableSizingTool with derating factor breakdown, voltage drop percentage, cable size recommendation, standard references (NEC Table 310.15(B)(16), IEC 60364-5-52)
-- [ ] T096 [US3] Add navigation link to cable calculator in components/layout/Sidebar.tsx
-- [ ] T097 [US3] Run cable calculation tests and verify voltage drop ±0.1% accuracy per SC-004, ampacity 100% compliance per SC-009
+- [X] T085 [P] [US3] Implement calculateVoltageDrop in lib/calculations/cables/voltageDrop.ts using Math.js BigNumber with formula V_drop = I × L × R per NEC/IEC 60364
+- [X] T086 [P] [US3] Implement lookupCableAmpacity in lib/calculations/cables/ampacity.ts with table lookup from lib/standards/cableTables.ts
+- [X] T087 [P] [US3] Implement calculateDeratingFactors in lib/calculations/cables/deratingFactors.ts applying temperature and grouping corrections
+- [X] T088 [US3] Implement recommendCableSize in lib/calculations/cables/cableSizing.ts integrating voltage drop check (3% limit per FR-009), ampacity check with derating, and cable size suggestions
+- [X] T089 [US3] Create cableInputsSchema in lib/validation/cableValidation.ts with Zod validation including systemVoltage enum (120V, 208V, 240V, 277V, 480V, 600V, 2.4kV, 4.16kV, 13.8kV, 12V, 24V, 48V, 125V, 250V, up to 1500V DC) per FR-007a
+- [X] T090 [US3] Create validateCableInputs function in lib/validation/cableValidation.ts checking dangerous conditions (voltage drop >10%, current exceeds derated ampacity)
+- [X] T091 [US3] Create cableStore.ts in stores/ with Zustand persist managing systemVoltage, current, length, conductorMaterial, installationMethod, ambientTemp in localStorage key "electromate-cable"
+- [X] T092 [US3] Create app/cables/page.tsx Server Component with metadata and CableSizingTool import
+- [X] T093 [US3] Create app/cables/CableSizingTool.tsx Client Component with voltage dropdown (organized by LV AC/MV/DC categories), cable size selector from standards tables, results display with red highlighting for >3% violations
+- [X] T094 [US3] Create app/api/calculations/cables/route.ts with GET/POST endpoints per contracts/cable.openapi.yaml
+- [X] T095 [US3] Integrate PDF generation in CableSizingTool with derating factor breakdown, voltage drop percentage, cable size recommendation, standard references (NEC Table 310.15(B)(16), IEC 60364-5-52)
+- [X] T096 [US3] Add navigation link to cable calculator in components/layout/Sidebar.tsx
+- [x] T097 [US3] Run cable calculation tests and verify voltage drop ±0.1% accuracy per SC-004, ampacity 100% compliance per SC-009
 
 **Checkpoint**: All P1 user stories (Battery, UPS, Cable Sizing) should now be independently functional
 
