@@ -23,7 +23,7 @@ export function CalculationCard({
   className,
 }: CalculationCardProps) {
   return (
-    <Card className={className}>
+    <Card className={`shadow-sm hover:shadow-md transition-shadow duration-200 ${className || ''}`}>
       <CardHeader>
         <div className="flex items-start justify-between">
           <div className="space-y-1">

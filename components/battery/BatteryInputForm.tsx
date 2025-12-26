@@ -103,7 +103,7 @@ export function BatteryInputForm() {
             setInputs({ chemistry: value as typeof inputs.chemistry })
           }
         >
-          <SelectTrigger>
+          <SelectTrigger className="h-12 transition-all duration-200 focus:ring-2 focus:ring-offset-2 focus:ring-primary focus:outline-none">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

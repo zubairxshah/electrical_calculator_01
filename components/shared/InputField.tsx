@@ -102,9 +102,10 @@ export function InputField({
           step={step}
           disabled={disabled}
           className={cn(
-            'h-12', // Mobile-optimized height (48px) for better touch targets
-            hasError && 'border-destructive focus-visible:ring-destructive',
-            hasWarning && 'border-yellow-500 focus-visible:ring-yellow-500'
+            'h-12 transition-all duration-200', // Mobile-optimized height (48px) for better touch targets
+            'focus:ring-2 focus:ring-offset-2 focus:ring-primary focus:outline-none',
+            hasError && 'border-destructive focus:ring-destructive',
+            hasWarning && 'border-yellow-500 focus:ring-yellow-500'
           )}
         />
         {unit && (

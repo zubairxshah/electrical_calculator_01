@@ -31,7 +31,11 @@ export function BatteryCalculator() {
       >
         <BatteryInputForm />
         <div className="mt-4 flex flex-col sm:flex-row gap-3">
-          <Button variant="outline" onClick={resetInputs} className="w-full sm:w-auto gap-2">
+          <Button
+            variant="outline"
+            onClick={resetInputs}
+            className="w-full sm:w-auto gap-2 transition-all duration-200 active:scale-95"
+          >
             <RotateCcw className="h-4 w-4" />
             Reset to Defaults
           </Button>

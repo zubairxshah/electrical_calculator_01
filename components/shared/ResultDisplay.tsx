@@ -27,14 +27,14 @@ export interface ResultDisplayProps {
 
 export function ResultDisplay({ results, className }: ResultDisplayProps) {
   return (
-    <Card className={cn('p-6', className)}>
+    <Card className={cn('p-6 shadow-sm hover:shadow-md transition-shadow duration-200', className)}>
       <div className="space-y-4">
         {results.map((result, index) => (
           <div
             key={index}
             className={cn(
-              'flex items-center justify-between border-b pb-3 last:border-0 last:pb-0',
-              result.isPrimary && 'border-primary'
+              'flex items-center justify-between border-b pb-3 last:border-0 last:pb-0 transition-colors duration-200',
+              result.isPrimary && 'border-primary bg-primary/5 -mx-6 px-6 py-4 rounded-lg'
             )}
           >
             <div className="space-y-1">
