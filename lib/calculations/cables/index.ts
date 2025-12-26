@@ -39,4 +39,6 @@ export {
   recommendCableSize,
   type CableSizingInput,
   type CableSizingResult,
+  type ParallelCableRun,
+  type EarthConductorRecommendation,
 } from './cableSizing';

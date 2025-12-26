@@ -65,6 +65,8 @@ export const NEC_COPPER_AMPACITY: CableTableEntry[] = [
   { sizeMetric: '203', sizeAWG: '400', material: 'copper', resistanceMvAm: 0.0850, resistanceOhmPer1000ft: 0.0321, ampacity60C: 280, ampacity75C: 335, ampacity90C: 380, standard: 'NEC' },
   { sizeMetric: '253', sizeAWG: '500', material: 'copper', resistanceMvAm: 0.0680, resistanceOhmPer1000ft: 0.0258, ampacity60C: 320, ampacity75C: 380, ampacity90C: 430, standard: 'NEC' },
   { sizeMetric: '304', sizeAWG: '600', material: 'copper', resistanceMvAm: 0.0567, resistanceOhmPer1000ft: 0.0214, ampacity60C: 350, ampacity75C: 420, ampacity90C: 475, standard: 'NEC' },
+  { sizeMetric: '380', sizeAWG: '750', material: 'copper', resistanceMvAm: 0.0454, resistanceOhmPer1000ft: 0.0171, ampacity60C: 385, ampacity75C: 475, ampacity90C: 535, standard: 'NEC' },
+  { sizeMetric: '507', sizeAWG: '1000', material: 'copper', resistanceMvAm: 0.0340, resistanceOhmPer1000ft: 0.0129, ampacity60C: 445, ampacity75C: 545, ampacity90C: 615, standard: 'NEC' },
 ];
 
 /**
@@ -90,6 +92,8 @@ export const NEC_ALUMINUM_AMPACITY: CableTableEntry[] = [
   { sizeMetric: '203', sizeAWG: '400', material: 'aluminum', resistanceMvAm: 0.140, resistanceOhmPer1000ft: 0.0529, ampacity60C: 225, ampacity75C: 270, ampacity90C: 305, standard: 'NEC' },
   { sizeMetric: '253', sizeAWG: '500', material: 'aluminum', resistanceMvAm: 0.112, resistanceOhmPer1000ft: 0.0424, ampacity60C: 260, ampacity75C: 310, ampacity90C: 350, standard: 'NEC' },
   { sizeMetric: '304', sizeAWG: '600', material: 'aluminum', resistanceMvAm: 0.0933, resistanceOhmPer1000ft: 0.0353, ampacity60C: 285, ampacity75C: 340, ampacity90C: 385, standard: 'NEC' },
+  { sizeMetric: '380', sizeAWG: '750', material: 'aluminum', resistanceMvAm: 0.0746, resistanceOhmPer1000ft: 0.0282, ampacity60C: 315, ampacity75C: 385, ampacity90C: 435, standard: 'NEC' },
+  { sizeMetric: '507', sizeAWG: '1000', material: 'aluminum', resistanceMvAm: 0.0560, resistanceOhmPer1000ft: 0.0212, ampacity60C: 375, ampacity75C: 445, ampacity90C: 500, standard: 'NEC' },
 ];
 
 /**
@@ -116,6 +120,9 @@ export const IEC_COPPER_AMPACITY: CableTableEntry[] = [
   { sizeMetric: '185', sizeAWG: '350', material: 'copper', resistanceMvAm: 0.0991, resistanceOhmPer1000ft: 0.0376, ampacity60C: 268, ampacity75C: 289, ampacity90C: 424, standard: 'IEC' },
   { sizeMetric: '240', sizeAWG: '500', material: 'copper', resistanceMvAm: 0.0754, resistanceOhmPer1000ft: 0.0286, ampacity60C: 315, ampacity75C: 341, ampacity90C: 500, standard: 'IEC' },
   { sizeMetric: '300', sizeAWG: '600', material: 'copper', resistanceMvAm: 0.0601, resistanceOhmPer1000ft: 0.0228, ampacity60C: 360, ampacity75C: 384, ampacity90C: 561, standard: 'IEC' },
+  { sizeMetric: '400', sizeAWG: '750', material: 'copper', resistanceMvAm: 0.0470, resistanceOhmPer1000ft: 0.0178, ampacity60C: 410, ampacity75C: 430, ampacity90C: 656, standard: 'IEC' },
+  { sizeMetric: '500', sizeAWG: '1000', material: 'copper', resistanceMvAm: 0.0366, resistanceOhmPer1000ft: 0.0139, ampacity60C: 470, ampacity75C: 490, ampacity90C: 749, standard: 'IEC' },
+  { sizeMetric: '630', sizeAWG: '1250', material: 'copper', resistanceMvAm: 0.0283, resistanceOhmPer1000ft: 0.0107, ampacity60C: 540, ampacity75C: 560, ampacity90C: 855, standard: 'IEC' },
 ];
 
 /**
@@ -136,6 +143,9 @@ export const IEC_ALUMINUM_AMPACITY: CableTableEntry[] = [
   { sizeMetric: '150', sizeAWG: '300', material: 'aluminum', resistanceMvAm: 0.203, resistanceOhmPer1000ft: 0.0771, ampacity60C: 184, ampacity75C: 201, ampacity90C: 290, standard: 'IEC' },
   { sizeMetric: '185', sizeAWG: '350', material: 'aluminum', resistanceMvAm: 0.162, resistanceOhmPer1000ft: 0.0615, ampacity60C: 209, ampacity75C: 225, ampacity90C: 329, standard: 'IEC' },
   { sizeMetric: '240', sizeAWG: '500', material: 'aluminum', resistanceMvAm: 0.123, resistanceOhmPer1000ft: 0.0467, ampacity60C: 246, ampacity75C: 266, ampacity90C: 388, standard: 'IEC' },
+  { sizeMetric: '300', sizeAWG: '600', material: 'aluminum', resistanceMvAm: 0.0986, resistanceOhmPer1000ft: 0.0374, ampacity60C: 281, ampacity75C: 300, ampacity90C: 435, standard: 'IEC' },
+  { sizeMetric: '400', sizeAWG: '750', material: 'aluminum', resistanceMvAm: 0.0770, resistanceOhmPer1000ft: 0.0292, ampacity60C: 322, ampacity75C: 335, ampacity90C: 510, standard: 'IEC' },
+  { sizeMetric: '500', sizeAWG: '1000', material: 'aluminum', resistanceMvAm: 0.0600, resistanceOhmPer1000ft: 0.0228, ampacity60C: 368, ampacity75C: 382, ampacity90C: 582, standard: 'IEC' },
 ];
 
 /**
@@ -154,6 +164,198 @@ export const ALL_CABLE_TABLES: CableTableEntry[] = [
 export const IEC_CABLE_SIZES_MM2 = [
   1.5, 2.5, 4, 6, 10, 16, 25, 35, 50, 70, 95, 120, 150, 185, 240, 300, 400, 500, 630,
 ];
+
+/**
+ * NEC Table 250.122 - Equipment Grounding Conductor Sizing
+ *
+ * Minimum size based on overcurrent protective device rating.
+ * Per NEC 2020 Article 250.122
+ */
+export interface GroundingConductorEntry {
+  /** Overcurrent device rating (amps) */
+  ocpdRating: number;
+  /** Minimum copper conductor size (AWG or kcmil) */
+  copperAWG: string;
+  /** Minimum copper conductor size (mm²) */
+  copperMm2: number;
+  /** Minimum aluminum conductor size (AWG or kcmil) */
+  aluminumAWG: string;
+  /** Minimum aluminum conductor size (mm²) */
+  aluminumMm2: number;
+}
+
+export const NEC_GROUNDING_CONDUCTOR_TABLE: GroundingConductorEntry[] = [
+  { ocpdRating: 15, copperAWG: '14', copperMm2: 2.08, aluminumAWG: '12', aluminumMm2: 3.31 },
+  { ocpdRating: 20, copperAWG: '12', copperMm2: 3.31, aluminumAWG: '10', aluminumMm2: 5.26 },
+  { ocpdRating: 60, copperAWG: '10', copperMm2: 5.26, aluminumAWG: '8', aluminumMm2: 8.37 },
+  { ocpdRating: 100, copperAWG: '8', copperMm2: 8.37, aluminumAWG: '6', aluminumMm2: 13.3 },
+  { ocpdRating: 200, copperAWG: '6', copperMm2: 13.3, aluminumAWG: '4', aluminumMm2: 21.2 },
+  { ocpdRating: 300, copperAWG: '4', copperMm2: 21.2, aluminumAWG: '2', aluminumMm2: 33.6 },
+  { ocpdRating: 400, copperAWG: '3', copperMm2: 26.7, aluminumAWG: '1', aluminumMm2: 42.4 },
+  { ocpdRating: 500, copperAWG: '2', copperMm2: 33.6, aluminumAWG: '1/0', aluminumMm2: 53.5 },
+  { ocpdRating: 600, copperAWG: '1', copperMm2: 42.4, aluminumAWG: '2/0', aluminumMm2: 67.4 },
+  { ocpdRating: 800, copperAWG: '1/0', copperMm2: 53.5, aluminumAWG: '3/0', aluminumMm2: 85.0 },
+  { ocpdRating: 1000, copperAWG: '2/0', copperMm2: 67.4, aluminumAWG: '4/0', aluminumMm2: 107 },
+  { ocpdRating: 1200, copperAWG: '3/0', copperMm2: 85.0, aluminumAWG: '250', aluminumMm2: 127 },
+  { ocpdRating: 1600, copperAWG: '4/0', copperMm2: 107, aluminumAWG: '350', aluminumMm2: 177 },
+  { ocpdRating: 2000, copperAWG: '250', copperMm2: 127, aluminumAWG: '400', aluminumMm2: 203 },
+  { ocpdRating: 2500, copperAWG: '350', copperMm2: 177, aluminumAWG: '600', aluminumMm2: 304 },
+  { ocpdRating: 3000, copperAWG: '400', copperMm2: 203, aluminumAWG: '600', aluminumMm2: 304 },
+  { ocpdRating: 4000, copperAWG: '500', copperMm2: 253, aluminumAWG: '750', aluminumMm2: 380 },
+  { ocpdRating: 5000, copperAWG: '700', copperMm2: 355, aluminumAWG: '1200', aluminumMm2: 608 },
+  { ocpdRating: 6000, copperAWG: '800', copperMm2: 405, aluminumAWG: '1200', aluminumMm2: 608 },
+];
+
+/**
+ * IEC 60364-5-54 - Protective Earth (PE) Conductor Sizing
+ *
+ * Based on phase conductor cross-sectional area.
+ * Simplified table method per IEC 60364-5-54.
+ */
+export interface IECEarthConductorEntry {
+  /** Phase conductor size range minimum (mm²) */
+  phaseSizeMin: number;
+  /** Phase conductor size range maximum (mm²) */
+  phaseSizeMax: number;
+  /** Minimum PE conductor size (mm²) - when same material as phase */
+  peMinMm2: number | 'Sph' | 'Sph/2';
+  /** Description of the rule */
+  rule: string;
+}
+
+export const IEC_EARTH_CONDUCTOR_TABLE: IECEarthConductorEntry[] = [
+  { phaseSizeMin: 0, phaseSizeMax: 16, peMinMm2: 'Sph', rule: 'PE = Phase conductor size' },
+  { phaseSizeMin: 16, phaseSizeMax: 35, peMinMm2: 16, rule: 'PE = 16 mm²' },
+  { phaseSizeMin: 35, phaseSizeMax: Infinity, peMinMm2: 'Sph/2', rule: 'PE = Phase size ÷ 2' },
+];
+
+/**
+ * Lookup equipment grounding conductor size per NEC Table 250.122
+ *
+ * @param ocpdRating - Overcurrent protective device rating in amps
+ * @param material - Conductor material
+ * @returns Minimum grounding conductor size
+ */
+export function lookupNECGroundingConductor(
+  ocpdRating: number,
+  material: 'copper' | 'aluminum'
+): { sizeAWG: string; sizeMm2: number; standardReference: string } {
+  // Find the entry with rating >= ocpdRating (go to next higher if exact match not found)
+  const entry = NEC_GROUNDING_CONDUCTOR_TABLE.find(e => e.ocpdRating >= ocpdRating);
+
+  if (!entry) {
+    // Use largest entry if OCPD exceeds table
+    const largest = NEC_GROUNDING_CONDUCTOR_TABLE[NEC_GROUNDING_CONDUCTOR_TABLE.length - 1];
+    return {
+      sizeAWG: material === 'copper' ? largest.copperAWG : largest.aluminumAWG,
+      sizeMm2: material === 'copper' ? largest.copperMm2 : largest.aluminumMm2,
+      standardReference: 'NEC 2020 Table 250.122',
+    };
+  }
+
+  return {
+    sizeAWG: material === 'copper' ? entry.copperAWG : entry.aluminumAWG,
+    sizeMm2: material === 'copper' ? entry.copperMm2 : entry.aluminumMm2,
+    standardReference: 'NEC 2020 Table 250.122',
+  };
+}
+
+/**
+ * Calculate IEC protective earth conductor size per IEC 60364-5-54
+ *
+ * @param phaseSizeMm2 - Phase conductor size in mm²
+ * @param isMechanicallyProtected - Whether PE is mechanically protected
+ * @returns Minimum PE conductor size and rule applied
+ */
+export function calculateIECEarthConductor(
+  phaseSizeMm2: number,
+  isMechanicallyProtected: boolean = true
+): { sizeMm2: number; rule: string; standardReference: string } {
+  // Apply IEC 60364-5-54 simplified method
+  let peMm2: number;
+  let rule: string;
+
+  if (phaseSizeMm2 <= 16) {
+    peMm2 = phaseSizeMm2;
+    rule = 'PE = Phase conductor size (Sph ≤ 16 mm²)';
+  } else if (phaseSizeMm2 <= 35) {
+    peMm2 = 16;
+    rule = 'PE = 16 mm² (16 < Sph ≤ 35 mm²)';
+  } else {
+    peMm2 = phaseSizeMm2 / 2;
+    rule = 'PE = Phase size ÷ 2 (Sph > 35 mm²)';
+  }
+
+  // Apply minimum requirements for separated PE conductors
+  const minSize = isMechanicallyProtected ? 2.5 : 4;
+  if (peMm2 < minSize) {
+    peMm2 = minSize;
+    rule += ` (minimum ${minSize} mm² for ${isMechanicallyProtected ? 'protected' : 'unprotected'} PE)`;
+  }
+
+  // Round to nearest standard size
+  const standardSizes = [1.5, 2.5, 4, 6, 10, 16, 25, 35, 50, 70, 95, 120, 150, 185, 240, 300];
+  const roundedSize = standardSizes.find(s => s >= peMm2) ?? peMm2;
+
+  return {
+    sizeMm2: roundedSize,
+    rule,
+    standardReference: 'IEC 60364-5-54',
+  };
+}
+
+/**
+ * Get earth/grounding conductor recommendation based on standard
+ *
+ * @param phaseSizeMm2 - Phase conductor size in mm²
+ * @param current - Circuit current in amps (for NEC OCPD estimation)
+ * @param material - Conductor material
+ * @param standard - Standard to use (IEC or NEC)
+ * @returns Earth conductor recommendation
+ */
+export function getEarthConductorRecommendation(
+  phaseSizeMm2: number,
+  current: number,
+  material: 'copper' | 'aluminum',
+  standard: 'IEC' | 'NEC'
+): {
+  sizeMm2: number;
+  sizeAWG: string | null;
+  formattedSize: string;
+  rule: string;
+  standardReference: string;
+} {
+  if (standard === 'NEC') {
+    // Estimate OCPD rating (typically 125% of current for continuous loads)
+    const ocpdRating = Math.ceil(current * 1.25);
+    const nec = lookupNECGroundingConductor(ocpdRating, material);
+
+    // Format size
+    const sizeNum = parseInt(nec.sizeAWG);
+    const formattedSize = !isNaN(sizeNum) && sizeNum >= 250
+      ? `${nec.sizeAWG} kcmil`
+      : `${nec.sizeAWG} AWG`;
+
+    return {
+      sizeMm2: nec.sizeMm2,
+      sizeAWG: nec.sizeAWG,
+      formattedSize,
+      rule: `Based on ${ocpdRating}A OCPD rating (125% of ${current}A)`,
+      standardReference: nec.standardReference,
+    };
+  } else {
+    // IEC method
+    const iec = calculateIECEarthConductor(phaseSizeMm2);
+
+    return {
+      sizeMm2: iec.sizeMm2,
+      sizeAWG: null,
+      formattedSize: `${iec.sizeMm2} mm²`,
+      rule: iec.rule,
+      standardReference: iec.standardReference,
+    };
+  }
+}
 
 /**
  * Standard cable sizes in AWG (NEC)

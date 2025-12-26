@@ -585,6 +585,84 @@ export function CableSizingTool() {
                 </div>
               </div>
 
+              {/* Earth/Grounding Conductor */}
+              {result.earthConductor && (
+                <div className="space-y-2 border-t pt-3">
+                  <h4 className="font-medium flex items-center gap-2">
+                    <Zap className="h-4 w-4 text-yellow-600" />
+                    Earth/Grounding Conductor
+                  </h4>
+                  <div className="rounded-lg p-3 bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800">
+                    <p className="text-lg font-semibold text-yellow-700 dark:text-yellow-300">
+                      {result.earthConductor.formattedSize}
+                    </p>
+                    <p className="text-xs text-yellow-600 dark:text-yellow-400 mt-1">
+                      {result.earthConductor.rule}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {result.earthConductor.standardReference}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Parallel Cable Run Options */}
+              {result.requiresParallelRuns && result.parallelRunOptions && result.parallelRunOptions.length > 0 && (
+                <div className="space-y-3">
+                  <h4 className="font-medium flex items-center gap-2">
+                    <Cable className="h-4 w-4" />
+                    Parallel Cable Run Options
+                  </h4>
+                  <p className="text-xs text-gray-500">
+                    Current exceeds single cable capacity. Multiple parallel cables per phase recommended.
+                  </p>
+                  <div className="space-y-2">
+                    {result.parallelRunOptions.map((option, index) => (
+                      <div
+                        key={index}
+                        className={`rounded-lg p-3 border ${
+                          option.isCompliant
+                            ? 'border-green-300 bg-green-50 dark:border-green-700 dark:bg-green-950'
+                            : 'border-gray-300 bg-gray-50 dark:border-gray-700 dark:bg-gray-900'
+                        }`}
+                      >
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="font-semibold">
+                              {option.cablesPerPhase}× {option.cableSize.formattedSize}
+                              <span className="text-gray-500 font-normal ml-1">per phase</span>
+                            </p>
+                            <div className="text-xs text-gray-600 dark:text-gray-400 mt-1 grid grid-cols-2 gap-x-4 gap-y-1">
+                              <span>Current/cable: {option.currentPerCable}A</span>
+                              <span>Total ampacity: {option.totalDeratedAmpacity}A</span>
+                              <span>Voltage drop: {option.voltageDrop.voltageDropPercent.toFixed(2)}%</span>
+                              <span>Utilization: {option.utilizationPercent.toFixed(1)}%</span>
+                            </div>
+                          </div>
+                          <div className="flex flex-col items-end gap-1">
+                            {option.isCompliant ? (
+                              <span className="text-xs bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300 px-2 py-0.5 rounded">
+                                Compliant
+                              </span>
+                            ) : (
+                              <span className="text-xs bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300 px-2 py-0.5 rounded">
+                                Non-compliant
+                              </span>
+                            )}
+                            <span className="text-xs text-gray-500">
+                              {'★'.repeat(option.costEfficiency)}{'☆'.repeat(5 - option.costEfficiency)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-gray-500 italic">
+                    ★ Cost efficiency rating considers cable count and utilization. Fewer larger cables are generally more economical.
+                  </p>
+                </div>
+              )}
+
               {/* Warnings */}
               {result.warnings.length > 0 && (
                 <Alert>

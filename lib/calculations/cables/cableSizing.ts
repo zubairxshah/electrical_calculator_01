@@ -14,7 +14,7 @@
 import { calculateVoltageDrop, type VoltageDropInput, type VoltageDrop } from './voltageDrop';
 import { lookupCableAmpacity, getAvailableSizes, type CableAmpacity } from './ampacity';
 import { calculateDeratingFactors, calculateDeratedAmpacity, type DeratingInput, type DeratingResult } from './deratingFactors';
-import type { CableTableEntry } from '@/lib/standards/cableTables';
+import { type CableTableEntry, getEarthConductorRecommendation } from '@/lib/standards/cableTables';
 
 /**
  * Cable sizing input parameters
@@ -42,6 +42,52 @@ export interface CableSizingInput {
   standard: 'IEC' | 'NEC';
   /** Maximum acceptable voltage drop percentage (default 3%) */
   maxVoltageDropPercent?: number;
+}
+
+/**
+ * Parallel cable run recommendation
+ */
+export interface ParallelCableRun {
+  /** Number of parallel cables per phase */
+  cablesPerPhase: number;
+  /** Cable size for each run */
+  cableSize: {
+    sizeMm2: string;
+    sizeAWG: string | null;
+    formattedSize: string;
+  };
+  /** Current per cable */
+  currentPerCable: number;
+  /** Total ampacity (all parallel cables) */
+  totalAmpacity: number;
+  /** Derated ampacity per cable */
+  deratedAmpacityPerCable: number;
+  /** Total derated ampacity */
+  totalDeratedAmpacity: number;
+  /** Voltage drop with parallel cables */
+  voltageDrop: VoltageDrop;
+  /** Utilization percentage */
+  utilizationPercent: number;
+  /** Is this option compliant */
+  isCompliant: boolean;
+  /** Cost efficiency rating (1-5, higher is more economical) */
+  costEfficiency: number;
+}
+
+/**
+ * Earth/Grounding conductor recommendation
+ */
+export interface EarthConductorRecommendation {
+  /** Size in mm² */
+  sizeMm2: number;
+  /** Size in AWG (NEC only) */
+  sizeAWG: string | null;
+  /** Formatted size for display */
+  formattedSize: string;
+  /** Rule/method applied */
+  rule: string;
+  /** Standard reference */
+  standardReference: string;
 }
 
 /**
@@ -76,6 +122,12 @@ export interface CableSizingResult {
   alternativeSizes: CableTableEntry[];
   /** Standard references used */
   standardReferences: string[];
+  /** Parallel cable run options (when single cable insufficient) */
+  parallelRunOptions?: ParallelCableRun[];
+  /** Whether parallel runs are recommended */
+  requiresParallelRuns: boolean;
+  /** Earth/Grounding conductor recommendation */
+  earthConductor: EarthConductorRecommendation;
 }
 
 /**
@@ -208,6 +260,14 @@ export function recommendCableSize(input: CableSizingInput): CableSizingResult {
   // Format cable size for display
   const formattedSize = formatCableSize(recommended.entry, standard);
 
+  // Calculate earth/grounding conductor size
+  const earthConductor = getEarthConductorRecommendation(
+    parseFloat(recommended.entry.sizeMetric),
+    current,
+    conductorMaterial,
+    standard
+  );
+
   return {
     recommendedSize: {
       sizeMm2: recommended.entry.sizeMetric,
@@ -233,11 +293,14 @@ export function recommendCableSize(input: CableSizingInput): CableSizingResult {
       recommended.ampacity.standardReference,
       deratingFactors.standardReference,
     ],
+    requiresParallelRuns: false,
+    earthConductor,
   };
 }
 
 /**
  * Create result for when no suitable cable is found
+ * Includes parallel cable run options
  */
 function createFailedResult(
   input: CableSizingInput,
@@ -273,38 +336,58 @@ function createFailedResult(
     deratingFactors.totalFactor
   );
 
+  // Calculate parallel cable run options
+  const parallelRunOptions = calculateParallelRunOptions(input, deratingFactors, availableSizes);
+
   const warnings = [
-    'No standard cable size meets all requirements.',
-    'Consider parallel conductors or alternative installation method.',
+    'No single cable size meets all requirements.',
+    parallelRunOptions.length > 0
+      ? 'Parallel cable runs are recommended - see options below.'
+      : 'Consider alternative installation method or reducing load.',
     ...deratingFactors.warnings,
   ];
 
   if (vdrop.voltageDropPercent > (input.maxVoltageDropPercent ?? 3)) {
     warnings.push(
-      `Voltage drop ${vdrop.voltageDropPercent.toFixed(1)}% exceeds ${input.maxVoltageDropPercent ?? 3}% limit even with largest cable.`
+      `Voltage drop ${vdrop.voltageDropPercent.toFixed(1)}% exceeds ${input.maxVoltageDropPercent ?? 3}% limit with single largest cable.`
     );
   }
 
   if (deratedAmpacity < input.current) {
     warnings.push(
-      `Derated ampacity ${deratedAmpacity}A is less than required ${input.current}A even with largest cable.`
+      `Single cable derated ampacity ${deratedAmpacity.toFixed(0)}A is less than required ${input.current}A.`
     );
   }
 
+  // Find best parallel option for recommendation
+  const bestParallel = parallelRunOptions.find(opt => opt.isCompliant) || parallelRunOptions[0];
+
   return {
-    recommendedSize: {
+    recommendedSize: bestParallel ? {
+      sizeMm2: bestParallel.cableSize.sizeMm2,
+      sizeAWG: bestParallel.cableSize.sizeAWG,
+      formattedSize: `${bestParallel.cablesPerPhase}× ${bestParallel.cableSize.formattedSize} per phase`,
+    } : {
       sizeMm2: largestCable.sizeMetric,
       sizeAWG: largestCable.sizeAWG,
       formattedSize: formatCableSize(largestCable, input.standard) + ' (INSUFFICIENT)',
     },
-    voltageDrop: vdrop,
-    ampacity: {
+    voltageDrop: bestParallel?.voltageDrop ?? vdrop,
+    ampacity: bestParallel ? {
+      baseAmpacity: bestParallel.totalAmpacity,
+      deratedAmpacity: bestParallel.totalDeratedAmpacity,
+      utilizationPercent: bestParallel.utilizationPercent,
+    } : {
       baseAmpacity: ampacity.ampacity,
       deratedAmpacity,
       utilizationPercent: (input.current / deratedAmpacity) * 100,
     },
     deratingFactors,
-    compliance: {
+    compliance: bestParallel ? {
+      isVoltageDropCompliant: bestParallel.voltageDrop.voltageDropPercent <= (input.maxVoltageDropPercent ?? 3),
+      isAmpacityCompliant: bestParallel.totalDeratedAmpacity >= input.current,
+      isFullyCompliant: bestParallel.isCompliant,
+    } : {
       isVoltageDropCompliant: false,
       isAmpacityCompliant: false,
       isFullyCompliant: false,
@@ -316,7 +399,149 @@ function createFailedResult(
       ampacity.standardReference,
       deratingFactors.standardReference,
     ],
+    parallelRunOptions,
+    requiresParallelRuns: true,
+    earthConductor: getEarthConductorRecommendation(
+      bestParallel ? parseFloat(bestParallel.cableSize.sizeMm2) : parseFloat(largestCable.sizeMetric),
+      input.current,
+      input.conductorMaterial,
+      input.standard
+    ),
   };
+}
+
+/**
+ * Calculate parallel cable run options when single cable is insufficient
+ *
+ * Parallel cables reduce effective resistance and share current:
+ * - Total ampacity = single cable ampacity × number of cables
+ * - Effective resistance = single cable resistance / number of cables
+ * - Voltage drop = (I / n) × L × R (where n = number of parallel cables)
+ */
+function calculateParallelRunOptions(
+  input: CableSizingInput,
+  deratingFactors: DeratingResult,
+  availableSizes: CableTableEntry[]
+): ParallelCableRun[] {
+  const {
+    current,
+    length,
+    conductorMaterial,
+    circuitType,
+    systemVoltage,
+    insulationRating = 75,
+    standard,
+    maxVoltageDropPercent = 3,
+  } = input;
+
+  const parallelOptions: ParallelCableRun[] = [];
+
+  // Consider common cable sizes for parallel runs (not too small)
+  // Typically 35mm², 50mm², 70mm², 95mm², 120mm², 150mm², 185mm², 240mm², 300mm², 400mm², 500mm² for IEC
+  // Or 2 AWG, 1/0, 2/0, 3/0, 4/0, 250, 300, 350, 400, 500, 750, 1000 kcmil for NEC
+  const parallelCandidates = availableSizes.filter(entry => {
+    const size = parseFloat(entry.sizeMetric);
+    // Select practical sizes for parallel runs (25mm² to 630mm² / 1000 kcmil)
+    return size >= 25 && size <= 630;
+  });
+
+  // Consider 2, 3, 4, 5, and 6 cables per phase
+  const runCounts = [2, 3, 4, 5, 6];
+
+  for (const entry of parallelCandidates) {
+    for (const numCables of runCounts) {
+      try {
+        // Get base ampacity for this cable
+        const ampacity = lookupCableAmpacity({
+          cableSizeMm2: standard === 'IEC' ? parseFloat(entry.sizeMetric) : undefined,
+          cableSizeAWG: standard === 'NEC' ? entry.sizeAWG ?? undefined : undefined,
+          conductorMaterial,
+          insulationRating,
+          standard,
+        });
+
+        // Calculate derated ampacity per cable
+        const deratedAmpacityPerCable = calculateDeratedAmpacity(
+          ampacity.ampacity,
+          deratingFactors.totalFactor
+        );
+
+        // Total derated ampacity with parallel cables
+        const totalDeratedAmpacity = deratedAmpacityPerCable * numCables;
+
+        // Skip if still insufficient ampacity
+        if (totalDeratedAmpacity < current) {
+          continue;
+        }
+
+        // Current per cable
+        const currentPerCable = current / numCables;
+
+        // Calculate voltage drop with reduced current per cable
+        // Parallel cables effectively reduce resistance
+        const vdropInput: VoltageDropInput = {
+          current: currentPerCable,
+          length,
+          cableSizeMm2: standard === 'IEC' ? parseFloat(entry.sizeMetric) : undefined,
+          cableSizeAWG: standard === 'NEC' ? entry.sizeAWG ?? undefined : undefined,
+          conductorMaterial,
+          circuitType,
+          systemVoltage,
+          standard,
+        };
+        const vdrop = calculateVoltageDrop(vdropInput);
+
+        // Check compliance
+        const isVdropCompliant = vdrop.voltageDropPercent <= maxVoltageDropPercent;
+        const isAmpacityCompliant = totalDeratedAmpacity >= current;
+        const isCompliant = isVdropCompliant && isAmpacityCompliant;
+
+        // Calculate utilization
+        const utilizationPercent = (current / totalDeratedAmpacity) * 100;
+
+        // Calculate cost efficiency (prefer fewer larger cables over many small ones)
+        // Also prefer options with 70-85% utilization
+        let costEfficiency = 5;
+        if (numCables > 4) costEfficiency -= 1;
+        if (numCables > 5) costEfficiency -= 1;
+        if (utilizationPercent < 50) costEfficiency -= 1;
+        if (utilizationPercent > 90) costEfficiency -= 1;
+        costEfficiency = Math.max(1, Math.min(5, costEfficiency));
+
+        // Only add if compliant or close to compliant
+        if (isCompliant || (utilizationPercent < 120 && vdrop.voltageDropPercent < 5)) {
+          parallelOptions.push({
+            cablesPerPhase: numCables,
+            cableSize: {
+              sizeMm2: entry.sizeMetric,
+              sizeAWG: entry.sizeAWG,
+              formattedSize: formatCableSize(entry, standard),
+            },
+            currentPerCable: Math.round(currentPerCable * 10) / 10,
+            totalAmpacity: ampacity.ampacity * numCables,
+            deratedAmpacityPerCable: Math.round(deratedAmpacityPerCable),
+            totalDeratedAmpacity: Math.round(totalDeratedAmpacity),
+            voltageDrop: vdrop,
+            utilizationPercent: Math.round(utilizationPercent * 10) / 10,
+            isCompliant,
+            costEfficiency,
+          });
+        }
+      } catch {
+        // Skip invalid entries
+      }
+    }
+  }
+
+  // Sort by: compliant first, then by cost efficiency, then by fewer cables
+  parallelOptions.sort((a, b) => {
+    if (a.isCompliant !== b.isCompliant) return a.isCompliant ? -1 : 1;
+    if (a.costEfficiency !== b.costEfficiency) return b.costEfficiency - a.costEfficiency;
+    return a.cablesPerPhase - b.cablesPerPhase;
+  });
+
+  // Return top 6 options
+  return parallelOptions.slice(0, 6);
 }
 
 /**
