@@ -430,9 +430,9 @@ export function CableSizingTool() {
                   <span className="text-gray-500">Status:</span>
                   <span>
                     {isDangerous ? (
-                      <span className="text-red-600 font-bold">DANGEROUS (>10%)</span>
+                      <span className="text-red-600 font-bold">DANGEROUS (&gt;10%)</span>
                     ) : isViolation ? (
-                      <span className="text-orange-600 font-bold">VIOLATION (>3%)</span>
+                      <span className="text-orange-600 font-bold">VIOLATION (&gt;3%)</span>
                     ) : (
                       <span className="text-green-600 font-bold">OK (&le;3%)</span>
                     )}
