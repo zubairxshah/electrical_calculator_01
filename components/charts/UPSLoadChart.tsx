@@ -280,7 +280,7 @@ export function UPSStackedLoadChart({
             label={{ value: 'kVA', angle: -90, position: 'insideLeft' }}
           />
           <Tooltip
-            formatter={(value: number) => [`${value.toFixed(2)} kVA`, '']}
+            formatter={(value) => [`${(value as number).toFixed(2)} kVA`, '']}
           />
           <Bar dataKey="connectedLoad" name="Connected" fill="#3b82f6" radius={[4, 4, 0, 0]} />
           <Bar dataKey="effectiveLoad" name="Effective" fill="#10b981" radius={[4, 4, 0, 0]} />
