@@ -520,6 +520,7 @@ export function CableSizingTool() {
                   },
                   results: result as unknown as Record<string, unknown>,
                   warnings: result.warnings.map((w) => ({
+                    field: 'result',
                     message: w,
                     severity: 'warning' as const,
                   })),
