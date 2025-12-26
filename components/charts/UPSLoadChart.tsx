@@ -147,8 +147,8 @@ export function UPSLoadChart({
               cx="50%"
               cy="50%"
               outerRadius={100}
-              label={({ name, percentage }) =>
-                percentage > 5 ? `${name} (${percentage.toFixed(0)}%)` : ''
+              label={({ name, payload }: { name: string; payload: ChartDataItem }) =>
+                payload.percentage > 5 ? `${name} (${payload.percentage.toFixed(0)}%)` : ''
               }
               labelLine={false}
             >
