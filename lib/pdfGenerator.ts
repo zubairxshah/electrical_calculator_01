@@ -233,10 +233,97 @@ function formatInputsForPDF(
 ): Record<string, string> {
   const formatted: Record<string, string> = {}
 
+  // Handle UPS-specific formatting
+  if (type === 'ups') {
+    return formatUPSInputsForPDF(inputs, standards)
+  }
+
+  // Handle battery-specific formatting
+  if (type === 'battery') {
+    return formatBatteryInputsForPDF(inputs, standards)
+  }
+
+  // Generic formatting for other types
   for (const [key, value] of Object.entries(inputs)) {
     const label = formatLabel(key)
     const formattedValue = formatValue(value, key, standards)
     formatted[label] = formattedValue
+  }
+
+  return formatted
+}
+
+/**
+ * Format UPS inputs for PDF display
+ */
+function formatUPSInputsForPDF(
+  inputs: Record<string, unknown>,
+  standards: StandardsFramework
+): Record<string, string> {
+  const formatted: Record<string, string> = {}
+
+  // Format loads array
+  if (inputs.loads && Array.isArray(inputs.loads)) {
+    const loads = inputs.loads as Array<{
+      name: string
+      powerVA?: number | null
+      powerWatts?: number | null
+      powerFactor?: number
+      quantity: number
+    }>
+
+    formatted['Number of Load Types'] = `${loads.length}`
+
+    let totalVA = 0
+    let totalItems = 0
+
+    loads.forEach((load, index) => {
+      const va = load.powerVA ?? (load.powerWatts ?? 0) / (load.powerFactor ?? 0.8)
+      const itemTotal = va * load.quantity
+      totalVA += itemTotal
+      totalItems += load.quantity
+
+      formatted[`Load ${index + 1}`] = `${load.name}: ${load.quantity}x @ ${load.powerVA ? `${load.powerVA} VA` : `${load.powerWatts} W (PF ${load.powerFactor})`} = ${itemTotal.toLocaleString()} VA`
+    })
+
+    formatted['Total Connected Load'] = `${totalVA.toLocaleString()} VA`
+    formatted['Total Equipment Count'] = `${totalItems}`
+  }
+
+  // Format growth margin
+  if (inputs.growthMargin !== undefined) {
+    formatted['Growth Margin'] = `${((inputs.growthMargin as number) * 100).toFixed(0)}%`
+  }
+
+  return formatted
+}
+
+/**
+ * Format Battery inputs for PDF display
+ */
+function formatBatteryInputsForPDF(
+  inputs: Record<string, unknown>,
+  standards: StandardsFramework
+): Record<string, string> {
+  const formatted: Record<string, string> = {}
+
+  if (inputs.voltage !== undefined) {
+    formatted['System Voltage'] = `${inputs.voltage} V DC`
+  }
+  if (inputs.ampHours !== undefined) {
+    formatted['Battery Capacity'] = `${inputs.ampHours} Ah`
+  }
+  if (inputs.loadWatts !== undefined) {
+    formatted['Load Power'] = `${inputs.loadWatts} W`
+  }
+  if (inputs.efficiency !== undefined) {
+    formatted['System Efficiency'] = `${((inputs.efficiency as number) * 100).toFixed(0)}%`
+  }
+  if (inputs.agingFactor !== undefined) {
+    formatted['Aging Factor'] = `${((inputs.agingFactor as number) * 100).toFixed(0)}%`
+  }
+  if (inputs.chemistry !== undefined) {
+    formatted['Battery Chemistry'] = `${inputs.chemistry}`
   }
 
   return formatted
@@ -249,8 +336,112 @@ function formatResultsForPDF(
   calculation: CalculationSession,
   standards: StandardsFramework
 ): Record<string, string> {
-  // Type-specific formatting handled in calculation modules
-  return {}
+  const results = calculation.results as Record<string, unknown>
+
+  // Handle UPS-specific results
+  if (calculation.calculationType === 'ups') {
+    return formatUPSResultsForPDF(results, standards)
+  }
+
+  // Handle battery-specific results
+  if (calculation.calculationType === 'battery') {
+    return formatBatteryResultsForPDF(results, standards)
+  }
+
+  // Generic formatting for other types
+  const formatted: Record<string, string> = {}
+  for (const [key, value] of Object.entries(results)) {
+    if (typeof value === 'number') {
+      formatted[formatLabel(key)] = value.toLocaleString()
+    } else if (typeof value === 'string') {
+      formatted[formatLabel(key)] = value
+    }
+  }
+  return formatted
+}
+
+/**
+ * Format UPS results for PDF display
+ */
+function formatUPSResultsForPDF(
+  results: Record<string, unknown>,
+  standards: StandardsFramework
+): Record<string, string> {
+  const formatted: Record<string, string> = {}
+
+  if (results.totalLoadVA !== undefined) {
+    formatted['Total Connected Load'] = `${(results.totalLoadVA as number).toLocaleString()} VA`
+  }
+  if (results.numberOfLoads !== undefined) {
+    formatted['Number of Load Items'] = `${results.numberOfLoads}`
+  }
+  if (results.diversityFactor !== undefined) {
+    formatted['IEEE 1100 Diversity Factor'] = `${results.diversityFactor}`
+  }
+  if (results.effectiveLoadVA !== undefined) {
+    formatted['Effective Load (after diversity)'] = `${(results.effectiveLoadVA as number).toLocaleString()} VA`
+  }
+  if (results.growthMargin !== undefined) {
+    formatted['Growth Margin Applied'] = `${((results.growthMargin as number) * 100).toFixed(0)}%`
+  }
+  if (results.loadWithGrowthVA !== undefined) {
+    formatted['Required Capacity (with growth)'] = `${(results.loadWithGrowthVA as number).toLocaleString()} VA`
+  }
+  if (results.loadWithGrowthKVA !== undefined) {
+    formatted['Required Capacity'] = `${(results.loadWithGrowthKVA as number).toFixed(2)} kVA`
+  }
+  if (results.recommendedUPSKVA !== undefined) {
+    if (results.recommendedUPSKVA === null) {
+      formatted['Recommended UPS Size'] = 'Exceeds 200 kVA - consider parallel configuration'
+    } else {
+      formatted['Recommended UPS Size'] = `${results.recommendedUPSKVA} kVA`
+    }
+  }
+  if (results.diversityExplanation !== undefined) {
+    formatted['Diversity Factor Explanation'] = results.diversityExplanation as string
+  }
+  if (results.standard !== undefined) {
+    formatted['Standards Reference'] = results.standard as string
+  }
+
+  return formatted
+}
+
+/**
+ * Format Battery results for PDF display
+ */
+function formatBatteryResultsForPDF(
+  results: Record<string, unknown>,
+  standards: StandardsFramework
+): Record<string, string> {
+  const formatted: Record<string, string> = {}
+
+  if (results.backupTimeHours !== undefined) {
+    const hours = typeof results.backupTimeHours === 'object'
+      ? Number(results.backupTimeHours)
+      : results.backupTimeHours as number
+    formatted['Backup Time'] = `${hours.toFixed(2)} hours`
+
+    // Also show in hours:minutes format
+    const totalMinutes = hours * 60
+    const hrs = Math.floor(totalMinutes / 60)
+    const mins = Math.round(totalMinutes % 60)
+    formatted['Backup Time (formatted)'] = `${hrs}h ${mins}m`
+  }
+  if (results.effectiveCapacityAh !== undefined) {
+    const capacity = typeof results.effectiveCapacityAh === 'object'
+      ? Number(results.effectiveCapacityAh)
+      : results.effectiveCapacityAh as number
+    formatted['Effective Capacity'] = `${capacity.toFixed(2)} Ah`
+  }
+  if (results.dischargeRate !== undefined) {
+    const rate = typeof results.dischargeRate === 'object'
+      ? Number(results.dischargeRate)
+      : results.dischargeRate as number
+    formatted['Discharge Rate (C-rate)'] = `C/${(1/rate).toFixed(1)}`
+  }
+
+  return formatted
 }
 
 /**
@@ -267,9 +458,60 @@ function formatLabel(key: string): string {
  * Format value with appropriate units
  */
 function formatValue(value: unknown, key: string, standards: StandardsFramework): string {
-  if (typeof value === 'number') {
-    return value.toFixed(2)
+  if (value === null || value === undefined) {
+    return 'N/A'
   }
+
+  if (typeof value === 'number') {
+    // Add appropriate units based on key
+    const lowerKey = key.toLowerCase()
+    if (lowerKey.includes('voltage') || lowerKey.includes('volt')) {
+      return `${value.toFixed(2)} V`
+    }
+    if (lowerKey.includes('current') || lowerKey.includes('amp')) {
+      return `${value.toFixed(2)} A`
+    }
+    if (lowerKey.includes('watt') || lowerKey.includes('power')) {
+      return `${value.toLocaleString()} W`
+    }
+    if (lowerKey.includes('percent') || lowerKey.includes('efficiency') || lowerKey.includes('factor')) {
+      return `${(value * 100).toFixed(1)}%`
+    }
+    if (lowerKey.includes('hour') || lowerKey.includes('time')) {
+      return `${value.toFixed(2)} hrs`
+    }
+    return value.toLocaleString()
+  }
+
+  if (typeof value === 'boolean') {
+    return value ? 'Yes' : 'No'
+  }
+
+  if (Array.isArray(value)) {
+    if (value.length === 0) {
+      return 'None'
+    }
+    // For arrays of primitives, join them
+    if (typeof value[0] !== 'object') {
+      return value.join(', ')
+    }
+    // For arrays of objects, show count
+    return `${value.length} item(s)`
+  }
+
+  if (typeof value === 'object') {
+    // For objects, try to extract meaningful info
+    const obj = value as Record<string, unknown>
+    if (obj.name) {
+      return String(obj.name)
+    }
+    if (obj.value !== undefined) {
+      return String(obj.value)
+    }
+    // Fallback: show key count
+    return `{${Object.keys(obj).length} properties}`
+  }
+
   return String(value)
 }
 
@@ -311,14 +553,19 @@ function getFormulasForType(type: string): string[] {
       'Energy Stored (Wh) = Voltage × Capacity × Aging Factor',
       'Backup Time (hours) = (Energy Stored × Efficiency) / Load',
       'Discharge Rate (C-rate) = Load / (Voltage × Capacity)',
+      'Reference: IEEE 485-2020',
     ],
     ups: [
-      'UPS VA Rating = Load Watts / Power Factor',
-      'Battery Ah = (Load Watts × Backup Time) / (Battery Voltage × Efficiency)',
+      'Total Load (VA) = Σ(Equipment VA × Quantity)',
+      'Diversity Factor: N≤3 → 1.0, 3<N≤10 → 0.9+0.1/N, N>10 → 0.85',
+      'Effective Load = Total Load × Diversity Factor',
+      'Required Capacity = Effective Load × (1 + Growth Margin)',
+      'Reference: IEEE 1100-2020 (Emerald Book), IEC 62040-3:2021',
     ],
     cable: [
       'Voltage Drop (V) = 2 × Length × Current × Resistance',
       'Voltage Drop (%) = (Voltage Drop / System Voltage) × 100',
+      'Reference: NEC Table 310.15(B)(16), IEC 60364-5-52',
     ],
   }
   return formulas[type] || []
