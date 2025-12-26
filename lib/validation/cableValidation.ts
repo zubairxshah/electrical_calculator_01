@@ -26,7 +26,7 @@ export const SYSTEM_VOLTAGES = {
 /**
  * All supported voltages (flat array)
  */
-export const ALL_VOLTAGES = Object.values(SYSTEM_VOLTAGES).flat();
+export const ALL_VOLTAGES: readonly number[] = Object.values(SYSTEM_VOLTAGES).flat();
 
 /**
  * Conductor materials
