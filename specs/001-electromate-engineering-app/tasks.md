@@ -255,11 +255,11 @@
 
 ### Implementation for User Story 6
 
-- [ ] T115 [P] [US6] Create lib/standards/batteryTypes.ts with reference data for VRLA, Lithium-Ion, NiCd (lifespan years, temperature range °C, recommended DoD %, cycle life, maintenance requirements, relative cost index)
-- [ ] T116 [US6] Create app/battery-comparison/page.tsx Server Component
-- [ ] T117 [US6] Create app/battery-comparison/BatteryComparisonTable.tsx Client Component with comparison table, application context selector, filtering by temperature/DoD requirements, tooltips explaining DoD/cycle life/temperature coefficient
-- [ ] T118 [US6] Add PDF export for battery comparison with selected application context and highlighted recommendations
-- [ ] T119 [US6] Add navigation link to battery comparison in components/layout/Sidebar.tsx
+- [X] T115 [P] [US6] Create lib/standards/batteryTypes.ts with reference data for VRLA, Lithium-Ion, NiCd (lifespan years, temperature range °C, recommended DoD %, cycle life, maintenance requirements, relative cost index)
+- [X] T116 [US6] Create app/battery-comparison/page.tsx Server Component
+- [X] T117 [US6] Create app/battery-comparison/BatteryComparisonTable.tsx Client Component with comparison table, application context selector, filtering by temperature/DoD requirements, tooltips explaining DoD/cycle life/temperature coefficient
+- [X] T118 [US6] Add PDF export for battery comparison with selected application context and highlighted recommendations
+- [X] T119 [US6] Add navigation link to battery comparison in components/layout/Sidebar.tsx
 
 ---
 

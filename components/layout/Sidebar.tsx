@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import { Battery, Zap, Cable, Sun, Settings, X } from 'lucide-react'
+import { Battery, Zap, Cable, Sun, Settings, Scale, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 /**
@@ -49,6 +49,13 @@ const navigationItems = [
     icon: Settings,
     description: 'Controller sizing & selection',
     priority: 'P2',
+  },
+  {
+    name: 'Battery Comparison',
+    href: '/battery-comparison',
+    icon: Scale,
+    description: 'Compare battery technologies',
+    priority: 'P3',
   },
 ]
 
