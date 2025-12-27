@@ -216,17 +216,17 @@
 
 ### Implementation for User Story 4
 
-- [ ] T098 [P] [US4] Write solar array sizing test in __tests__/unit/calculations/solar.test.ts validating formula: Panels = Daily_kWh / (Panel_kW × PSH × PR)
-- [ ] T099 [P] [US4] Implement calculateSolarArraySize in lib/calculations/solar/arraySize.ts using Math.js BigNumber
-- [ ] T100 [P] [US4] Implement calculatePerformanceRatio in lib/calculations/solar/performanceRatio.ts with PR range validation (warn if <0.6 or >0.9, typical 0.7-0.85)
-- [ ] T101 [US4] Create solarInputsSchema in lib/validation/solarValidation.ts with Zod validation (dailyEnergyKWh 0.1-100000, peakSunHours 1-12, panelWattage 50-1000, performanceRatio 0.5-1.0)
-- [ ] T102 [US4] Create solarStore.ts in stores/ with Zustand persist in localStorage key "electromate-solar"
-- [ ] T103 [US4] Create app/solar/page.tsx Server Component
-- [ ] T104 [US4] Create app/solar/SolarArrayCalculator.tsx Client Component with PSH input, panel specs, PR slider, results showing panel count, array power, daily/annual generation, area requirements
-- [ ] T105 [US4] Create components/charts/SolarGenerationChart.tsx with Recharts AreaChart showing estimated monthly generation
-- [ ] T106 [US4] Create app/api/calculations/solar/route.ts with GET/POST endpoints per contracts/solar.openapi.yaml
-- [ ] T107 [US4] Integrate PDF generation in SolarArrayCalculator with standard references (NREL)
-- [ ] T108 [US4] Add navigation link to solar calculator in components/layout/Sidebar.tsx
+- [X] T098 [P] [US4] Write solar array sizing test in __tests__/unit/calculations/solar.test.ts validating formula: Panels = Daily_kWh / (Panel_kW × PSH × PR)
+- [X] T099 [P] [US4] Implement calculateSolarArraySize in lib/calculations/solar/arraySize.ts using Math.js BigNumber
+- [X] T100 [P] [US4] Implement calculatePerformanceRatio in lib/calculations/solar/performanceRatio.ts with PR range validation (warn if <0.6 or >0.9, typical 0.7-0.85)
+- [X] T101 [US4] Create solarInputsSchema in lib/validation/solarValidation.ts with Zod validation (dailyEnergyKWh 0.1-100000, peakSunHours 1-12, panelWattage 50-1000, performanceRatio 0.5-1.0)
+- [X] T102 [US4] Create solarStore.ts in stores/ with Zustand persist in localStorage key "electromate-solar"
+- [X] T103 [US4] Create app/solar/page.tsx Server Component
+- [X] T104 [US4] Create app/solar/SolarArrayCalculator.tsx Client Component with PSH input, panel specs, PR slider, results showing panel count, array power, daily/annual generation, area requirements
+- [X] T105 [US4] Create components/charts/SolarGenerationChart.tsx with Recharts AreaChart showing estimated monthly generation
+- [X] T106 [US4] Create app/api/calculations/solar/route.ts with GET/POST endpoints per contracts/solar.openapi.yaml
+- [X] T107 [US4] Integrate PDF generation in SolarArrayCalculator with standard references (NREL)
+- [X] T108 [US4] Add navigation link to solar calculator in components/layout/Sidebar.tsx
 
 ---
 
@@ -238,12 +238,12 @@
 
 ### Implementation for User Story 5
 
-- [ ] T109 [P] [US5] Implement recommendChargeController in lib/calculations/solar/chargeController.ts with V_oc safety margin (controller rating ≥ 125% array V_oc per FR-013), I_sc safety margin (20-25%), MPPT vs PWM recommendation logic (MPPT if voltage mismatch >20%)
-- [ ] T110 [P] [US5] Create charge controller validation with Zod schema checking V_oc and I_sc ranges
-- [ ] T111 [US5] Create app/charge-controller/page.tsx Server Component
-- [ ] T112 [US5] Create app/charge-controller/ChargeControllerTool.tsx Client Component with array V_oc/I_sc inputs, battery voltage input, controller recommendations table with MPPT/PWM comparison
-- [ ] T113 [US5] Integrate PDF generation in ChargeControllerTool with safety margin calculations, MPPT vs PWM efficiency comparison
-- [ ] T114 [US5] Add navigation link to charge controller tool in components/layout/Sidebar.tsx
+- [X] T109 [P] [US5] Implement recommendChargeController in lib/calculations/solar/chargeController.ts with V_oc safety margin (controller rating ≥ 125% array V_oc per FR-013), I_sc safety margin (20-25%), MPPT vs PWM recommendation logic (MPPT if voltage mismatch >20%)
+- [X] T110 [P] [US5] Create charge controller validation with Zod schema checking V_oc and I_sc ranges
+- [X] T111 [US5] Create app/charge-controller/page.tsx Server Component
+- [X] T112 [US5] Create app/charge-controller/ChargeControllerTool.tsx Client Component with array V_oc/I_sc inputs, battery voltage input, controller recommendations table with MPPT/PWM comparison
+- [X] T113 [US5] Integrate PDF generation in ChargeControllerTool with safety margin calculations, MPPT vs PWM efficiency comparison
+- [X] T114 [US5] Add navigation link to charge controller tool in components/layout/Sidebar.tsx
 
 ---
 

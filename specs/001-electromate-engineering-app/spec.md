@@ -59,9 +59,11 @@ An engineer designing an electrical distribution system needs to calculate volta
 
 **Acceptance Scenarios**:
 
-1. **Given** circuit parameters (system voltage from dropdown, current, length, conductor type, installation method, ambient temperature), **When** user selects a cable size from standard tables (1.5mm² to 500mm²), **Then** the system calculates voltage drop using V_drop = I × L × (mV/A/m) / 1000 and displays result with percentage relative to system voltage
+1. **Given** circuit parameters (system voltage from dropdown or custom input, current, length, conductor type, installation method, ambient temperature), **When** user selects a cable size from standard tables (1.5mm² to 630mm²), **Then** the system calculates voltage drop using V_drop = I × L × (mV/A/m) / 1000 and displays result with percentage relative to system voltage
 2. **Given** calculated voltage drop, **When** result exceeds 3% (conservative limit applied to all circuits), **Then** the system highlights the result in red with warning message and suggests larger cable sizes that meet the 3% threshold
 3. **Given** installation method and ambient temperature, **When** calculating, **Then** the system applies appropriate derating factors per NEC Table 310.15(B)(16) or IEC 60364-5-52 and warns if current exceeds cable ampacity
+4. **Given** circuit current exceeds single cable ampacity, **When** user calculates, **Then** the system recommends parallel cable run options (2-6 cables per phase) with cost efficiency ratings and compliance status for each option
+5. **Given** a cable size recommendation, **When** results are displayed, **Then** the system shows recommended earth/grounding conductor size per NEC Table 250.122 (for NEC) or IEC 60364-5-54 (for IEC) with the sizing rule applied
 
 ---
 
@@ -136,8 +138,10 @@ An engineer selecting batteries for a backup power system needs to compare VRLA,
 - **FR-004**: System MUST flag dangerous or physically impossible values (e.g., discharge rates >1C for VRLA, voltage drops >10%, efficiency >100%)
 - **FR-005**: System MUST generate downloadable PDF reports for all calculation tools including inputs, formulas, results, applicable standards, and calculation timestamp
 - **FR-006**: System MUST reference appropriate standards in calculations: IEC 60364 (installations), IEEE 485 (batteries), BS 7671 (cables), NEC (North America)
-- **FR-007**: System MUST include cable sizing lookup tables with resistance values (mV/A/m) for copper and aluminum conductors from 1.5mm² to 500mm² (or AWG 14 to 600 kcmil for North America)
-- **FR-007a**: System MUST support comprehensive voltage range including: Low Voltage AC (120V, 208V, 240V, 277V, 480V, 600V), Medium Voltage distribution (2.4kV, 4.16kV, 13.8kV), and DC systems (12V, 24V, 48V telecom/data center, 125V/250V industrial DC, solar array voltages up to 1500V DC). System MUST provide voltage selection dropdown organized by category (LV AC, MV, DC Systems)
+- **FR-007**: System MUST include cable sizing lookup tables with resistance values (mV/A/m) for copper and aluminum conductors from 1.5mm² to 630mm² (or AWG 14 to 1000 kcmil for North America) to support industrial and generator applications
+- **FR-007a**: System MUST support comprehensive voltage range including: Low Voltage AC (120V, 208V, 240V, 277V, 480V, 600V), Medium Voltage distribution (2.4kV, 4.16kV, 13.8kV), and DC systems (12V, 24V, 48V telecom/data center, 125V/250V industrial DC, solar array voltages up to 1500V DC). System MUST provide voltage selection dropdown organized by category (LV AC, MV, DC Systems). System MUST also allow custom voltage input (1V to 50,000V) with AC/DC type selection for non-standard applications
+- **FR-007b**: System MUST calculate and recommend parallel cable runs when single cable capacity is insufficient for the circuit current. System MUST display options for 2-6 parallel cables per phase with cable sizes from 25mm² to 630mm² (or equivalent AWG/kcmil). Each parallel option MUST show: cables per phase, current per cable, total ampacity, voltage drop, utilization percentage, compliance status, and cost efficiency rating (1-5 stars)
+- **FR-007c**: System MUST calculate and display recommended earth/grounding conductor size based on: (1) NEC Table 250.122 for OCPD-based sizing when using NEC standard, (2) IEC 60364-5-54 simplified method based on phase conductor size when using IEC standard. System MUST display the sizing rule applied and standard reference
 - **FR-008**: System MUST apply cable derating factors based on installation method (conduit, cable tray, direct burial, free air) and ambient temperature
 - **FR-009**: System MUST highlight voltage drop violations in red when exceeding 3% per NEC 210.19(A) and IEC 60364-5-52 recommendations. System applies conservative 3% limit universally to ensure code compliance for all circuit types (lighting and power). Display informational note: "Using 3% limit (suitable for all circuits per NEC/IEC)"
 - **FR-010**: System MUST calculate UPS sizing with automatic 25% future growth margin applied to total load
