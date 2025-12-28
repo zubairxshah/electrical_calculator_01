@@ -12,7 +12,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { calculationSessions } from '@/lib/schema';
+import { calculationSessions, type CalculationSession } from '@/lib/schema';
 import { eq, desc, and, isNull } from 'drizzle-orm';
 import { z } from 'zod';
 
@@ -76,7 +76,7 @@ export async function GET(request: NextRequest) {
       .limit(limit);
 
     return NextResponse.json({
-      calculations: calculations.map((calc) => ({
+      calculations: calculations.map((calc: typeof calculationSessions.$inferSelect) => ({
         id: calc.id,
         userId: calc.userId,
         inputs: calc.inputs,

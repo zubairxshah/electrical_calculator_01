@@ -13,19 +13,35 @@ import { drizzle } from 'drizzle-orm/neon-http'
 import { neon } from '@neondatabase/serverless'
 import * as schema from './schema'
 
-/**
- * Neon HTTP client
- *
- * Uses HTTP API for serverless edge functions (faster cold starts than TCP)
- */
-const sql = neon(process.env.NEON_DATABASE_URL!)
+// Lazy initialization - only create connection if URL is available
+let sqlInstance: ReturnType<typeof neon> | null = null
+let dbInstance: ReturnType<typeof drizzle> | null = null
+
+function getConnection() {
+  if (!process.env.NEON_DATABASE_URL) {
+    return null
+  }
+  if (!sqlInstance) {
+    sqlInstance = neon(process.env.NEON_DATABASE_URL)
+  }
+  if (!dbInstance) {
+    dbInstance = drizzle(sqlInstance, { schema })
+  }
+  return dbInstance
+}
 
 /**
- * Drizzle ORM instance
- *
- * Provides type-safe query builder with full schema access
+ * Drizzle ORM instance (lazy)
  */
-export const db = drizzle(sql, { schema })
+export const db = new Proxy({} as any, {
+  get(target, prop) {
+    const instance = getConnection()
+    if (!instance) {
+      throw new Error('Database not configured. Set NEON_DATABASE_URL environment variable.')
+    }
+    return (instance as any)[prop]
+  }
+})
 
 /**
  * Connection health check
@@ -35,7 +51,11 @@ export const db = drizzle(sql, { schema })
  */
 export async function checkDatabaseConnection(): Promise<boolean> {
   try {
-    await sql`SELECT 1`
+    const instance = getConnection()
+    if (!instance || !sqlInstance) {
+      return false
+    }
+    await sqlInstance`SELECT 1`
     return true
   } catch (error) {
     console.error('Database connection failed:', error)
