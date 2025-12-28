@@ -133,7 +133,7 @@ export function calculateLoadCurrent(input: LoadCurrentInput): LoadCurrentResult
     formula = 'I = P / (V × PF)';
   } else {
     // Three-phase formula: I = P / (√3 × V × PF)
-    const sqrt3 = math.bignumber(math.sqrt(3));  // 1.732050807568877...
+    const sqrt3 = math.bignumber('1.7320508075688772');  // √3 constant
     const denominator = math.multiply(
       math.multiply(sqrt3, voltageBN),
       powerFactorBN
@@ -291,7 +291,7 @@ export function convertPhaseType(
   }
 
   const currentBN = math.bignumber(current);
-  const sqrt3 = math.bignumber(math.sqrt(3));
+  const sqrt3 = math.bignumber('1.7320508075688772');  // √3 constant
 
   if (fromPhase === 'single' && toPhase === 'three') {
     // Single to three: divide by √3

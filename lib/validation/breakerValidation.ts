@@ -18,13 +18,11 @@ import { z } from 'zod';
  * Common voltages: NEC (120, 208, 240, 277, 480), IEC (230, 400, 690)
  */
 export const voltageSchema = z
-  .number({
-    required_error: 'Voltage is required',
-    invalid_type_error: 'Voltage must be a number',
-  })
+  .number()
   .positive('Voltage must be positive')
   .min(100, 'Voltage must be at least 100V')
-  .max(1000, 'Voltage must not exceed 1000V');
+  .max(1000, 'Voltage must not exceed 1000V')
+  .describe('Voltage (100-1000V)');
 
 /**
  * Load Value Validation Schema
@@ -32,12 +30,10 @@ export const voltageSchema = z
  * Valid range: >0 to 10,000 (kW or A depending on mode)
  */
 export const loadValueSchema = z
-  .number({
-    required_error: 'Load value is required',
-    invalid_type_error: 'Load must be a number',
-  })
+  .number()
   .positive('Load must be greater than zero')
-  .max(10000, 'Load must not exceed 10,000 (kW or A)');
+  .max(10000, 'Load must not exceed 10,000 (kW or A)')
+  .describe('Load value');
 
 /**
  * Power Factor Validation Schema
@@ -46,13 +42,11 @@ export const loadValueSchema = z
  * Typical values: 0.8-0.95 (industrial), 0.9-1.0 (residential)
  */
 export const powerFactorSchema = z
-  .number({
-    required_error: 'Power factor is required',
-    invalid_type_error: 'Power factor must be a number',
-  })
+  .number()
   .min(0.5, 'Power factor must be at least 0.5')
   .max(1.0, 'Power factor must not exceed 1.0')
-  .default(0.8);
+  .default(0.8)
+  .describe('Power factor');
 
 /**
  * Temperature Validation Schema
@@ -61,12 +55,11 @@ export const powerFactorSchema = z
  * Typical range: 20°C to 40°C (ambient)
  */
 export const temperatureSchema = z
-  .number({
-    invalid_type_error: 'Temperature must be a number',
-  })
+  .number()
   .min(-40, 'Temperature must be at least -40°C')
   .max(70, 'Temperature must not exceed 70°C')
-  .optional();
+  .optional()
+  .describe('Ambient temperature');
 
 /**
  * Grouped Cables Validation Schema
@@ -75,13 +68,12 @@ export const temperatureSchema = z
  * Note: >20 cables requires special thermal analysis
  */
 export const groupedCablesSchema = z
-  .number({
-    invalid_type_error: 'Number of cables must be a number',
-  })
+  .number()
   .int('Number of cables must be an integer')
   .min(1, 'Must have at least 1 cable')
   .max(100, 'Grouping assumption: limit to 100 cables')
-  .optional();
+  .optional()
+  .describe('Number of grouped cables');
 
 /**
  * Circuit Distance Validation Schema
@@ -89,12 +81,11 @@ export const groupedCablesSchema = z
  * Valid range: >0 (meters or feet)
  */
 export const circuitDistanceSchema = z
-  .number({
-    invalid_type_error: 'Distance must be a number',
-  })
+  .number()
   .positive('Distance must be greater than zero')
   .max(10000, 'Distance must not exceed 10,000 (m or ft)')
-  .optional();
+  .optional()
+  .describe('Circuit distance');
 
 /**
  * Short Circuit Current Validation Schema
@@ -102,21 +93,19 @@ export const circuitDistanceSchema = z
  * Valid range: >0 kA (typically 5-100 kA)
  */
 export const shortCircuitCurrentSchema = z
-  .number({
-    invalid_type_error: 'Short circuit current must be a number',
-  })
+  .number()
   .positive('Short circuit current must be greater than zero')
   .max(200, 'Short circuit current must not exceed 200 kA')
-  .optional();
+  .optional()
+  .describe('Short circuit current (kA)');
 
 /**
  * Installation Method Schema (IEC)
  */
 export const installationMethodSchema = z
-  .enum(['A1', 'A2', 'B1', 'B2', 'C', 'D', 'E', 'F', 'G'], {
-    errorMap: () => ({ message: 'Invalid installation method' }),
-  })
-  .optional();
+  .enum(['A1', 'A2', 'B1', 'B2', 'C', 'D', 'E', 'F', 'G'])
+  .optional()
+  .describe('IEC installation method');
 
 /**
  * Conductor Size Schema
@@ -124,11 +113,10 @@ export const installationMethodSchema = z
 export const conductorSizeSchema = z
   .object({
     value: z.number().positive('Conductor size must be positive'),
-    unit: z.enum(['AWG', 'kcmil', 'mm²'], {
-      errorMap: () => ({ message: 'Invalid conductor size unit' }),
-    }),
+    unit: z.enum(['AWG', 'kcmil', 'mm²']),
   })
-  .optional();
+  .optional()
+  .describe('Conductor size');
 
 /**
  * Circuit Configuration Schema
@@ -136,21 +124,13 @@ export const conductorSizeSchema = z
  * Primary user inputs for breaker sizing calculation
  */
 export const circuitConfigSchema = z.object({
-  standard: z.enum(['NEC', 'IEC'], {
-    errorMap: () => ({ message: 'Standard must be NEC or IEC' }),
-  }),
+  standard: z.enum(['NEC', 'IEC']),
   voltage: voltageSchema,
-  phase: z.enum(['single', 'three'], {
-    errorMap: () => ({ message: 'Phase must be single or three' }),
-  }),
-  loadMode: z.enum(['kw', 'amps'], {
-    errorMap: () => ({ message: 'Load mode must be kw or amps' }),
-  }),
+  phase: z.enum(['single', 'three']),
+  loadMode: z.enum(['kw', 'amps']),
   loadValue: loadValueSchema,
   powerFactor: powerFactorSchema,
-  unitSystem: z.enum(['metric', 'imperial'], {
-    errorMap: () => ({ message: 'Unit system must be metric or imperial' }),
-  }),
+  unitSystem: z.enum(['metric', 'imperial']),
 });
 
 /**
@@ -165,13 +145,12 @@ export const environmentalConditionsSchema = z
     installationMethod: installationMethodSchema,
     circuitDistance: circuitDistanceSchema,
     conductorMaterial: z
-      .enum(['copper', 'aluminum'], {
-        errorMap: () => ({ message: 'Material must be copper or aluminum' }),
-      })
+      .enum(['copper', 'aluminum'])
       .optional(),
     conductorSize: conductorSizeSchema,
   })
-  .optional();
+  .optional()
+  .describe('Environmental conditions');
 
 /**
  * Full Calculation Input Schema
@@ -183,10 +162,9 @@ export const calculationInputSchema = z.object({
   environment: environmentalConditionsSchema,
   shortCircuitCurrentKA: shortCircuitCurrentSchema,
   loadType: z
-    .enum(['resistive', 'inductive', 'mixed', 'capacitive'], {
-      errorMap: () => ({ message: 'Invalid load type' }),
-    })
-    .optional(),
+    .enum(['resistive', 'inductive', 'mixed', 'capacitive'])
+    .optional()
+    .describe('Load type'),
 });
 
 /**
@@ -203,7 +181,8 @@ export const projectInformationSchema = z
     notes: z.string().max(1000, 'Notes too long').optional(),
     jurisdictionalCode: z.string().max(50, 'Code reference too long').optional(),
   })
-  .optional();
+  .optional()
+  .describe('Project information');
 
 // ============================================================================
 // TYPE EXPORTS (inferred from schemas)
