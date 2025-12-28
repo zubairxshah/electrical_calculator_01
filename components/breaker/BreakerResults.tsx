@@ -76,7 +76,7 @@ export function BreakerResults(props: BreakerResultsProps) {
   const showDetails = externalShowDetails !== undefined ? externalShowDetails : internalShowDetails;
   const handleToggle = onToggleDetails || (() => setInternalShowDetails(!internalShowDetails));
 
-  const { loadAnalysis, breakerSizing, recommendations, alerts } = results;
+  const { loadAnalysis, breakerSizing, recommendations, alerts, voltageDropAnalysis, deratingFactors } = results;
 
   return (
     <div className="space-y-6">
@@ -243,6 +243,147 @@ export function BreakerResults(props: BreakerResultsProps) {
           )}
         </CardContent>
       </Card>
+
+      {/* Voltage Drop Analysis */}
+      {voltageDropAnalysis && voltageDropAnalysis.performed && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Info className="h-5 w-5 text-blue-600" />
+              Voltage Drop Analysis
+            </CardTitle>
+            <CardDescription>
+              Per NEC 210.19(A) - Branch circuit limit: 3%, Combined limit: 5%
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <p className="text-sm text-muted-foreground">Voltage Drop</p>
+                <p className={`text-2xl font-bold ${
+                  voltageDropAnalysis.status === 'exceed-limit' ? 'text-red-600' :
+                  voltageDropAnalysis.status === 'warning' ? 'text-yellow-600' : 'text-green-600'
+                }`}>
+                  {voltageDropAnalysis.voltageDropPercent.toFixed(2)}%
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Voltage Drop</p>
+                <p className="text-xl font-semibold">{voltageDropAnalysis.voltageDrop.toFixed(2)} V</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Circuit Distance</p>
+                <p className="text-xl font-semibold">{voltageDropAnalysis.circuitDistance}</p>
+              </div>
+            </div>
+
+            {/* Status Badge */}
+            <div className={`p-3 rounded-md ${
+              voltageDropAnalysis.status === 'exceed-limit' ? 'bg-red-50 border border-red-200' :
+              voltageDropAnalysis.status === 'warning' ? 'bg-yellow-50 border border-yellow-200' : 'bg-green-50 border border-green-200'
+            }`}>
+              <p className="font-semibold">{voltageDropAnalysis.assessment}</p>
+            </div>
+
+            {/* Cable Recommendation */}
+            {voltageDropAnalysis.recommendedCableSize && (
+              <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
+                <p className="text-sm font-semibold text-blue-900">Cable Recommendation</p>
+                <p className="text-sm text-blue-800">
+                  Use <strong>{voltageDropAnalysis.recommendedCableSize}</strong> to reduce voltage drop
+                  {voltageDropAnalysis.recommendedVDPercent && ` to ${voltageDropAnalysis.recommendedVDPercent.toFixed(2)}%`}
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Derating Factors */}
+      {deratingFactors && deratingFactors.applied && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Info className="h-5 w-5 text-purple-600" />
+              Derating Factors Applied
+            </CardTitle>
+            <CardDescription>Environmental adjustments to breaker sizing</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Temperature Factor */}
+            {deratingFactors.temperatureFactor && (
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <p className="text-sm font-medium">{deratingFactors.temperatureFactor.label}</p>
+                  <p className="text-lg font-semibold">
+                    {(deratingFactors.temperatureFactor.factor * 100).toFixed(0)}%
+                  </p>
+                </div>
+                {deratingFactors.temperatureFactor.ambient !== undefined && (
+                  <p className="text-xs text-muted-foreground">
+                    Ambient: {deratingFactors.temperatureFactor.ambient}°C
+                  </p>
+                )}
+                {deratingFactors.temperatureFactor.codeReference && (
+                  <p className="text-xs text-muted-foreground">
+                    Per {deratingFactors.temperatureFactor.codeReference}
+                  </p>
+                )}
+                <div className="h-2 bg-muted rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-purple-500"
+                    style={{ width: `${deratingFactors.temperatureFactor.factor * 100}%` }}
+                  />
+                </div>
+              </div>
+            )}
+
+            <Separator />
+
+            {/* Grouping Factor */}
+            {deratingFactors.groupingFactor && (
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <p className="text-sm font-medium">{deratingFactors.groupingFactor.label}</p>
+                  <p className="text-lg font-semibold">
+                    {(deratingFactors.groupingFactor.factor * 100).toFixed(0)}%
+                  </p>
+                </div>
+                {deratingFactors.groupingFactor.cableCount !== undefined && (
+                  <p className="text-xs text-muted-foreground">
+                    {deratingFactors.groupingFactor.cableCount} current-carrying conductors
+                  </p>
+                )}
+                {deratingFactors.groupingFactor.codeReference && (
+                  <p className="text-xs text-muted-foreground">
+                    Per {deratingFactors.groupingFactor.codeReference}
+                  </p>
+                )}
+                <div className="h-2 bg-muted rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-purple-500"
+                    style={{ width: `${deratingFactors.groupingFactor.factor * 100}%` }}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Combined Factor */}
+            <Separator />
+            <div className="p-3 bg-purple-50 border border-purple-200 rounded-md">
+              <div className="flex justify-between items-center">
+                <p className="text-sm font-semibold text-purple-900">Combined Derating Factor</p>
+                <p className="text-xl font-bold text-purple-700">
+                  {(deratingFactors.combinedFactor * 100).toFixed(0)}%
+                </p>
+              </div>
+              <p className="text-sm text-purple-800 mt-1">
+                Adjusted breaker size: <strong>{deratingFactors.adjustedBreakerSizeAmps.toFixed(1)} A</strong>
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Warnings and Alerts */}
       {alerts.length > 0 && (
