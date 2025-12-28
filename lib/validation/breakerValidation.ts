@@ -18,13 +18,11 @@ import { z } from 'zod';
  * Common voltages: NEC (120, 208, 240, 277, 480), IEC (230, 400, 690)
  */
 export const voltageSchema = z
-  .number({
-    required_error: 'Voltage is required',
-    invalid_type_error: 'Voltage must be a number',
-  })
+  .number()
   .positive('Voltage must be positive')
-  .min(100, 'Voltage must be at least 100V')
-  .max(1000, 'Voltage must not exceed 1000V');
+  .min(100, { message: 'Voltage must be at least 100V' })
+  .max(1000, { message: 'Voltage must not exceed 1000V' })
+  .describe('Voltage in volts (100V - 1000V)');
 
 /**
  * Load Value Validation Schema
@@ -32,12 +30,10 @@ export const voltageSchema = z
  * Valid range: >0 to 10,000 (kW or A depending on mode)
  */
 export const loadValueSchema = z
-  .number({
-    required_error: 'Load value is required',
-    invalid_type_error: 'Load must be a number',
-  })
-  .positive('Load must be greater than zero')
-  .max(10000, 'Load must not exceed 10,000 (kW or A)');
+  .number()
+  .positive({ message: 'Load must be greater than zero' })
+  .max(10000, { message: 'Load must not exceed 10,000 (kW or A)' })
+  .describe('Load value in kW or Amperes');
 
 /**
  * Power Factor Validation Schema
@@ -46,13 +42,11 @@ export const loadValueSchema = z
  * Typical values: 0.8-0.95 (industrial), 0.9-1.0 (residential)
  */
 export const powerFactorSchema = z
-  .number({
-    required_error: 'Power factor is required',
-    invalid_type_error: 'Power factor must be a number',
-  })
-  .min(0.5, 'Power factor must be at least 0.5')
-  .max(1.0, 'Power factor must not exceed 1.0')
-  .default(0.8);
+  .number()
+  .min(0.5, { message: 'Power factor must be at least 0.5' })
+  .max(1.0, { message: 'Power factor must not exceed 1.0' })
+  .default(0.8)
+  .describe('Power factor (0.5 - 1.0)');
 
 /**
  * Temperature Validation Schema
@@ -61,12 +55,11 @@ export const powerFactorSchema = z
  * Typical range: 20°C to 40°C (ambient)
  */
 export const temperatureSchema = z
-  .number({
-    invalid_type_error: 'Temperature must be a number',
-  })
-  .min(-40, 'Temperature must be at least -40°C')
-  .max(70, 'Temperature must not exceed 70°C')
-  .optional();
+  .number()
+  .min(-40, { message: 'Temperature must be at least -40°C' })
+  .max(70, { message: 'Temperature must not exceed 70°C' })
+  .optional()
+  .describe('Ambient temperature in Celsius');
 
 /**
  * Grouped Cables Validation Schema
@@ -75,13 +68,12 @@ export const temperatureSchema = z
  * Note: >20 cables requires special thermal analysis
  */
 export const groupedCablesSchema = z
-  .number({
-    invalid_type_error: 'Number of cables must be a number',
-  })
-  .int('Number of cables must be an integer')
-  .min(1, 'Must have at least 1 cable')
-  .max(100, 'Grouping assumption: limit to 100 cables')
-  .optional();
+  .number()
+  .int({ message: 'Number of cables must be an integer' })
+  .min(1, { message: 'Must have at least 1 cable' })
+  .max(100, { message: 'Grouping assumption: limit to 100 cables' })
+  .optional()
+  .describe('Number of grouped cables');
 
 /**
  * Circuit Distance Validation Schema
@@ -89,12 +81,11 @@ export const groupedCablesSchema = z
  * Valid range: >0 (meters or feet)
  */
 export const circuitDistanceSchema = z
-  .number({
-    invalid_type_error: 'Distance must be a number',
-  })
-  .positive('Distance must be greater than zero')
-  .max(10000, 'Distance must not exceed 10,000 (m or ft)')
-  .optional();
+  .number()
+  .positive({ message: 'Distance must be greater than zero' })
+  .max(10000, { message: 'Distance must not exceed 10,000 (m or ft)' })
+  .optional()
+  .describe('Circuit distance in meters or feet');
 
 /**
  * Short Circuit Current Validation Schema
@@ -102,12 +93,11 @@ export const circuitDistanceSchema = z
  * Valid range: >0 kA (typically 5-100 kA)
  */
 export const shortCircuitCurrentSchema = z
-  .number({
-    invalid_type_error: 'Short circuit current must be a number',
-  })
-  .positive('Short circuit current must be greater than zero')
-  .max(200, 'Short circuit current must not exceed 200 kA')
-  .optional();
+  .number()
+  .positive({ message: 'Short circuit current must be greater than zero' })
+  .max(200, { message: 'Short circuit current must not exceed 200 kA' })
+  .optional()
+  .describe('Short circuit current in kA');
 
 /**
  * Installation Method Schema (IEC)
