@@ -103,22 +103,20 @@ export const shortCircuitCurrentSchema = z
  * Installation Method Schema (IEC)
  */
 export const installationMethodSchema = z
-  .enum(['A1', 'A2', 'B1', 'B2', 'C', 'D', 'E', 'F', 'G'], {
-    errorMap: () => ({ message: 'Invalid installation method' }),
-  })
-  .optional();
+  .enum(['A1', 'A2', 'B1', 'B2', 'C', 'D', 'E', 'F', 'G'])
+  .optional()
+  .describe('IEC installation method type');
 
 /**
  * Conductor Size Schema
  */
 export const conductorSizeSchema = z
   .object({
-    value: z.number().positive('Conductor size must be positive'),
-    unit: z.enum(['AWG', 'kcmil', 'mm²'], {
-      errorMap: () => ({ message: 'Invalid conductor size unit' }),
-    }),
+    value: z.number().positive({ message: 'Conductor size must be positive' }),
+    unit: z.enum(['AWG', 'kcmil', 'mm²']),
   })
-  .optional();
+  .optional()
+  .describe('Conductor size with unit');
 
 /**
  * Circuit Configuration Schema
@@ -126,21 +124,13 @@ export const conductorSizeSchema = z
  * Primary user inputs for breaker sizing calculation
  */
 export const circuitConfigSchema = z.object({
-  standard: z.enum(['NEC', 'IEC'], {
-    errorMap: () => ({ message: 'Standard must be NEC or IEC' }),
-  }),
+  standard: z.enum(['NEC', 'IEC']),
   voltage: voltageSchema,
-  phase: z.enum(['single', 'three'], {
-    errorMap: () => ({ message: 'Phase must be single or three' }),
-  }),
-  loadMode: z.enum(['kw', 'amps'], {
-    errorMap: () => ({ message: 'Load mode must be kw or amps' }),
-  }),
+  phase: z.enum(['single', 'three']),
+  loadMode: z.enum(['kw', 'amps']),
   loadValue: loadValueSchema,
   powerFactor: powerFactorSchema,
-  unitSystem: z.enum(['metric', 'imperial'], {
-    errorMap: () => ({ message: 'Unit system must be metric or imperial' }),
-  }),
+  unitSystem: z.enum(['metric', 'imperial']),
 });
 
 /**
@@ -154,11 +144,7 @@ export const environmentalConditionsSchema = z
     groupedCables: groupedCablesSchema,
     installationMethod: installationMethodSchema,
     circuitDistance: circuitDistanceSchema,
-    conductorMaterial: z
-      .enum(['copper', 'aluminum'], {
-        errorMap: () => ({ message: 'Material must be copper or aluminum' }),
-      })
-      .optional(),
+    conductorMaterial: z.enum(['copper', 'aluminum']).optional(),
     conductorSize: conductorSizeSchema,
   })
   .optional();
@@ -172,11 +158,7 @@ export const calculationInputSchema = z.object({
   circuit: circuitConfigSchema,
   environment: environmentalConditionsSchema,
   shortCircuitCurrentKA: shortCircuitCurrentSchema,
-  loadType: z
-    .enum(['resistive', 'inductive', 'mixed', 'capacitive'], {
-      errorMap: () => ({ message: 'Invalid load type' }),
-    })
-    .optional(),
+  loadType: z.enum(['resistive', 'inductive', 'mixed', 'capacitive']).optional(),
 });
 
 /**
@@ -186,12 +168,12 @@ export const calculationInputSchema = z.object({
  */
 export const projectInformationSchema = z
   .object({
-    projectName: z.string().max(200, 'Project name too long').optional(),
-    projectLocation: z.string().max(200, 'Location too long').optional(),
-    engineerName: z.string().max(100, 'Engineer name too long').optional(),
-    engineerCompany: z.string().max(200, 'Company name too long').optional(),
-    notes: z.string().max(1000, 'Notes too long').optional(),
-    jurisdictionalCode: z.string().max(50, 'Code reference too long').optional(),
+    projectName: z.string().max(200, { message: 'Project name too long' }).optional(),
+    projectLocation: z.string().max(200, { message: 'Location too long' }).optional(),
+    engineerName: z.string().max(100, { message: 'Engineer name too long' }).optional(),
+    engineerCompany: z.string().max(200, { message: 'Company name too long' }).optional(),
+    notes: z.string().max(1000, { message: 'Notes too long' }).optional(),
+    jurisdictionalCode: z.string().max(50, { message: 'Code reference too long' }).optional(),
   })
   .optional();
 
