@@ -11,6 +11,7 @@ import { calculateLoadCurrent } from './loadCurrent';
 import { applySafetyFactor } from './safetyFactors';
 import { recommendStandardBreaker } from '@/lib/standards/breakerRatings';
 import { recommendTripCurve } from '@/lib/standards/tripCurves';
+import { calculateVoltageDrop, assessVoltageDropCompliance, recommendCableSizeForVD } from './voltageDrop';
 import { validateCalculationInput, validateWithWarnings } from '@/lib/validation/breakerValidation';
 import { logger } from '@/lib/utils/logger';
 import type {
@@ -23,6 +24,7 @@ import type {
   CalculationAlert,
   BreakerSpecification,
   LoadType,
+  VoltageDropAnalysis,
 } from '@/types/breaker-calculator';
 
 /**
@@ -281,7 +283,101 @@ export async function calculateBreakerSizing(
   }
 
   // ============================================================================
-  // STEP 9: BUILD FINAL RESULTS
+  // STEP 9: VOLTAGE DROP ANALYSIS (Optional)
+  // ============================================================================
+
+  let voltageDropAnalysis: VoltageDropAnalysis | undefined;
+
+  if (input.environment?.circuitDistance && input.environment?.conductorMaterial) {
+    logger.debug('BreakerCalculator', 'Calculating voltage drop');
+
+    try {
+      const vdInput = {
+        current: loadCurrentResult.currentAmps,
+        voltage: input.circuit.voltage,
+        distance: input.environment.circuitDistance,
+        conductorSize: {
+          sizeAWG: input.environment.conductorSize?.unit === 'AWG' ? String(input.environment.conductorSize.value) : null,
+          sizeMm2: input.environment.conductorSize?.unit === 'mm²' ? input.environment.conductorSize.value : null,
+        },
+        material: input.environment.conductorMaterial,
+        phase: input.circuit.phase,
+        powerFactor: input.circuit.powerFactor,
+      };
+
+      const vdResult = calculateVoltageDrop(vdInput);
+      const compliance = assessVoltageDropCompliance(vdResult.voltageDropPercent);
+
+      let cableRecommendation = null;
+      let recommendedVDPercent: number | undefined;
+      if (vdResult.voltageDropPercent > 3.0) {
+        cableRecommendation = recommendCableSizeForVD({
+          ...vdInput,
+          currentSize: vdInput.conductorSize,
+          vdLimit: 3.0,
+        });
+        recommendedVDPercent = cableRecommendation.predictedVoltageDropPercent ?? undefined;
+      }
+
+      // Format conductor size string
+      const conductorSizeStr = vdInput.conductorSize.sizeAWG
+        ? `#${vdInput.conductorSize.sizeAWG} AWG`
+        : vdInput.conductorSize.sizeMm2
+          ? `${vdInput.conductorSize.sizeMm2}mm²`
+        : undefined;
+
+      voltageDropAnalysis = {
+        performed: true,
+        loadCurrentAmps: vdResult.components.current,
+        circuitDistance: vdResult.components.distance,
+        conductorSize: conductorSizeStr,
+        conductorResistance: vdResult.components.resistance,
+        voltageDrop: vdResult.voltageDropVolts,
+        voltageDropPercent: vdResult.voltageDropPercent,
+        limitBranchCircuit: 3.0,
+        limitCombined: 5.0,
+        status: compliance.status,
+        assessment: compliance.message,
+        recommendedCableSize: cableRecommendation?.recommendedSize
+          ? cableRecommendation.recommendedSize.sizeAWG
+            ? `#${cableRecommendation.recommendedSize.sizeAWG} AWG`
+            : `${cableRecommendation.recommendedSize.sizeMetric}mm²`
+          : undefined,
+        recommendedVDPercent,
+      };
+
+      // Add alerts based on VD status
+      if (compliance.status === 'warning') {
+        alerts.push({
+          type: 'warning',
+          code: 'VOLTAGE_DROP_WARNING',
+          message: compliance.message,
+          severity: compliance.level === 'error' ? 'major' : 'minor',
+          codeReference: compliance.codeReference,
+        });
+      } else if (compliance.status === 'exceed-limit') {
+        alerts.push({
+          type: 'error',
+          code: 'VOLTAGE_DROP_EXCEEDED',
+          message: compliance.message,
+          severity: 'critical',
+          codeReference: compliance.codeReference,
+        });
+      }
+
+      logger.debug('BreakerCalculator', 'Voltage drop calculated', {
+        vdPercent: vdResult.voltageDropPercent,
+        status: compliance.status,
+      });
+    } catch (vdError) {
+      logger.warn('BreakerCalculator', 'Voltage drop calculation failed', {
+        error: vdError instanceof Error ? vdError.message : 'Unknown error',
+      });
+    }
+  }
+
+  // ============================================================================
+  // STEP 10: BUILD FINAL RESULTS
   // ============================================================================
 
   const endTime = performance.now();
@@ -300,6 +396,7 @@ export async function calculateBreakerSizing(
     calculatedAt: new Date().toISOString(),
     calculationVersion: '1.0.0',
     alerts,
+    voltageDropAnalysis,
   };
 
   return results;
