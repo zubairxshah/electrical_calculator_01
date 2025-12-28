@@ -425,85 +425,67 @@ http://localhost:3000/breaker
 
 ---
 
-## Circuit Breaker Sizing Calculator - ALL 7 USER STORIES COMPLETE (2025-12-28)
+## RESUME POINT (2025-12-29)
 
-**Status:** ✅ **ALL USER STORIES COMPLETE**
-**Branch:** 003-circuit-breaker-sizing
-**Progress:** 104/143 tasks (72.7%)
-**Tests:** 100/100 passing
+**Current Working Directory:** `004-lighting-design` branch
 
-### Completed User Stories
-1. **US1 - Basic Breaker Sizing** (21/21 tasks) ✅
-2. **US2 - Voltage Drop Analysis** (13/13 tasks) ✅
-3. **US3 - Derating Factors** (14/14 tasks) ✅
-4. **US4 - Short Circuit Protection** (9/9 tasks) ✅
-5. **US5 - Trip Curve Recommendations** (6/6 tasks) ✅
-6. **US6 - Calculation History** (10/10 tasks) ✅
-7. **US7 - PDF Export** (9/9 tasks) ✅
+### Session Summary
 
-### Remaining Tasks
-- Phase 10 (Polish): 9 tasks (T099-T107)
-- Phase 11 (Constitution Compliance): 36 tasks (T108-T143)
+#### Circuit Breaker Sizing (003-circuit-breaker-sizing) - MOSTLY COMPLETE
+- **Status:** All 7 User Stories COMPLETE, build passes ✅
+- **Branch:** `003-circuit-breaker-sizing` (pushed to origin)
+- **Progress:** 104/143 tasks (72.7%)
+- **Tests:** 100/100 passing
+- **Last Action:** Fixed build errors (math.sqrt TypeScript, Zod compatibility, JSX syntax, missing components)
+- **Next Actions:**
+  1. Phase 10: Polish (T099-T107) - Loading spinner, binary search optimization, keyboard shortcuts, example presets, clear all button, responsive design, E2E tests
+  2. Phase 11: Constitution Compliance (T108-T143) - Validation against constitution principles
 
-### Key Files Created
-- lib/calculations/breaker/loadCurrent.ts
-- lib/calculations/breaker/safetyFactors.ts
-- lib/calculations/breaker/voltageDrop.ts
-- lib/calculations/breaker/breakerCalculator.ts
-- lib/standards/breakerRatings.ts
-- lib/standards/deratingTables.ts
-- lib/standards/tripCurves.ts
-- lib/pdfGenerator.breaker.ts
-- types/breaker-calculator.ts
-- stores/useBreakerStore.ts
-- components/breaker/BreakerInputForm.tsx
-- components/breaker/BreakerResults.tsx
-- components/breaker/DeratingSidebar.tsx
-- components/breaker/HistorySidebar.tsx
-- app/breaker/page.tsx
-- app/breaker/BreakerSizingTool.tsx
+#### Lighting Design Calculator (004-lighting-design) - SPEC READY FOR PLANNING
+- **Status:** ✅ Specification complete, ready for `/sp.plan`
+- **Branch:** `004-lighting-design` (pushed to origin)
+- **Specification:** `specs/004-lighting-design/spec.md`
+- **Key Decisions Made:**
+  - Visual Input: Tesseract.js OCR (local, zero cost)
+  - Outdoor Standards: IES RP-8 + CIE 140 (dual support)
+  - Freemium: Unlimited basic, 3 visual analyses/month free
+- **Next Action:** Run `/sp.plan` to create technical architecture
 
----
+### Files Modified This Session
 
-## Lighting Design Calculator - SPECIFICATION COMPLETE (2025-12-28)
+**Circuit Breaker Fixes:**
+- `app/breaker/BreakerSizingTool.tsx` - Fixed JSX syntax for HistorySidebar
+- `lib/calculations/breaker/loadCurrent.ts` - Fixed math.sqrt TypeScript error
+- `lib/validation/breakerValidation.ts` - Removed unsupported Zod options
+- `components/breaker/HistorySidebar.tsx` - Fixed Badge variant
+- `components/ui/separator.tsx` - Added missing component
 
-**Status:** ✅ **Ready for Planning**
-**Branch:** 004-lighting-design
-**Feature:** DIALux competitor with manual and visual input
+**Lighting Design:**
+- `specs/004-lighting-design/spec.md` - Updated clarifications resolved
+- `specs/004-lighting-design/checklists/requirements.md` - Ready for planning status
+- `history/prompts/004-lighting-design/M001-*.spec.prompt.md` - PHR created
 
-### Specification Summary
-- **6 User Stories** (P1-P3 priority)
-- **29 Functional Requirements**
-- **8 Success Criteria**
-- **Standards:** IESNA, CIE, IEC, ASHRAE
-- **Visual Input:** Tesseract.js OCR (local, zero cost)
-- **Outdoor Standards:** IES RP-8 and CIE 140 (dual support)
-- **Freemium:** Unlimited basic, 3 visual analyses/month free
+### Git Status
+- `003-circuit-breaker-sizing`: e394e6e (pushed)
+- `004-lighting-design`: 217e3fd (pushed)
 
-### User Stories
-1. **US1 - Basic Indoor Lighting Calculation** (P1) - Lumen method, Room Index
-2. **US2 - Visual Input from Floor Plans** (P2) - PDF/image upload with OCR
-3. **US3 - Advanced Lighting Simulations** (P2) - Uniformity, shadow mapping
-4. **US4 - Outdoor and Roadway Lighting** (P3) - IES RP-8/CIE 140
-5. **US5 - PDF Report Generation** (P1) - Professional reports with diagrams
-6. **US6 - Luminaire Catalog Management** (P3) - Pre-loaded and custom fixtures
+### Quick Resume Commands
+```bash
+# Resume Circuit Breaker Polish/Compliance:
+git checkout 003-circuit-breaker-sizing
+npm run test -- __tests__/unit/calculations/breaker/
+npm run dev
 
-### Key Entities
-- Room, Luminaire, LightingDesign, VisualInputAnalysis, LuminaireCatalog, UserDesign
+# Continue Lighting Design Planning:
+git checkout 004-lighting-design
+/sp.plan  # Run planning phase
+```
 
-### Dependencies
-- pdf.js for PDF rendering
-- Tesseract.js for local OCR
-- jsPDF for report generation
-- Math.js for precision calculations
-
-### Next Step
-Run `/sp.plan` to create technical architecture
+### Known Issues
+- Solar API route (`/api/calculations/solar`) has pre-existing build issue unrelated to breaker changes
+- Google Fonts network error (environment-specific, not code issue)
 
 ---
 
-## Next Session Actions
-
-1. **Circuit Breaker:** Complete Phase 10 (Polish) and Phase 11 (Constitution Compliance)
-2. **Lighting Design:** Run `/sp.plan` to create technical architecture, then `/sp.tasks` for implementation
-3. **Feature 001:** Complete Phase 9-10 (Polish & Compliance) if needed
+**Last Updated:** 2025-12-29
+**Session End:** Build fixes complete, ready to resume
