@@ -12,6 +12,7 @@ import { applySafetyFactor } from './safetyFactors';
 import { recommendStandardBreaker } from '@/lib/standards/breakerRatings';
 import { recommendTripCurve } from '@/lib/standards/tripCurves';
 import { calculateVoltageDrop, assessVoltageDropCompliance, recommendCableSizeForVD } from './voltageDrop';
+import { calculateCombinedDerating, getNECGroupingFactor, getIECTemperatureFactor, type IECInstallationMethod } from '@/lib/standards/deratingTables';
 import { validateCalculationInput, validateWithWarnings } from '@/lib/validation/breakerValidation';
 import { logger } from '@/lib/utils/logger';
 import type {
@@ -25,6 +26,8 @@ import type {
   BreakerSpecification,
   LoadType,
   VoltageDropAnalysis,
+  DeratingFactorsResult,
+  InstallationMethod,
 } from '@/types/breaker-calculator';
 
 /**
@@ -156,13 +159,94 @@ export async function calculateBreakerSizing(
   });
 
   // ============================================================================
+  // STEP 3.5: DERATING FACTORS (Optional)
+  // ============================================================================
+
+  let deratingFactorsResult: DeratingFactorsResult | undefined;
+
+  if (input.environment?.ambientTemperature || input.environment?.groupedCables) {
+    logger.debug('BreakerCalculator', 'Applying derating factors');
+
+    try {
+      const ambientTemp = input.environment.ambientTemperature ?? 30; // Default to 30°C
+      const numConductors = input.environment.groupedCables ?? 1;
+      const installationMethod = input.environment.installationMethod as IECInstallationMethod | undefined;
+
+      // Calculate derating factors
+      const derating = calculateCombinedDerating({
+        ambientTemp,
+        insulationRating: 90, // Use 90°C for modern cables
+        numberOfConductors: numConductors,
+        installationMethod,
+        standard: input.circuit.standard,
+      });
+
+      // Calculate adjusted breaker size due to derating
+      const adjustedBreakerSize = safetyFactorResult.minimumBreakerSize / derating.totalFactor;
+
+      deratingFactorsResult = {
+        applied: true,
+        temperatureFactor: {
+          label: 'Ca (Temperature)',
+          ambient: ambientTemp,
+          factor: derating.temperatureFactor,
+          codeReference: derating.standardReference.split(',')[0].trim() || 'NEC Table 310.15(B)(2)(a)',
+        },
+        groupingFactor: {
+          label: 'Cg (Grouping)',
+          cableCount: numConductors,
+          factor: derating.groupingFactor,
+          codeReference: derating.standardReference.split(',')[1]?.trim() || derating.standardReference,
+        },
+        installationMethodFactor: installationMethod
+          ? {
+              label: 'Cc (Installation Method)',
+              method: installationMethod as InstallationMethod,
+              factor: 1.0,
+              codeReference: 'IEC 60364-5-52 Table B.52.5',
+            }
+          : undefined,
+        combinedFactor: derating.totalFactor,
+        adjustedBreakerSizeAmps: adjustedBreakerSize,
+      };
+
+      // Add warning for significant derating
+      if (derating.totalFactor < 0.7) {
+        alerts.push({
+          type: 'warning',
+          code: 'SIGNIFICANT_DERATING',
+          message: `Combined derating factors (${(derating.totalFactor * 100).toFixed(0)}%) require ${adjustedBreakerSize.toFixed(1)}A breaker. Verify cable ampacity allows this size.`,
+          severity: 'major',
+          codeReference: derating.standardReference,
+        });
+      }
+
+      logger.debug('BreakerCalculator', 'Derating factors applied', {
+        tempFactor: derating.temperatureFactor,
+        groupingFactor: derating.groupingFactor,
+        combinedFactor: derating.totalFactor,
+        adjustedBreakerSize: adjustedBreakerSize,
+      });
+    } catch (deratingError) {
+      logger.warn('BreakerCalculator', 'Derating calculation failed', {
+        error: deratingError instanceof Error ? deratingError.message : 'Unknown error',
+      });
+    }
+  }
+
+  // ============================================================================
   // STEP 4: STANDARD BREAKER RECOMMENDATION
   // ============================================================================
 
   logger.debug('BreakerCalculator', 'Finding standard breaker rating');
 
+  // Use derated breaker size if derating was applied
+  const baseBreakerSize = deratingFactorsResult
+    ? deratingFactorsResult.adjustedBreakerSizeAmps
+    : safetyFactorResult.minimumBreakerSize;
+
   const recommendedBreaker = recommendStandardBreaker(
-    safetyFactorResult.minimumBreakerSize,
+    baseBreakerSize,
     input.circuit.standard
   );
 
@@ -397,6 +481,7 @@ export async function calculateBreakerSizing(
     calculationVersion: '1.0.0',
     alerts,
     voltageDropAnalysis,
+    deratingFactors: deratingFactorsResult,
   };
 
   return results;
