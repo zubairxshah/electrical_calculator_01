@@ -166,7 +166,7 @@ export function HistorySidebar({ isOpen, onClose }: HistorySidebarProps) {
             {history.length} of 50 calculations
           </span>
           {history.length >= 50 && (
-            <Badge variant="warning" className="text-xs">
+            <Badge variant="outline" className="text-xs border-amber-500 text-amber-600 bg-amber-50">
               <AlertCircle className="h-3 w-3 mr-1" />
               Full
             </Badge>
