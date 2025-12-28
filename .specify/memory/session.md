@@ -1,8 +1,11 @@
 # Session Memory - ElectroMate Engineering App
 
 **Last Updated:** 2025-12-28
-**Active Feature:** 003-circuit-breaker-sizing
-**Branch:** 003-circuit-breaker-sizing
+**Active Feature:** 004-lighting-design (spec created, ready for planning)
+**Branches:**
+- `main` - Feature 001 (Battery, UPS, Cable, Solar, Charge Controller, Battery Comparison) - 77% complete
+- `003-circuit-breaker-sizing` - All 7 User Stories COMPLETE (72.7% of tasks)
+- `004-lighting-design` - Specification created, ready for planning
 
 ---
 
@@ -422,7 +425,85 @@ http://localhost:3000/breaker
 
 ---
 
+## Circuit Breaker Sizing Calculator - ALL 7 USER STORIES COMPLETE (2025-12-28)
+
+**Status:** ✅ **ALL USER STORIES COMPLETE**
+**Branch:** 003-circuit-breaker-sizing
+**Progress:** 104/143 tasks (72.7%)
+**Tests:** 100/100 passing
+
+### Completed User Stories
+1. **US1 - Basic Breaker Sizing** (21/21 tasks) ✅
+2. **US2 - Voltage Drop Analysis** (13/13 tasks) ✅
+3. **US3 - Derating Factors** (14/14 tasks) ✅
+4. **US4 - Short Circuit Protection** (9/9 tasks) ✅
+5. **US5 - Trip Curve Recommendations** (6/6 tasks) ✅
+6. **US6 - Calculation History** (10/10 tasks) ✅
+7. **US7 - PDF Export** (9/9 tasks) ✅
+
+### Remaining Tasks
+- Phase 10 (Polish): 9 tasks (T099-T107)
+- Phase 11 (Constitution Compliance): 36 tasks (T108-T143)
+
+### Key Files Created
+- lib/calculations/breaker/loadCurrent.ts
+- lib/calculations/breaker/safetyFactors.ts
+- lib/calculations/breaker/voltageDrop.ts
+- lib/calculations/breaker/breakerCalculator.ts
+- lib/standards/breakerRatings.ts
+- lib/standards/deratingTables.ts
+- lib/standards/tripCurves.ts
+- lib/pdfGenerator.breaker.ts
+- types/breaker-calculator.ts
+- stores/useBreakerStore.ts
+- components/breaker/BreakerInputForm.tsx
+- components/breaker/BreakerResults.tsx
+- components/breaker/DeratingSidebar.tsx
+- components/breaker/HistorySidebar.tsx
+- app/breaker/page.tsx
+- app/breaker/BreakerSizingTool.tsx
+
+---
+
+## Lighting Design Calculator - SPECIFICATION COMPLETE (2025-12-28)
+
+**Status:** ✅ **Ready for Planning**
+**Branch:** 004-lighting-design
+**Feature:** DIALux competitor with manual and visual input
+
+### Specification Summary
+- **6 User Stories** (P1-P3 priority)
+- **29 Functional Requirements**
+- **8 Success Criteria**
+- **Standards:** IESNA, CIE, IEC, ASHRAE
+- **Visual Input:** Tesseract.js OCR (local, zero cost)
+- **Outdoor Standards:** IES RP-8 and CIE 140 (dual support)
+- **Freemium:** Unlimited basic, 3 visual analyses/month free
+
+### User Stories
+1. **US1 - Basic Indoor Lighting Calculation** (P1) - Lumen method, Room Index
+2. **US2 - Visual Input from Floor Plans** (P2) - PDF/image upload with OCR
+3. **US3 - Advanced Lighting Simulations** (P2) - Uniformity, shadow mapping
+4. **US4 - Outdoor and Roadway Lighting** (P3) - IES RP-8/CIE 140
+5. **US5 - PDF Report Generation** (P1) - Professional reports with diagrams
+6. **US6 - Luminaire Catalog Management** (P3) - Pre-loaded and custom fixtures
+
+### Key Entities
+- Room, Luminaire, LightingDesign, VisualInputAnalysis, LuminaireCatalog, UserDesign
+
+### Dependencies
+- pdf.js for PDF rendering
+- Tesseract.js for local OCR
+- jsPDF for report generation
+- Math.js for precision calculations
+
+### Next Step
+Run `/sp.plan` to create technical architecture
+
+---
+
 ## Next Session Actions
 
-1. **Continue with Circuit Breaker Feature:** Run `/sp.implement` on branch 003-circuit-breaker-sizing
-2. **Or Return to Feature 001:** Switch to main branch and complete Polish & Compliance phases
+1. **Circuit Breaker:** Complete Phase 10 (Polish) and Phase 11 (Constitution Compliance)
+2. **Lighting Design:** Run `/sp.plan` to create technical architecture, then `/sp.tasks` for implementation
+3. **Feature 001:** Complete Phase 9-10 (Polish & Compliance) if needed
