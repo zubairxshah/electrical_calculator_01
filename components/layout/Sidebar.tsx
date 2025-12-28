@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import { Battery, Zap, Cable, Sun, Settings, Scale, X } from 'lucide-react'
+import { Battery, Zap, Cable, Sun, Settings, Scale, X, CircuitBoard } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 /**
@@ -34,6 +34,13 @@ const navigationItems = [
     href: '/cables',
     icon: Cable,
     description: 'Conductor sizing & voltage drop',
+    priority: 'P1',
+  },
+  {
+    name: 'Circuit Breaker',
+    href: '/breaker',
+    icon: CircuitBoard,
+    description: 'Breaker sizing with NEC/IEC standards',
     priority: 'P1',
   },
   {

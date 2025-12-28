@@ -1,0 +1,775 @@
+openapi: 3.0.0
+info:
+  title: Circuit Breaker Sizing Calculator API
+  version: 1.0.0
+  description: |
+    RESTful API specification for circuit breaker sizing calculations.
+
+    This API specification documents the expected request/response contracts
+    for the Circuit Breaker Sizing Calculator. While the current implementation
+    is client-side (all calculations in the browser), this specification
+    provides the contract for:
+
+    1. **Client-side calculation engine**: Pure functions that match these contracts
+    2. **Future server-side API**: If backend calculations needed in future phases
+    3. **Integration testing**: Mock API contracts for E2E and integration tests
+    4. **Type safety**: TypeScript interfaces derived from these schemas
+
+  contact:
+    name: ElectroMate Development Team
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Development server
+  - url: https://api.electromate.io/v1
+    description: Production server (future)
+
+paths:
+  /breaker/calculate:
+    post:
+      summary: Calculate required circuit breaker size
+      description: |
+        Performs circuit breaker sizing calculation based on load, voltage,
+        and optional environmental factors. Supports both NEC and IEC standards.
+      operationId: calculateBreaker
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BreakerCalculationRequest'
+            examples:
+              nec-single-phase:
+                summary: NEC Single-Phase Example
+                value:
+                  standard: NEC
+                  voltage: 240
+                  phase: single
+                  loadMode: kw
+                  loadValue: 10
+                  powerFactor: 0.9
+              iec-three-phase:
+                summary: IEC Three-Phase with Derating
+                value:
+                  standard: IEC
+                  voltage: 400
+                  phase: three
+                  loadMode: amps
+                  loadValue: 50
+                  powerFactor: 1.0
+                  ambientTemperature: 45
+                  groupedCables: 6
+                  installationMethod: C
+      responses:
+        '200':
+          description: Calculation successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BreakerCalculationResponse'
+        '400':
+          description: Invalid input parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+      tags:
+        - Calculations
+
+  /breaker/voltage-drop:
+    post:
+      summary: Calculate voltage drop and cable requirements
+      description: |
+        Calculates voltage drop for a circuit and recommends cable sizes
+        to keep drop within acceptable limits (3% branch, 5% combined).
+      operationId: calculateVoltageDrop
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VoltageDropRequest'
+      responses:
+        '200':
+          description: Voltage drop analysis successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VoltageDropResponse'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      tags:
+        - Voltage Drop Analysis
+
+  /breaker/derating-factors:
+    post:
+      summary: Calculate derating factors and adjusted breaker size
+      description: |
+        Applies environmental derating factors (temperature, grouping,
+        installation method) and calculates adjusted breaker requirement.
+      operationId: calculateDerating
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeratingRequest'
+      responses:
+        '200':
+          description: Derating calculation successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeratingResponse'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      tags:
+        - Derating Factors
+
+  /breaker/recommendations:
+    post:
+      summary: Get breaker type and cable recommendations
+      description: |
+        Recommends appropriate breaker type (Type B/C/D for IEC,
+        thermal-magnetic/electronic for NEC) based on load characteristics.
+      operationId: getRecommendations
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecommendationRequest'
+      responses:
+        '200':
+          description: Recommendations generated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecommendationResponse'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      tags:
+        - Recommendations
+
+  /breaker/history:
+    get:
+      summary: Retrieve calculation history
+      description: |
+        Retrieves stored calculation history from localStorage (client-side)
+        or database (future server-side implementation).
+      operationId: getHistory
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of calculations to return (default 50)
+          schema:
+            type: integer
+            default: 50
+            maximum: 50
+        - name: standard
+          in: query
+          description: Filter by standard (NEC or IEC)
+          schema:
+            type: string
+            enum: [NEC, IEC]
+      responses:
+        '200':
+          description: History retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total:
+                    type: integer
+                    description: Total calculations in history
+                  calculations:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CalculationHistoryEntry'
+      tags:
+        - History
+
+    delete:
+      summary: Clear calculation history
+      description: Deletes all stored calculations from history
+      operationId: clearHistory
+      responses:
+        '204':
+          description: History cleared successfully
+        '500':
+          description: Failed to clear history
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      tags:
+        - History
+
+  /breaker/history/{id}:
+    get:
+      summary: Retrieve specific calculation from history
+      description: Retrieves a single historical calculation by ID
+      operationId: getHistoryEntry
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Calculation ID (UUID)
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Calculation found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalculationHistoryEntry'
+        '404':
+          description: Calculation not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      tags:
+        - History
+
+    delete:
+      summary: Delete specific calculation from history
+      description: Removes a single calculation by ID from history
+      operationId: deleteHistoryEntry
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Calculation ID (UUID)
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Calculation deleted
+        '404':
+          description: Calculation not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      tags:
+        - History
+
+  /breaker/export/pdf:
+    post:
+      summary: Export calculation as PDF report
+      description: |
+        Generates a professional PDF technical specification report
+        containing all calculation inputs, formulas, and recommendations.
+      operationId: exportPDF
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PDFExportRequest'
+      responses:
+        '200':
+          description: PDF generated successfully
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: PDF generation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      tags:
+        - Export
+
+components:
+  schemas:
+    # ===== Request Schemas =====
+
+    BreakerCalculationRequest:
+      type: object
+      required:
+        - standard
+        - voltage
+        - phase
+        - loadMode
+        - loadValue
+      properties:
+        standard:
+          type: string
+          enum: [NEC, IEC]
+          description: Electrical standard (NEC for Americas, IEC for International)
+        voltage:
+          type: number
+          minimum: 100
+          maximum: 1000
+          description: Circuit voltage in volts
+        phase:
+          type: string
+          enum: [single, three]
+          description: Single-phase or three-phase circuit
+        loadMode:
+          type: string
+          enum: [kw, amps]
+          description: Load input mode (kilowatts or amperes)
+        loadValue:
+          type: number
+          minimum: 0.001
+          maximum: 10000
+          description: Load value in kW or A depending on loadMode
+        powerFactor:
+          type: number
+          minimum: 0.5
+          maximum: 1.0
+          default: 0.8
+          description: Power factor (0.5-1.0, defaults to 0.8 if not specified)
+        ambientTemperature:
+          type: number
+          minimum: -40
+          maximum: 70
+          description: Ambient temperature in °C (optional, triggers derating if specified)
+        groupedCables:
+          type: integer
+          minimum: 1
+          maximum: 100
+          description: Number of cables grouped in same conduit (optional)
+        installationMethod:
+          type: string
+          enum: [A1, A2, B1, B2, C, D, E, F, G]
+          description: IEC installation method (optional, defaults to C)
+        circuitDistance:
+          type: number
+          minimum: 0.1
+          description: Circuit length in meters or feet (optional, enables voltage drop analysis)
+        conductorMaterial:
+          type: string
+          enum: [copper, aluminum]
+          default: copper
+          description: Conductor material (defaults to copper)
+        shortCircuitCurrentKA:
+          type: number
+          minimum: 0.1
+          description: Expected short circuit current in kA (optional, enables fault capacity check)
+
+    VoltageDropRequest:
+      type: object
+      required:
+        - standard
+        - voltage
+        - loadCurrentAmps
+        - distance
+      properties:
+        standard:
+          type: string
+          enum: [NEC, IEC]
+        voltage:
+          type: number
+          minimum: 100
+          maximum: 1000
+        phase:
+          type: string
+          enum: [single, three]
+          default: single
+        loadCurrentAmps:
+          type: number
+          minimum: 0.1
+          maximum: 10000
+          description: Load current in amperes
+        distance:
+          type: number
+          minimum: 0.1
+          description: Circuit distance (m or ft)
+        conductorSize:
+          type: object
+          required: [value, unit]
+          properties:
+            value:
+              type: number
+              description: Wire gauge (AWG/kcmil) or area (mm²)
+            unit:
+              type: string
+              enum: [AWG, kcmil, mm²]
+        conductorMaterial:
+          type: string
+          enum: [copper, aluminum]
+          default: copper
+
+    DeratingRequest:
+      type: object
+      required:
+        - standard
+        - loadCurrentAmps
+      properties:
+        standard:
+          type: string
+          enum: [NEC, IEC]
+        loadCurrentAmps:
+          type: number
+          minimum: 0.1
+          maximum: 10000
+        ambientTemperature:
+          type: number
+          minimum: -40
+          maximum: 70
+        groupedCables:
+          type: integer
+          minimum: 1
+          maximum: 100
+        installationMethod:
+          type: string
+          enum: [A1, A2, B1, B2, C, D, E, F, G]
+
+    RecommendationRequest:
+      type: object
+      required:
+        - standard
+        - breaker SizeAmps
+        - loadType
+      properties:
+        standard:
+          type: string
+          enum: [NEC, IEC]
+        breakerSizeAmps:
+          type: number
+          minimum: 15
+          maximum: 4000
+        loadType:
+          type: string
+          enum: [resistive, inductive, mixed, capacitive]
+          description: Type of load (determines breaker trip curve recommendation)
+        faultCurrentKA:
+          type: number
+          description: Expected fault current for breaking capacity recommendation
+
+    PDFExportRequest:
+      type: object
+      required:
+        - calculation
+      properties:
+        calculation:
+          $ref: '#/components/schemas/BreakerCalculationResponse'
+        projectName:
+          type: string
+        projectLocation:
+          type: string
+        engineerName:
+          type: string
+        includeCalculationDetails:
+          type: boolean
+          default: true
+          description: Include detailed calculation steps in PDF
+
+    # ===== Response Schemas =====
+
+    BreakerCalculationResponse:
+      type: object
+      properties:
+        loadAnalysis:
+          type: object
+          properties:
+            calculatedCurrentAmps:
+              type: number
+            continuousLoadFactor:
+              type: number
+            formula:
+              type: string
+              example: "I = P / (V × PF)"
+        breakerSizing:
+          type: object
+          properties:
+            minimumBreakerSizeAmps:
+              type: number
+            recommendedBreakerAmps:
+              type: number
+            safetyFactor:
+              type: number
+        recommendations:
+          type: object
+          properties:
+            primaryBreaker:
+              $ref: '#/components/schemas/BreakerSpecification'
+            breakerTypeGuidance:
+              type: object
+              properties:
+                recommendedType:
+                  type: string
+                  example: "Type C (IEC)"
+                rationale:
+                  type: string
+                inrushCapability:
+                  type: string
+        warnings:
+          type: array
+          items:
+            $ref: '#/components/schemas/CalculationWarning'
+
+    VoltageDropResponse:
+      type: object
+      properties:
+        voltageDrop:
+          type: number
+          description: Voltage drop in volts
+        voltageDropPercent:
+          type: number
+          description: Voltage drop as percentage
+        status:
+          type: string
+          enum: [acceptable, warning, exceed-limit]
+        assessment:
+          type: string
+        recommendedCableSize:
+          type: string
+          description: Recommended cable size if limit exceeded
+        recommendedVDPercent:
+          type: number
+          description: VD% with recommended cable size
+
+    DeratingResponse:
+      type: object
+      properties:
+        appliedFactors:
+          type: object
+          properties:
+            temperature:
+              type: number
+            grouping:
+              type: number
+            installationMethod:
+              type: number
+            combined:
+              type: number
+        adjustedBreakerSizeAmps:
+          type: number
+        adjustmentRatio:
+          type: number
+          description: Ratio of adjusted to original requirement
+
+    RecommendationResponse:
+      type: object
+      properties:
+        primaryRecommendation:
+          $ref: '#/components/schemas/BreakerSpecification'
+        alternativeOptions:
+          type: array
+          items:
+            $ref: '#/components/schemas/BreakerSpecification'
+        breakerTypeGuidance:
+          type: object
+          properties:
+            recommendedType:
+              type: string
+            rationale:
+              type: string
+            inrushCapability:
+              type: string
+        cableGuidance:
+          type: object
+          properties:
+            minimumSize:
+              type: string
+            recommendedSize:
+              type: string
+
+    BreakerSpecification:
+      type: object
+      properties:
+        ratingAmps:
+          type: number
+        breakingCapacityKA:
+          type: number
+        tripCurve:
+          type: string
+          enum: [B, C, D, K, Z]
+          description: IEC trip curve
+        tripType:
+          type: string
+          enum: [thermal-magnetic, electronic]
+          description: NEC trip type
+        loadType:
+          type: string
+          enum: [resistive, inductive, mixed, capacitive]
+        standard:
+          type: string
+          enum: [NEC, IEC]
+        codeSection:
+          type: string
+          example: "NEC 210.20(A)"
+        isSafe:
+          type: boolean
+        warnings:
+          type: array
+          items:
+            $ref: '#/components/schemas/CalculationWarning'
+
+    CalculationHistoryEntry:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        timestamp:
+          type: string
+          format: date-time
+        standard:
+          type: string
+          enum: [NEC, IEC]
+        voltage:
+          type: number
+        phase:
+          type: string
+          enum: [single, three]
+        loadValue:
+          type: number
+        recommendedBreaker:
+          type: number
+        projectName:
+          type: string
+
+    CalculationWarning:
+      type: object
+      properties:
+        level:
+          type: string
+          enum: [info, warning, error]
+        code:
+          type: string
+          example: "SHORT_CIRCUIT_CAPACITY_LOW"
+        message:
+          type: string
+        codeReference:
+          type: string
+          example: "NEC 210.19(A)"
+        recommendation:
+          type: string
+
+    # ===== Error Schemas =====
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          enum:
+            - INVALID_INPUT
+            - VALIDATION_ERROR
+            - CALCULATION_FAILED
+            - NOT_FOUND
+            - INTERNAL_ERROR
+        message:
+          type: string
+          description: Human-readable error message
+        code:
+          type: string
+          description: Machine-readable error code
+        timestamp:
+          type: string
+          format: date-time
+
+    ValidationErrorResponse:
+      allOf:
+        - $ref: '#/components/schemas/ErrorResponse'
+        - type: object
+          properties:
+            errors:
+              type: array
+              items:
+                type: object
+                properties:
+                  field:
+                    type: string
+                  message:
+                    type: string
+                  value:
+                    description: The invalid value provided
+                  constraint:
+                    type: string
+                    example: "must be 100-1000"
+
+  # ===== Common Parameters =====
+
+  parameters:
+    StandardParam:
+      name: standard
+      in: query
+      description: Electrical standard (NEC or IEC)
+      schema:
+        type: string
+        enum: [NEC, IEC]
+
+    VoltageParam:
+      name: voltage
+      in: query
+      description: Circuit voltage in volts
+      schema:
+        type: number
+        minimum: 100
+        maximum: 1000
+
+tags:
+  - name: Calculations
+    description: Core breaker sizing calculations
+  - name: Voltage Drop Analysis
+    description: Voltage drop and cable sizing
+  - name: Derating Factors
+    description: Environmental derating calculations
+  - name: Recommendations
+    description: Breaker type and cable recommendations
+  - name: History
+    description: Calculation history retrieval and management
+  - name: Export
+    description: Report generation and export
+
+x-code-samples:
+  - lang: typescript
+    source: |
+      // TypeScript example
+      const response = await fetch('/api/v1/breaker/calculate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          standard: 'NEC',
+          voltage: 240,
+          phase: 'single',
+          loadMode: 'kw',
+          loadValue: 10,
+          powerFactor: 0.9
+        })
+      });
+      const result = await response.json();
+      console.log(`Recommended breaker: ${result.breakerSizing.recommendedBreakerAmps}A`);
