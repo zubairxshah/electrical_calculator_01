@@ -115,7 +115,8 @@ export function LightingDesignTool() {
     } finally {
       setIsCalculating(false);
     }
-  }, [room, store.selectedLuminaire, params, store]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [room, store.selectedLuminaire, params]);
 
   // Update UF when room parameters change (unless manually overridden)
   useEffect(() => {
@@ -134,6 +135,7 @@ export function LightingDesignTool() {
       );
       store.setUtilizationFactor(newUF, false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     room.length,
     room.width,
@@ -144,7 +146,6 @@ export function LightingDesignTool() {
     room.floorReflectance,
     store.selectedLuminaire,
     store.isUFManualOverride,
-    store,
   ]);
 
   // Update illuminance when space type changes
@@ -153,7 +154,8 @@ export function LightingDesignTool() {
     if (preset) {
       store.setRequiredIlluminance(preset.illuminance);
     }
-  }, [store.spaceType, store]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [store.spaceType]);
 
   return (
     <div className="space-y-6">
