@@ -1,0 +1,686 @@
+openapi: 3.0.3
+info:
+  title: ElectroMate Lighting Design API
+  description: |
+    API contracts for the Lighting Design Calculator feature.
+    Note: This is primarily a client-side calculator. API endpoints are for:
+    - User luminaire catalog management (authenticated)
+    - Saved lighting designs (authenticated)
+    - Premium feature validation (subscription check)
+  version: 1.0.0
+  contact:
+    name: ElectroMate Engineering
+servers:
+  - url: /api
+    description: Next.js API routes
+
+tags:
+  - name: Luminaire Catalog
+    description: User-saved custom luminaires
+  - name: Lighting Designs
+    description: Saved lighting design calculations
+  - name: Premium Features
+    description: Subscription and feature gating
+
+paths:
+  /lighting/luminaires:
+    get:
+      tags:
+        - Luminaire Catalog
+      summary: Get user's custom luminaires
+      description: Retrieve all custom luminaires saved by the authenticated user
+      operationId: getUserLuminaires
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: category
+          in: query
+          schema:
+            $ref: '#/components/schemas/LuminaireCategory'
+          description: Filter by luminaire category
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: List of user luminaires
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  luminaires:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/UserLuminaire'
+                  total:
+                    type: integer
+                  limit:
+                    type: integer
+                  offset:
+                    type: integer
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      tags:
+        - Luminaire Catalog
+      summary: Save a custom luminaire
+      description: Save a new custom luminaire to the user's catalog
+      operationId: createUserLuminaire
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LuminaireInput'
+      responses:
+        '201':
+          description: Luminaire created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserLuminaire'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /lighting/luminaires/{id}:
+    get:
+      tags:
+        - Luminaire Catalog
+      summary: Get a specific luminaire
+      operationId: getLuminaireById
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Luminaire details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserLuminaire'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags:
+        - Luminaire Catalog
+      summary: Update a custom luminaire
+      operationId: updateLuminaire
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LuminaireInput'
+      responses:
+        '200':
+          description: Luminaire updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserLuminaire'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags:
+        - Luminaire Catalog
+      summary: Delete a custom luminaire
+      operationId: deleteLuminaire
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Luminaire deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /lighting/designs:
+    get:
+      tags:
+        - Lighting Designs
+      summary: Get user's saved lighting designs
+      operationId: getUserDesigns
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: List of saved designs
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  designs:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SavedDesignSummary'
+                  total:
+                    type: integer
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      tags:
+        - Lighting Designs
+      summary: Save a lighting design
+      operationId: saveDesign
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SaveDesignInput'
+      responses:
+        '201':
+          description: Design saved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavedDesign'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /lighting/designs/{id}:
+    get:
+      tags:
+        - Lighting Designs
+      summary: Get a saved design
+      operationId: getDesignById
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Full design data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavedDesign'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags:
+        - Lighting Designs
+      summary: Delete a saved design
+      operationId: deleteDesign
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Design deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /lighting/premium/visual-analysis-status:
+    get:
+      tags:
+        - Premium Features
+      summary: Check visual analysis usage
+      description: |
+        Check the user's visual analysis usage for the current month.
+        Free tier: 3 analyses/month
+        Premium tier: Unlimited
+      operationId: getVisualAnalysisStatus
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Visual analysis status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tier:
+                    type: string
+                    enum: [free, premium]
+                  usedThisMonth:
+                    type: integer
+                  limit:
+                    type: integer
+                    nullable: true
+                    description: null for unlimited (premium)
+                  remainingAnalyses:
+                    type: integer
+                    nullable: true
+                  resetDate:
+                    type: string
+                    format: date
+                    description: First day of next month
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /lighting/premium/record-visual-analysis:
+    post:
+      tags:
+        - Premium Features
+      summary: Record a visual analysis usage
+      description: Increment the user's visual analysis counter
+      operationId: recordVisualAnalysis
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Usage recorded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  remainingAnalyses:
+                    type: integer
+                    nullable: true
+        '402':
+          description: Visual analysis limit reached (free tier)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Monthly visual analysis limit reached"
+                  upgradeUrl:
+                    type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: BetterAuth session token
+
+  schemas:
+    LuminaireCategory:
+      type: string
+      enum:
+        - troffer
+        - highbay
+        - downlight
+        - wallpack
+        - strip
+        - roadway
+        - floodlight
+        - decorative
+        - emergency
+
+    DistributionType:
+      type: string
+      enum:
+        - direct
+        - indirect
+        - direct-indirect
+        - symmetric
+        - asymmetric
+
+    LuminaireInput:
+      type: object
+      required:
+        - manufacturer
+        - model
+        - category
+        - watts
+        - lumens
+      properties:
+        manufacturer:
+          type: string
+          minLength: 1
+          maxLength: 100
+        model:
+          type: string
+          minLength: 1
+          maxLength: 100
+        category:
+          $ref: '#/components/schemas/LuminaireCategory'
+        watts:
+          type: number
+          minimum: 1
+          maximum: 5000
+        lumens:
+          type: number
+          minimum: 1
+          maximum: 100000
+        efficacy:
+          type: number
+          minimum: 1
+          maximum: 250
+        beamAngle:
+          type: number
+          minimum: 10
+          maximum: 180
+        distributionType:
+          $ref: '#/components/schemas/DistributionType'
+        maxSHR:
+          type: number
+          minimum: 0.5
+          maximum: 2.5
+        cri:
+          type: integer
+          minimum: 0
+          maximum: 100
+        cct:
+          type: integer
+          minimum: 2000
+          maximum: 10000
+        dimmable:
+          type: boolean
+        ipRating:
+          type: string
+          maxLength: 10
+
+    UserLuminaire:
+      allOf:
+        - type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            userId:
+              type: string
+              format: uuid
+            createdAt:
+              type: string
+              format: date-time
+            updatedAt:
+              type: string
+              format: date-time
+        - $ref: '#/components/schemas/LuminaireInput'
+
+    RoomInput:
+      type: object
+      required:
+        - length
+        - width
+        - height
+      properties:
+        length:
+          type: number
+          minimum: 1
+          maximum: 100
+          description: Room length in meters
+        width:
+          type: number
+          minimum: 1
+          maximum: 100
+          description: Room width in meters
+        height:
+          type: number
+          minimum: 2
+          maximum: 20
+          description: Ceiling height in meters
+        workPlaneHeight:
+          type: number
+          minimum: 0
+          default: 0.75
+          description: Work plane height above floor
+        ceilingReflectance:
+          type: integer
+          minimum: 0
+          maximum: 100
+          default: 80
+        wallReflectance:
+          type: integer
+          minimum: 0
+          maximum: 100
+          default: 50
+        floorReflectance:
+          type: integer
+          minimum: 0
+          maximum: 100
+          default: 20
+        spaceType:
+          type: string
+
+    DesignParametersInput:
+      type: object
+      required:
+        - requiredIlluminance
+      properties:
+        requiredIlluminance:
+          type: number
+          minimum: 50
+          maximum: 5000
+          description: Required illuminance in lux
+        utilizationFactor:
+          type: number
+          minimum: 0.3
+          maximum: 0.9
+        maintenanceFactor:
+          type: number
+          minimum: 0.5
+          maximum: 1.0
+          default: 0.8
+        operatingHoursPerDay:
+          type: number
+          minimum: 1
+          maximum: 24
+          default: 10
+        unitSystem:
+          type: string
+          enum: [SI, Imperial]
+          default: SI
+
+    CalculationResults:
+      type: object
+      properties:
+        roomIndex:
+          type: object
+          properties:
+            value:
+              type: number
+            mountingHeight:
+              type: number
+            formula:
+              type: string
+        utilizationFactor:
+          type: number
+        luminairesRequired:
+          type: number
+        luminairesRounded:
+          type: integer
+        averageIlluminance:
+          type: number
+        totalWatts:
+          type: number
+        totalLumens:
+          type: number
+        energyConsumptionKwhYear:
+          type: number
+        spacingToHeightRatio:
+          type: number
+        shrCompliant:
+          type: boolean
+        warnings:
+          type: array
+          items:
+            type: object
+            properties:
+              severity:
+                type: string
+                enum: [info, warning, error]
+              code:
+                type: string
+              message:
+                type: string
+        recommendations:
+          type: array
+          items:
+            type: string
+        standardReference:
+          type: string
+        calculatedAt:
+          type: string
+          format: date-time
+
+    SaveDesignInput:
+      type: object
+      required:
+        - name
+        - room
+        - luminaire
+        - designParameters
+        - results
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        room:
+          $ref: '#/components/schemas/RoomInput'
+        luminaire:
+          $ref: '#/components/schemas/LuminaireInput'
+        designParameters:
+          $ref: '#/components/schemas/DesignParametersInput'
+        results:
+          $ref: '#/components/schemas/CalculationResults'
+
+    SavedDesignSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        roomDimensions:
+          type: string
+          description: "12m × 8m × 3m"
+        luminairesRequired:
+          type: integer
+        averageIlluminance:
+          type: number
+        createdAt:
+          type: string
+          format: date-time
+
+    SavedDesign:
+      allOf:
+        - $ref: '#/components/schemas/SavedDesignSummary'
+        - type: object
+          properties:
+            room:
+              $ref: '#/components/schemas/RoomInput'
+            luminaire:
+              $ref: '#/components/schemas/LuminaireInput'
+            designParameters:
+              $ref: '#/components/schemas/DesignParametersInput'
+            results:
+              $ref: '#/components/schemas/CalculationResults'
+            updatedAt:
+              type: string
+              format: date-time
+
+  responses:
+    BadRequest:
+      description: Invalid input
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    field:
+                      type: string
+                    message:
+                      type: string
+
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: "Authentication required"
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: "Resource not found"
