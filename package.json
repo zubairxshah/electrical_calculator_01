@@ -45,6 +45,7 @@
     "mathjs": "^15.1.0",
     "next": "^16.1.1",
     "nuqs": "^2.8.6",
+    "pdfjs-dist": "^5.4.530",
     "postcss": "^8.5.6",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
@@ -53,6 +54,7 @@
     "tailwind-merge": "^3.4.0",
     "tailwindcss": "^3.4.19",
     "tailwindcss-animate": "^1.0.7",
+    "tesseract.js": "^7.0.0",
     "typescript": "^5.9.3",
     "zod": "^4.2.1",
     "zustand": "^5.0.9"

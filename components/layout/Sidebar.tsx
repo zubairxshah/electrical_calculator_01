@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import { Battery, Zap, Cable, Sun, Settings, Scale, X, CircuitBoard } from 'lucide-react'
+import { Battery, Zap, Cable, Sun, Settings, Scale, X, CircuitBoard, Lightbulb } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 /**
@@ -41,6 +41,13 @@ const navigationItems = [
     href: '/breaker',
     icon: CircuitBoard,
     description: 'Breaker sizing with NEC/IEC standards',
+    priority: 'P1',
+  },
+  {
+    name: 'Lighting Design',
+    href: '/lighting',
+    icon: Lightbulb,
+    description: 'Indoor lighting calculations (IESNA)',
     priority: 'P1',
   },
   {

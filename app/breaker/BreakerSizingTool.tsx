@@ -6,7 +6,9 @@
  * - Calculation trigger with debouncing
  * - Results display
  * - Optional derating sidebar
+ * - Optional history sidebar
  * - Standard toggle (NEC/IEC)
+ * - PDF export functionality
  *
  * @module BreakerSizingTool
  */
@@ -18,10 +20,12 @@ import { useBreakerStore } from '@/stores/useBreakerStore';
 import { BreakerInputForm } from '@/components/breaker/BreakerInputForm';
 import { BreakerResults } from '@/components/breaker/BreakerResults';
 import { DeratingSidebar } from '@/components/breaker/DeratingSidebar';
+import { HistorySidebar } from '@/components/breaker/HistorySidebar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Loader2, Calculator, Settings } from 'lucide-react';
+import { Loader2, Calculator, Settings, FileText, History } from 'lucide-react';
 import { calculateBreakerSizing } from '@/lib/calculations/breaker/breakerCalculator';
+import { downloadBreakerPDF } from '@/lib/pdfGenerator.breaker';
 import type { BreakerCalculationInput } from '@/lib/calculations/breaker/breakerCalculator';
 
 /**
@@ -36,6 +40,10 @@ export function BreakerSizingTool() {
   // Local state
   const [isCalculating, setIsCalculating] = useState(false);
   const [calculationError, setCalculationError] = useState<string | null>(null);
+  const [isExportingPDF, setIsExportingPDF] = useState(false);
+
+  // Sidebar state
+  const [showHistory, setShowHistory] = useState(false);
 
   // Debounce timer ref (T030: 300ms debouncing)
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -104,6 +112,47 @@ export function BreakerSizingTool() {
   }, [store]);
 
   /**
+   * Handle PDF export
+   */
+  const handleExportPDF = useCallback(async () => {
+    if (!store.results) {
+      return;
+    }
+
+    setIsExportingPDF(true);
+    try {
+      console.log('[BreakerSizingTool] Generating PDF...');
+
+      await downloadBreakerPDF({
+        circuit: {
+          standard: store.standard,
+          voltage: store.voltage,
+          phase: store.phase,
+          loadMode: store.loadMode,
+          loadValue: store.loadValue,
+          powerFactor: store.powerFactor,
+          unitSystem: store.unitSystem,
+        },
+        results: store.results,
+        project: store.projectName || store.engineerName || store.projectLocation
+          ? {
+              projectName: store.projectName,
+              projectLocation: store.projectLocation,
+              engineerName: store.engineerName,
+            }
+          : undefined,
+      });
+
+      console.log('[BreakerSizingTool] PDF downloaded successfully');
+    } catch (error) {
+      console.error('[BreakerSizingTool] PDF export failed:', error);
+      // Could add error handling UI here
+    } finally {
+      setIsExportingPDF(false);
+    }
+  }, [store]);
+
+  /**
    * Debounced auto-calculation
    * T030: Auto-recalculate with 300ms debounce after input changes
    */
@@ -158,22 +207,36 @@ export function BreakerSizingTool() {
   }, []);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      {/* Main Input Area */}
-      <div className="lg:col-span-2 space-y-6">
+    <div className="relative">
+      {/* Main Content Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Main Input Area */}
+        <div className="lg:col-span-2 space-y-6">
         {/* Input Form Card */}
         <Card>
           <CardContent className="pt-6">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-semibold">Circuit Configuration</h2>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => store.toggleDeratingSidebar()}
-              >
-                <Settings className="h-4 w-4 mr-2" />
-                {store.showDeratingSidebar ? 'Hide' : 'Show'} Advanced
-              </Button>
+              <div className="flex gap-2">
+                {/* History Toggle */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowHistory(true)}
+                >
+                  <History className="h-4 w-4 mr-2" />
+                  History
+                </Button>
+                {/* Advanced Settings Toggle */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => store.toggleDeratingSidebar()}
+                >
+                  <Settings className="h-4 w-4 mr-2" />
+                  {store.showDeratingSidebar ? 'Hide' : 'Show'} Advanced
+                </Button>
+              </div>
             </div>
 
             <BreakerInputForm
@@ -196,11 +259,11 @@ export function BreakerSizingTool() {
             />
 
             {/* Calculate Button */}
-            <div className="mt-6">
+            <div className="mt-6 flex gap-3">
               <Button
                 onClick={handleCalculate}
                 disabled={isCalculating}
-                className="w-full"
+                className="flex-1"
                 size="lg"
               >
                 {isCalculating ? (
@@ -215,6 +278,22 @@ export function BreakerSizingTool() {
                   </>
                 )}
               </Button>
+
+              {/* PDF Export Button */}
+              {store.results && (
+                <Button
+                  variant="outline"
+                  onClick={handleExportPDF}
+                  disabled={isExportingPDF}
+                  size="lg"
+                >
+                  {isExportingPDF ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  ) : (
+                    <FileText className="h-5 w-5" />
+                  )}
+                </Button>
+              )}
             </div>
 
             {/* Error Display */}
@@ -307,6 +386,13 @@ export function BreakerSizingTool() {
           </Card>
         )}
       </div>
+      </div>
+
+      {/* History Sidebar - overlay, not part of grid */}
+      <HistorySidebar
+        isOpen={showHistory}
+        onClose={() => setShowHistory(false)}
+      />
     </div>
   );
 }

@@ -1,8 +1,11 @@
 # Session Memory - ElectroMate Engineering App
 
 **Last Updated:** 2025-12-28
-**Active Feature:** 003-circuit-breaker-sizing
-**Branch:** 003-circuit-breaker-sizing
+**Active Feature:** 004-lighting-design (spec created, ready for planning)
+**Branches:**
+- `main` - Feature 001 (Battery, UPS, Cable, Solar, Charge Controller, Battery Comparison) - 77% complete
+- `003-circuit-breaker-sizing` - All 7 User Stories COMPLETE (72.7% of tasks)
+- `004-lighting-design` - Specification created, ready for planning
 
 ---
 
@@ -422,7 +425,67 @@ http://localhost:3000/breaker
 
 ---
 
-## Next Session Actions
+## RESUME POINT (2025-12-29)
 
-1. **Continue with Circuit Breaker Feature:** Run `/sp.implement` on branch 003-circuit-breaker-sizing
-2. **Or Return to Feature 001:** Switch to main branch and complete Polish & Compliance phases
+**Current Working Directory:** `004-lighting-design` branch
+
+### Session Summary
+
+#### Circuit Breaker Sizing (003-circuit-breaker-sizing) - MOSTLY COMPLETE
+- **Status:** All 7 User Stories COMPLETE, build passes ✅
+- **Branch:** `003-circuit-breaker-sizing` (pushed to origin)
+- **Progress:** 104/143 tasks (72.7%)
+- **Tests:** 100/100 passing
+- **Last Action:** Fixed build errors (math.sqrt TypeScript, Zod compatibility, JSX syntax, missing components)
+- **Next Actions:**
+  1. Phase 10: Polish (T099-T107) - Loading spinner, binary search optimization, keyboard shortcuts, example presets, clear all button, responsive design, E2E tests
+  2. Phase 11: Constitution Compliance (T108-T143) - Validation against constitution principles
+
+#### Lighting Design Calculator (004-lighting-design) - SPEC READY FOR PLANNING
+- **Status:** ✅ Specification complete, ready for `/sp.plan`
+- **Branch:** `004-lighting-design` (pushed to origin)
+- **Specification:** `specs/004-lighting-design/spec.md`
+- **Key Decisions Made:**
+  - Visual Input: Tesseract.js OCR (local, zero cost)
+  - Outdoor Standards: IES RP-8 + CIE 140 (dual support)
+  - Freemium: Unlimited basic, 3 visual analyses/month free
+- **Next Action:** Run `/sp.plan` to create technical architecture
+
+### Files Modified This Session
+
+**Circuit Breaker Fixes:**
+- `app/breaker/BreakerSizingTool.tsx` - Fixed JSX syntax for HistorySidebar
+- `lib/calculations/breaker/loadCurrent.ts` - Fixed math.sqrt TypeScript error
+- `lib/validation/breakerValidation.ts` - Removed unsupported Zod options
+- `components/breaker/HistorySidebar.tsx` - Fixed Badge variant
+- `components/ui/separator.tsx` - Added missing component
+
+**Lighting Design:**
+- `specs/004-lighting-design/spec.md` - Updated clarifications resolved
+- `specs/004-lighting-design/checklists/requirements.md` - Ready for planning status
+- `history/prompts/004-lighting-design/M001-*.spec.prompt.md` - PHR created
+
+### Git Status
+- `003-circuit-breaker-sizing`: e394e6e (pushed)
+- `004-lighting-design`: 217e3fd (pushed)
+
+### Quick Resume Commands
+```bash
+# Resume Circuit Breaker Polish/Compliance:
+git checkout 003-circuit-breaker-sizing
+npm run test -- __tests__/unit/calculations/breaker/
+npm run dev
+
+# Continue Lighting Design Planning:
+git checkout 004-lighting-design
+/sp.plan  # Run planning phase
+```
+
+### Known Issues
+- Solar API route (`/api/calculations/solar`) has pre-existing build issue unrelated to breaker changes
+- Google Fonts network error (environment-specific, not code issue)
+
+---
+
+**Last Updated:** 2025-12-29
+**Session End:** Build fixes complete, ready to resume
