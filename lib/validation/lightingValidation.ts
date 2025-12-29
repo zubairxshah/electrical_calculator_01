@@ -175,7 +175,7 @@ export function validateRoom(input: unknown): ValidationResult {
   if (!result.success) {
     return {
       isValid: false,
-      errors: result.error.errors.map((e) => e.message),
+      errors: result.error.issues.map((e) => e.message),
       warnings: [],
     };
   }
@@ -229,7 +229,7 @@ export function validateLuminaire(input: unknown): ValidationResult {
   if (!result.success) {
     return {
       isValid: false,
-      errors: result.error.errors.map((e) => e.message),
+      errors: result.error.issues.map((e) => e.message),
       warnings: [],
     };
   }
@@ -272,7 +272,7 @@ export function validateDesignParameters(input: unknown): ValidationResult {
   if (!result.success) {
     return {
       isValid: false,
-      errors: result.error.errors.map((e) => e.message),
+      errors: result.error.issues.map((e) => e.message),
       warnings: [],
     };
   }
