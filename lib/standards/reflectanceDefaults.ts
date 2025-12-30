@@ -24,6 +24,7 @@ export interface ReflectancePreset {
  * Standard reflectance presets for common room types
  */
 export const REFLECTANCE_PRESETS: ReflectancePreset[] = [
+  // Commercial Spaces
   {
     name: 'Standard Office',
     description: 'White ceiling, light walls, medium carpet',
@@ -66,6 +67,58 @@ export const REFLECTANCE_PRESETS: ReflectancePreset[] = [
     wall: 60,
     floor: 40,
   },
+  // Residential Spaces
+  {
+    name: 'Residential Living',
+    description: 'Off-white ceiling, warm-toned walls, wood floor',
+    ceiling: 70,
+    wall: 50,
+    floor: 30,
+  },
+  {
+    name: 'Residential Bedroom',
+    description: 'Soft white ceiling, neutral walls, carpet',
+    ceiling: 75,
+    wall: 55,
+    floor: 35,
+  },
+  {
+    name: 'Residential Kitchen',
+    description: 'White ceiling, light cabinets, tile floor',
+    ceiling: 80,
+    wall: 60,
+    floor: 40,
+  },
+  {
+    name: 'Modern Home',
+    description: 'White ceiling, light gray walls, light wood floor',
+    ceiling: 85,
+    wall: 55,
+    floor: 45,
+  },
+  {
+    name: 'Traditional Home',
+    description: 'Off-white ceiling, warm beige walls, dark wood floor',
+    ceiling: 70,
+    wall: 45,
+    floor: 20,
+  },
+  // Hospitality
+  {
+    name: 'Hotel Room',
+    description: 'Soft white ceiling, neutral walls, carpet',
+    ceiling: 75,
+    wall: 50,
+    floor: 30,
+  },
+  {
+    name: 'Restaurant',
+    description: 'Warm tone ceiling, accent walls, varied flooring',
+    ceiling: 65,
+    wall: 40,
+    floor: 25,
+  },
+  // Edge Cases
   {
     name: 'Dark Interior',
     description: 'Dark ceiling, dark walls, dark floor',
@@ -128,6 +181,57 @@ export function getReflectancePreset(name: string): ReflectancePreset | undefine
   return REFLECTANCE_PRESETS.find(
     (preset) => preset.name.toLowerCase() === name.toLowerCase()
   );
+}
+
+/**
+ * Get recommended reflectance preset for a space type
+ *
+ * Maps space types to appropriate surface reflectance values
+ * based on typical finishes for that environment.
+ */
+export function getReflectancePresetForSpaceType(
+  spaceType: string
+): ReflectancePreset {
+  const presets: Record<string, ReflectancePreset> = {
+    // Residential
+    residential_living: REFLECTANCE_PRESETS.find(p => p.name === 'Residential Living')!,
+    residential_kitchen: REFLECTANCE_PRESETS.find(p => p.name === 'Residential Kitchen')!,
+    residential_bedroom: REFLECTANCE_PRESETS.find(p => p.name === 'Residential Bedroom')!,
+    residential_bathroom: REFLECTANCE_PRESETS.find(p => p.name === 'Modern Home')!,
+    // Hospitality
+    hotel_lobby: REFLECTANCE_PRESETS.find(p => p.name === 'Modern Home')!,
+    hotel_guest_room: REFLECTANCE_PRESETS.find(p => p.name === 'Hotel Room')!,
+    restaurant_dining: REFLECTANCE_PRESETS.find(p => p.name === 'Restaurant')!,
+    restaurant_kitchen: REFLECTANCE_PRESETS.find(p => p.name === 'Residential Kitchen')!,
+    cafe_bistro: REFLECTANCE_PRESETS.find(p => p.name === 'Restaurant')!,
+    // Retail
+    retail: REFLECTANCE_PRESETS.find(p => p.name === 'Retail')!,
+    retail_store: REFLECTANCE_PRESETS.find(p => p.name === 'Modern Home')!,
+    retail_display: REFLECTANCE_PRESETS.find(p => p.name === 'Highly Reflective')!,
+    // Commercial
+    office_general: REFLECTANCE_PRESETS.find(p => p.name === 'Standard Office')!,
+    office_detailed: REFLECTANCE_PRESETS.find(p => p.name === 'Modern Office')!,
+    classroom: REFLECTANCE_PRESETS.find(p => p.name === 'Standard Office')!,
+    conference: REFLECTANCE_PRESETS.find(p => p.name === 'Modern Office')!,
+    corridor: REFLECTANCE_PRESETS.find(p => p.name === 'Standard Office')!,
+    lobby: REFLECTANCE_PRESETS.find(p => p.name === 'Modern Office')!,
+    // Industrial
+    warehouse: REFLECTANCE_PRESETS.find(p => p.name === 'Warehouse')!,
+    warehouse_detailed: REFLECTANCE_PRESETS.find(p => p.name === 'Industrial')!,
+    industrial: REFLECTANCE_PRESETS.find(p => p.name === 'Industrial')!,
+    // Healthcare
+    hospital_exam: REFLECTANCE_PRESETS.find(p => p.name === 'Healthcare')!,
+    // Services
+    salon_beauty: REFLECTANCE_PRESETS.find(p => p.name === 'Healthcare')!,
+    // Food Processing
+    food_prep: REFLECTANCE_PRESETS.find(p => p.name === 'Residential Kitchen')!,
+    food_storage: REFLECTANCE_PRESETS.find(p => p.name === 'Warehouse')!,
+    food_service: REFLECTANCE_PRESETS.find(p => p.name === 'Residential Kitchen')!,
+    // Parking
+    parking_indoor: REFLECTANCE_PRESETS.find(p => p.name === 'Warehouse')!,
+  };
+
+  return presets[spaceType] || REFLECTANCE_PRESETS.find(p => p.name === 'Standard Office')!;
 }
 
 /**

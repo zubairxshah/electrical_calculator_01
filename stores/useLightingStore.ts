@@ -29,6 +29,8 @@ import type {
   LightingStandard,
   UnitSystem,
 } from '@/lib/types/lighting';
+import { getSpaceTypePreset } from '@/lib/standards/spaceTypePresets';
+import { getReflectancePresetForSpaceType } from '@/lib/standards/reflectanceDefaults';
 
 // ============================================================================
 // State Types
@@ -222,7 +224,21 @@ export const useLightingStore = create<LightingCalculatorState & LightingCalcula
       },
 
       setSpaceType: (type) => {
-        set({ spaceType: type });
+        // Get the preset for this space type
+        const preset = getSpaceTypePreset(type);
+        const reflectancePreset = getReflectancePresetForSpaceType(type);
+
+        set({
+          spaceType: type,
+          // Auto-set illuminance from preset
+          requiredIlluminance: preset?.illuminance ?? 300,
+          // Auto-adjust reflectances to match space type
+          ceilingReflectance: reflectancePreset.ceiling,
+          wallReflectance: reflectancePreset.wall,
+          floorReflectance: reflectancePreset.floor,
+          // Reset UF calculation since reflectances changed
+          isUFManualOverride: false,
+        });
       },
 
       // =========================================================================
