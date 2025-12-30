@@ -263,6 +263,8 @@ export interface CalculationResults {
   luminairesRequired: number;
   /** Rounded up number of luminaires */
   luminairesRounded: number;
+  /** Practical number of luminaires (with density limits) */
+  luminairesPractical: number;
   /** Average illuminance achieved in lux */
   averageIlluminance: number;
   /** Total power consumption in Watts */
