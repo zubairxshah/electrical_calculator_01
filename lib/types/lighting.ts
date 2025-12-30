@@ -27,6 +27,24 @@ export enum SpaceType {
   RETAIL = 'retail',
   HOSPITAL_EXAM = 'hospital_exam',
   PARKING_INDOOR = 'parking_indoor',
+  // Residential & Hospitality
+  RESIDENTIAL_LIVING = 'residential_living',
+  RESIDENTIAL_KITCHEN = 'residential_kitchen',
+  RESIDENTIAL_BEDROOM = 'residential_bedroom',
+  RESIDENTIAL_BATHROOM = 'residential_bathroom',
+  HOTEL_LOBBY = 'hotel_lobby',
+  HOTEL_GUEST_ROOM = 'hotel_guest_room',
+  RESTAURANT_DINING = 'restaurant_dining',
+  RESTAURANT_KITCHEN = 'restaurant_kitchen',
+  CAFE_BISTRO = 'cafe_bistro',
+  // Commercial & Services
+  RETAIL_STORE = 'retail_store',
+  RETAIL_DISPLAY = 'retail_display',
+  SALON_BEAUTY = 'salon_beauty',
+  // Food Processing
+  FOOD_PREP = 'food_prep',
+  FOOD_STORAGE = 'food_storage',
+  FOOD_SERVICE = 'food_service',
   CUSTOM = 'custom',
 }
 
@@ -39,10 +57,15 @@ export enum LuminaireCategory {
   DOWNLIGHT = 'downlight',
   WALLPACK = 'wallpack',
   STRIP = 'strip',
+  PANEL = 'panel',
+  BULKHEAD = 'bulkhead',
+  TRACK = 'track',
   ROADWAY = 'roadway',
   FLOODLIGHT = 'floodlight',
   DECORATIVE = 'decorative',
   EMERGENCY = 'emergency',
+  RESIDENTIAL = 'residential',
+  SPOTLIGHT = 'spotlight',
 }
 
 /**
