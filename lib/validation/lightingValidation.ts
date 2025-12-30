@@ -89,7 +89,7 @@ export const LuminaireSchema = z.object({
   beamAngle: z
     .number()
     .min(10, 'Beam angle must be at least 10°')
-    .max(180, 'Beam angle must not exceed 180°')
+    .max(360, 'Beam angle must not exceed 360°')
     .default(120),
   distributionType: z.nativeEnum(DistributionType).default(DistributionType.DIRECT),
   maxSHR: z
