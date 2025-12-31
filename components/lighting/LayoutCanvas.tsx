@@ -19,7 +19,9 @@
 
 import { useState, useEffect } from 'react';
 import { useCanvas } from '@/hooks/useCanvas';
+import { FixtureTooltip } from './FixtureTooltip';
 import type { FixturePosition } from '@/lib/types/lighting';
+import { UnitSystem } from '@/lib/types/lighting';
 
 export interface LayoutCanvasProps {
   /** Room width in meters */
@@ -28,6 +30,12 @@ export interface LayoutCanvasProps {
   roomLength: number;
   /** Fixture positions to display */
   fixturePositions: FixturePosition[];
+  /** Luminaire lumens output */
+  luminaireLumens?: number;
+  /** Luminaire watts */
+  luminaireWatts?: number;
+  /** Unit system for display */
+  unitSystem?: UnitSystem;
   /** Canvas container width (default: 600px) */
   containerWidth?: number;
   /** Whether to show grid overlay (default: true) */
@@ -49,6 +57,9 @@ export function LayoutCanvas({
   roomWidth,
   roomLength,
   fixturePositions,
+  luminaireLumens = 0,
+  luminaireWatts = 0,
+  unitSystem = UnitSystem.SI,
   containerWidth = 600,
   showGrid = true,
   onFixtureHover,
@@ -57,18 +68,19 @@ export function LayoutCanvas({
   className = '',
 }: LayoutCanvasProps) {
   const [hoveredFixture, setHoveredFixture] = useState<number | null>(null);
+  const [mousePosition, setMousePosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [canvasDimensions, setCanvasDimensions] = useState({ width: 600, height: 450 });
 
   // Calculate canvas dimensions based on room aspect ratio
   useEffect(() => {
     const aspectRatio = roomWidth / roomLength;
-    const margin = 80; // 40px margin on each side
 
-    let canvasWidth = containerWidth;
+    // Start with container width, but cap it
+    let canvasWidth = Math.min(containerWidth, 500);
     let canvasHeight = canvasWidth / aspectRatio;
 
     // Ensure canvas doesn't get too tall
-    const maxHeight = 600;
+    const maxHeight = 500;
     if (canvasHeight > maxHeight) {
       canvasHeight = maxHeight;
       canvasWidth = canvasHeight * aspectRatio;
@@ -79,6 +91,12 @@ export function LayoutCanvas({
     if (canvasHeight < minHeight) {
       canvasHeight = minHeight;
       canvasWidth = canvasHeight * aspectRatio;
+    }
+
+    // Cap width to container
+    if (canvasWidth > containerWidth) {
+      canvasWidth = containerWidth;
+      canvasHeight = canvasWidth / aspectRatio;
     }
 
     setCanvasDimensions({
@@ -136,11 +154,15 @@ export function LayoutCanvas({
 
     if (hoveredIndex !== hoveredFixture) {
       setHoveredFixture(hoveredIndex);
+      setMousePosition({ x: e.clientX, y: e.clientY });
       redraw(hoveredIndex);
 
       if (onFixtureHover) {
         onFixtureHover(hoveredIndex);
       }
+    } else if (hoveredIndex !== null) {
+      // Update mouse position even if same fixture
+      setMousePosition({ x: e.clientX, y: e.clientY });
     }
   };
 
@@ -194,7 +216,7 @@ export function LayoutCanvas({
   }
 
   return (
-    <div className={`relative ${className}`}>
+    <div className={`relative w-full ${className}`}>
       <canvas
         ref={canvasRef}
         width={canvasDimensions.width}
@@ -202,12 +224,27 @@ export function LayoutCanvas({
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
         onClick={handleClick}
-        className="border border-slate-300 rounded-lg bg-white shadow-sm cursor-pointer"
+        className="border border-slate-300 rounded-lg bg-white shadow-sm cursor-pointer w-full"
         style={{
-          width: canvasDimensions.width,
-          height: canvasDimensions.height,
+          maxWidth: '100%',
+          height: 'auto',
+          aspectRatio: `${canvasDimensions.width} / ${canvasDimensions.height}`,
         }}
       />
+
+      {/* Tooltip */}
+      {hoveredFixture !== null && luminaireLumens > 0 && (
+        <FixtureTooltip
+          fixtureNumber={hoveredFixture + 1}
+          lumens={luminaireLumens}
+          watts={luminaireWatts}
+          position={fixturePositions[hoveredFixture]}
+          roomDimensions={{ width: roomWidth, length: roomLength }}
+          screenPosition={mousePosition}
+          visible={true}
+          unitSystem={unitSystem}
+        />
+      )}
 
       {/* Legend */}
       <div className="mt-3 flex items-center gap-4 text-sm text-slate-600">

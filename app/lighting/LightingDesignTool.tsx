@@ -50,7 +50,6 @@ import type { Room, Luminaire, DesignParameters, CalculationResults, Calculation
 import { SpaceType, LuminaireCategory, LightingStandard, UnitSystem } from '@/lib/types/lighting';
 import { downloadLightingPdf } from '@/lib/reports/lightingPdfGenerator';
 import { LayoutCanvas } from '@/components/lighting/LayoutCanvas';
-import { FixtureTooltip } from '@/components/lighting/FixtureTooltip';
 import { FixtureSuggestions } from '@/components/lighting/FixtureSuggestions';
 import { LayoutToolbar } from '@/components/lighting/LayoutToolbar';
 import { calculateFixtureLayout } from '@/lib/calculations/lighting/layoutAlgorithm';
@@ -64,8 +63,6 @@ export function LightingDesignTool() {
   const store = useLightingStore();
   const [isCalculating, setIsCalculating] = useState(false);
   const [activeTab, setActiveTab] = useState('room');
-  const [hoveredFixture, setHoveredFixture] = useState<number | null>(null);
-  const [tooltipPosition, setTooltipPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [layoutCanvasElement, setLayoutCanvasElement] = useState<HTMLCanvasElement | null>(null);
   const [useSimpleMethod, setUseSimpleMethod] = useState(true); // Default to simple method
 
@@ -778,27 +775,15 @@ export function LightingDesignTool() {
                         roomWidth={room.width}
                         roomLength={room.length}
                         fixturePositions={store.layoutPositions}
-                        containerWidth={560}
+                        luminaireLumens={store.selectedLuminaire?.lumens}
+                        luminaireWatts={store.selectedLuminaire?.watts}
+                        unitSystem={store.unitSystem}
+                        containerWidth={500}
                         showGrid={true}
-                        onFixtureHover={(index) => {
-                          setHoveredFixture(index);
-                        }}
                         onCanvasReady={(canvas) => {
                           setLayoutCanvasElement(canvas);
                         }}
                       />
-                      {hoveredFixture !== null && store.selectedLuminaire && (
-                        <FixtureTooltip
-                          fixtureNumber={hoveredFixture + 1}
-                          lumens={store.selectedLuminaire.lumens}
-                          watts={store.selectedLuminaire.watts}
-                          position={store.layoutPositions[hoveredFixture]}
-                          roomDimensions={{ width: room.width, length: room.length }}
-                          screenPosition={tooltipPosition}
-                          visible={true}
-                          unitSystem={store.unitSystem}
-                        />
-                      )}
                     </div>
                   )}
 
