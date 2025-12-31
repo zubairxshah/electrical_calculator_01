@@ -40,6 +40,7 @@ import {
 } from 'lucide-react';
 import { useLightingStore } from '@/stores/useLightingStore';
 import { performLightingCalculation } from '@/lib/calculations/lighting/lumenMethod';
+import { calculateSimpleLighting } from '@/lib/calculations/lighting/simpleLumenMethod';
 import { validateRoom, validateLuminaire, validateDesignParameters } from '@/lib/validation/lightingValidation';
 import { SPACE_TYPE_PRESETS, getSpaceTypePreset } from '@/lib/standards/spaceTypePresets';
 import { REFLECTANCE_PRESETS, DEFAULT_REFLECTANCES } from '@/lib/standards/reflectanceDefaults';
@@ -66,6 +67,7 @@ export function LightingDesignTool() {
   const [hoveredFixture, setHoveredFixture] = useState<number | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [layoutCanvasElement, setLayoutCanvasElement] = useState<HTMLCanvasElement | null>(null);
+  const [useSimpleMethod, setUseSimpleMethod] = useState(true); // Default to simple method
 
   // Get room from store
   const room: Room = {
@@ -116,16 +118,22 @@ export function LightingDesignTool() {
     setIsCalculating(true);
 
     try {
-      const results = performLightingCalculation(room, store.selectedLuminaire, params);
+      // Use simple method by default, or complex IESNA method if toggled
+      const results = useSimpleMethod
+        ? calculateSimpleLighting(room, store.selectedLuminaire, params)
+        : performLightingCalculation(room, store.selectedLuminaire, params);
+
       store.setResults(results);
 
       // Generate layout positions (Feature: 005-lighting-layout-viz)
-      if (results.luminairesRounded > 0) {
+      // Use practical count for layout visualization
+      const fixtureCount = results.luminairesPractical || results.luminairesRounded;
+      if (fixtureCount > 0) {
         const mountingHeight = room.height - room.workPlaneHeight;
         const layoutResult = calculateFixtureLayout({
           roomWidth: room.width,
           roomLength: room.length,
-          fixtureCount: results.luminairesRounded,
+          fixtureCount,
           mountingHeight,
         });
         store.setLayoutPositions(layoutResult.positions);
@@ -580,6 +588,34 @@ export function LightingDesignTool() {
               </Card>
             </TabsContent>
           </Tabs>
+
+          {/* Calculation Method Toggle */}
+          <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+            <div className="flex items-center gap-2">
+              <Settings2 className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-medium">Calculation Method</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge variant={useSimpleMethod ? "default" : "outline"} className="text-xs">
+                {useSimpleMethod ? 'Simple' : 'IESNA'}
+              </Badge>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setUseSimpleMethod(!useSimpleMethod)}
+              >
+                Switch
+              </Button>
+            </div>
+          </div>
+          <Alert>
+            <Info className="h-4 w-4" />
+            <AlertDescription className="text-xs">
+              {useSimpleMethod
+                ? 'Simple method: Direct lumen calculation for practical results (recommended for most applications)'
+                : 'IESNA method: Professional engineering calculation with UF tables (for detailed design)'}
+            </AlertDescription>
+          </Alert>
 
           {/* Calculate Button */}
           <Button
