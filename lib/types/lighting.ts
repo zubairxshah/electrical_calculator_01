@@ -510,3 +510,38 @@ export interface LightingCalculationInput {
   luminaire: Luminaire;
   designParameters: DesignParameters;
 }
+
+// ============================================================================
+// Layout Visualization Types (Feature: 005-lighting-layout-viz)
+// ============================================================================
+
+/**
+ * Fixture position in room layout
+ * Coordinates are stored as percentages (0-100) for resolution-independence
+ */
+export interface FixturePosition {
+  /** Horizontal position as percentage of room width (0-100) */
+  x: number;
+  /** Vertical position as percentage of room length (0-100) */
+  y: number;
+  /** Position index for tracking (0-based) */
+  index: number;
+  /** Whether this position was manually adjusted */
+  isManual?: boolean;
+}
+
+/**
+ * Layout configuration for visualization and export
+ */
+export interface LayoutConfiguration {
+  /** Fixture positions in the room */
+  positions: FixturePosition[];
+  /** Whether layout was manually customized */
+  isManual: boolean;
+  /** Layout algorithm used */
+  algorithm: 'center' | 'linear' | 'grid';
+  /** Canvas width in pixels */
+  canvasWidth: number;
+  /** Canvas height in pixels */
+  canvasHeight: number;
+}

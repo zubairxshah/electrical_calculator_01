@@ -40,6 +40,7 @@ import {
 } from 'lucide-react';
 import { useLightingStore } from '@/stores/useLightingStore';
 import { performLightingCalculation } from '@/lib/calculations/lighting/lumenMethod';
+import { calculateSimpleLighting } from '@/lib/calculations/lighting/simpleLumenMethod';
 import { validateRoom, validateLuminaire, validateDesignParameters } from '@/lib/validation/lightingValidation';
 import { SPACE_TYPE_PRESETS, getSpaceTypePreset } from '@/lib/standards/spaceTypePresets';
 import { REFLECTANCE_PRESETS, DEFAULT_REFLECTANCES } from '@/lib/standards/reflectanceDefaults';
@@ -48,6 +49,11 @@ import { lookupUF } from '@/lib/standards/utilizationFactorTables';
 import type { Room, Luminaire, DesignParameters, CalculationResults, CalculationWarning } from '@/lib/types/lighting';
 import { SpaceType, LuminaireCategory, LightingStandard, UnitSystem } from '@/lib/types/lighting';
 import { downloadLightingPdf } from '@/lib/reports/lightingPdfGenerator';
+import { LayoutCanvas } from '@/components/lighting/LayoutCanvas';
+import { FixtureSuggestions } from '@/components/lighting/FixtureSuggestions';
+import { LayoutToolbar } from '@/components/lighting/LayoutToolbar';
+import { calculateFixtureLayout } from '@/lib/calculations/lighting/layoutAlgorithm';
+import type { FixturePosition } from '@/lib/types/lighting';
 
 // ============================================================================
 // Component
@@ -57,6 +63,8 @@ export function LightingDesignTool() {
   const store = useLightingStore();
   const [isCalculating, setIsCalculating] = useState(false);
   const [activeTab, setActiveTab] = useState('room');
+  const [layoutCanvasElement, setLayoutCanvasElement] = useState<HTMLCanvasElement | null>(null);
+  const [useSimpleMethod, setUseSimpleMethod] = useState(true); // Default to simple method
 
   // Get room from store
   const room: Room = {
@@ -107,8 +115,28 @@ export function LightingDesignTool() {
     setIsCalculating(true);
 
     try {
-      const results = performLightingCalculation(room, store.selectedLuminaire, params);
+      // Use simple method by default, or complex IESNA method if toggled
+      const results = useSimpleMethod
+        ? calculateSimpleLighting(room, store.selectedLuminaire, params)
+        : performLightingCalculation(room, store.selectedLuminaire, params);
+
       store.setResults(results);
+
+      // Generate layout positions (Feature: 005-lighting-layout-viz)
+      // Use practical count for layout visualization
+      const fixtureCount = results.luminairesPractical || results.luminairesRounded;
+      if (fixtureCount > 0) {
+        const mountingHeight = room.height - room.workPlaneHeight;
+        const layoutResult = calculateFixtureLayout({
+          roomWidth: room.width,
+          roomLength: room.length,
+          fixtureCount,
+          mountingHeight,
+        });
+        store.setLayoutPositions(layoutResult.positions);
+      } else {
+        store.resetLayoutPositions();
+      }
     } catch (error) {
       console.error('Calculation error:', error);
       store.setValidationErrors(['Calculation failed. Please check your inputs.']);
@@ -558,6 +586,34 @@ export function LightingDesignTool() {
             </TabsContent>
           </Tabs>
 
+          {/* Calculation Method Toggle */}
+          <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+            <div className="flex items-center gap-2">
+              <Settings2 className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-medium">Calculation Method</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge variant={useSimpleMethod ? "default" : "outline"} className="text-xs">
+                {useSimpleMethod ? 'Simple' : 'IESNA'}
+              </Badge>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setUseSimpleMethod(!useSimpleMethod)}
+              >
+                Switch
+              </Button>
+            </div>
+          </div>
+          <Alert>
+            <Info className="h-4 w-4" />
+            <AlertDescription className="text-xs">
+              {useSimpleMethod
+                ? 'Simple method: Direct lumen calculation for practical results (recommended for most applications)'
+                : 'IESNA method: Professional engineering calculation with UF tables (for detailed design)'}
+            </AlertDescription>
+          </Alert>
+
           {/* Calculate Button */}
           <Button
             size="lg"
@@ -688,6 +744,61 @@ export function LightingDesignTool() {
 
                   <Separator />
 
+                  {/* Layout Visualization (Feature: 005-lighting-layout-viz) */}
+                  {store.layoutPositions.length > 0 && (
+                    <div className="space-y-3">
+                      <h4 className="text-sm font-semibold flex items-center gap-1">
+                        <Home className="h-4 w-4" />
+                        Room Layout
+                      </h4>
+
+                      <LayoutToolbar
+                        isManual={store.isLayoutManual}
+                        fixtureCount={store.layoutPositions.length}
+                        onReset={() => {
+                          store.resetLayoutPositions();
+                          // Recalculate auto-layout
+                          if (store.results) {
+                            const mountingHeight = room.height - room.workPlaneHeight;
+                            const layoutResult = calculateFixtureLayout({
+                              roomWidth: room.width,
+                              roomLength: room.length,
+                              fixtureCount: store.results.luminairesRounded,
+                              mountingHeight,
+                            });
+                            store.setLayoutPositions(layoutResult.positions);
+                          }
+                        }}
+                      />
+
+                      <LayoutCanvas
+                        roomWidth={room.width}
+                        roomLength={room.length}
+                        fixturePositions={store.layoutPositions}
+                        luminaireLumens={store.selectedLuminaire?.lumens}
+                        luminaireWatts={store.selectedLuminaire?.watts}
+                        unitSystem={store.unitSystem}
+                        containerWidth={500}
+                        showGrid={true}
+                        onCanvasReady={(canvas) => {
+                          setLayoutCanvasElement(canvas);
+                        }}
+                      />
+                    </div>
+                  )}
+
+                  <Separator />
+
+                  {/* Fixture Suggestions (Feature: 005-lighting-layout-viz US4) */}
+                  <FixtureSuggestions
+                    spaceType={room.spaceType}
+                    requiredIlluminance={store.requiredIlluminance}
+                    roomArea={room.width * room.length}
+                    currentCategory={store.selectedLuminaire?.category}
+                  />
+
+                  <Separator />
+
                   {/* Actions */}
                   <div className="flex gap-2">
                     <Button
@@ -722,6 +833,9 @@ export function LightingDesignTool() {
                             projectInfo: {
                               date: new Date().toLocaleDateString(),
                             },
+                            // Include layout visualization (Feature: 005-lighting-layout-viz)
+                            layoutCanvas: layoutCanvasElement || undefined,
+                            layoutPositions: store.layoutPositions.length > 0 ? store.layoutPositions : undefined,
                           });
                         }
                       }}

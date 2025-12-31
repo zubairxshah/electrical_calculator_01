@@ -28,6 +28,7 @@ import type {
   SpaceType,
   LightingStandard,
   UnitSystem,
+  FixturePosition,
 } from '@/lib/types/lighting';
 import { getSpaceTypePreset } from '@/lib/standards/spaceTypePresets';
 import { getReflectancePresetForSpaceType } from '@/lib/standards/reflectanceDefaults';
@@ -63,6 +64,10 @@ export interface LightingCalculatorState {
 
   // Calculation Results
   results: CalculationResults | null;
+
+  // Layout Visualization State (Feature: 005-lighting-layout-viz)
+  layoutPositions: FixturePosition[];
+  isLayoutManual: boolean;
 
   // UI State
   showHistorySidebar: boolean;
@@ -100,6 +105,11 @@ export interface LightingCalculatorActions {
   // Results
   setResults: (results: CalculationResults | null) => void;
   clearResults: () => void;
+
+  // Layout Actions (Feature: 005-lighting-layout-viz)
+  setLayoutPositions: (positions: FixturePosition[]) => void;
+  resetLayoutPositions: () => void;
+  updateFixturePosition: (index: number, x: number, y: number) => void;
 
   // UI Toggles
   toggleHistorySidebar: () => void;
@@ -151,6 +161,10 @@ const initialState: LightingCalculatorState = {
 
   // Results
   results: null,
+
+  // Layout Visualization (Feature: 005-lighting-layout-viz)
+  layoutPositions: [],
+  isLayoutManual: false,
 
   // UI State
   showHistorySidebar: false,
@@ -287,6 +301,33 @@ export const useLightingStore = create<LightingCalculatorState & LightingCalcula
 
       clearResults: () => {
         set({ results: null });
+      },
+
+      // =========================================================================
+      // LAYOUT ACTIONS (Feature: 005-lighting-layout-viz)
+      // =========================================================================
+
+      setLayoutPositions: (positions) => {
+        set({ layoutPositions: positions });
+      },
+
+      resetLayoutPositions: () => {
+        set({ layoutPositions: [], isLayoutManual: false });
+      },
+
+      updateFixturePosition: (index, x, y) => {
+        const state = get();
+        const positions = [...state.layoutPositions];
+
+        if (index >= 0 && index < positions.length) {
+          positions[index] = {
+            ...positions[index],
+            x,
+            y,
+            isManual: true,
+          };
+          set({ layoutPositions: positions, isLayoutManual: true });
+        }
       },
 
       // =========================================================================
@@ -510,6 +551,8 @@ export const useLightingStore = create<LightingCalculatorState & LightingCalcula
         standard: state.standard,
         unitSystem: state.unitSystem,
         isUFManualOverride: state.isUFManualOverride,
+        layoutPositions: state.layoutPositions,
+        isLayoutManual: state.isLayoutManual,
         // Don't persist: results, UI state, validation errors
       }),
     }
