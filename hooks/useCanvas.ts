@@ -38,7 +38,7 @@ export interface UseCanvasOptions {
 
 export interface CanvasDrawingUtils {
   /** Reference to canvas element */
-  canvasRef: React.RefObject<HTMLCanvasElement>;
+  canvasRef: React.RefObject<HTMLCanvasElement | null>;
   /** Drawing context (null if canvas not mounted) */
   ctx: CanvasRenderingContext2D | null;
   /** Draw the room boundary */
