@@ -48,6 +48,12 @@ import { lookupUF } from '@/lib/standards/utilizationFactorTables';
 import type { Room, Luminaire, DesignParameters, CalculationResults, CalculationWarning } from '@/lib/types/lighting';
 import { SpaceType, LuminaireCategory, LightingStandard, UnitSystem } from '@/lib/types/lighting';
 import { downloadLightingPdf } from '@/lib/reports/lightingPdfGenerator';
+import { LayoutCanvas } from '@/components/lighting/LayoutCanvas';
+import { FixtureTooltip } from '@/components/lighting/FixtureTooltip';
+import { FixtureSuggestions } from '@/components/lighting/FixtureSuggestions';
+import { LayoutToolbar } from '@/components/lighting/LayoutToolbar';
+import { calculateFixtureLayout } from '@/lib/calculations/lighting/layoutAlgorithm';
+import type { FixturePosition } from '@/lib/types/lighting';
 
 // ============================================================================
 // Component
@@ -57,6 +63,9 @@ export function LightingDesignTool() {
   const store = useLightingStore();
   const [isCalculating, setIsCalculating] = useState(false);
   const [activeTab, setActiveTab] = useState('room');
+  const [hoveredFixture, setHoveredFixture] = useState<number | null>(null);
+  const [tooltipPosition, setTooltipPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const [layoutCanvasElement, setLayoutCanvasElement] = useState<HTMLCanvasElement | null>(null);
 
   // Get room from store
   const room: Room = {
@@ -109,6 +118,20 @@ export function LightingDesignTool() {
     try {
       const results = performLightingCalculation(room, store.selectedLuminaire, params);
       store.setResults(results);
+
+      // Generate layout positions (Feature: 005-lighting-layout-viz)
+      if (results.luminairesRounded > 0) {
+        const mountingHeight = room.height - room.workPlaneHeight;
+        const layoutResult = calculateFixtureLayout({
+          roomWidth: room.width,
+          roomLength: room.length,
+          fixtureCount: results.luminairesRounded,
+          mountingHeight,
+        });
+        store.setLayoutPositions(layoutResult.positions);
+      } else {
+        store.resetLayoutPositions();
+      }
     } catch (error) {
       console.error('Calculation error:', error);
       store.setValidationErrors(['Calculation failed. Please check your inputs.']);
@@ -688,6 +711,73 @@ export function LightingDesignTool() {
 
                   <Separator />
 
+                  {/* Layout Visualization (Feature: 005-lighting-layout-viz) */}
+                  {store.layoutPositions.length > 0 && (
+                    <div className="space-y-3">
+                      <h4 className="text-sm font-semibold flex items-center gap-1">
+                        <Home className="h-4 w-4" />
+                        Room Layout
+                      </h4>
+
+                      <LayoutToolbar
+                        isManual={store.isLayoutManual}
+                        fixtureCount={store.layoutPositions.length}
+                        onReset={() => {
+                          store.resetLayoutPositions();
+                          // Recalculate auto-layout
+                          if (store.results) {
+                            const mountingHeight = room.height - room.workPlaneHeight;
+                            const layoutResult = calculateFixtureLayout({
+                              roomWidth: room.width,
+                              roomLength: room.length,
+                              fixtureCount: store.results.luminairesRounded,
+                              mountingHeight,
+                            });
+                            store.setLayoutPositions(layoutResult.positions);
+                          }
+                        }}
+                      />
+
+                      <LayoutCanvas
+                        roomWidth={room.width}
+                        roomLength={room.length}
+                        fixturePositions={store.layoutPositions}
+                        containerWidth={560}
+                        showGrid={true}
+                        onFixtureHover={(index) => {
+                          setHoveredFixture(index);
+                        }}
+                        onCanvasReady={(canvas) => {
+                          setLayoutCanvasElement(canvas);
+                        }}
+                      />
+                      {hoveredFixture !== null && store.selectedLuminaire && (
+                        <FixtureTooltip
+                          fixtureNumber={hoveredFixture + 1}
+                          lumens={store.selectedLuminaire.lumens}
+                          watts={store.selectedLuminaire.watts}
+                          position={store.layoutPositions[hoveredFixture]}
+                          roomDimensions={{ width: room.width, length: room.length }}
+                          screenPosition={tooltipPosition}
+                          visible={true}
+                          unitSystem={store.unitSystem}
+                        />
+                      )}
+                    </div>
+                  )}
+
+                  <Separator />
+
+                  {/* Fixture Suggestions (Feature: 005-lighting-layout-viz US4) */}
+                  <FixtureSuggestions
+                    spaceType={room.spaceType}
+                    requiredIlluminance={store.requiredIlluminance}
+                    roomArea={room.width * room.length}
+                    currentCategory={store.selectedLuminaire?.category}
+                  />
+
+                  <Separator />
+
                   {/* Actions */}
                   <div className="flex gap-2">
                     <Button
@@ -722,6 +812,9 @@ export function LightingDesignTool() {
                             projectInfo: {
                               date: new Date().toLocaleDateString(),
                             },
+                            // Include layout visualization (Feature: 005-lighting-layout-viz)
+                            layoutCanvas: layoutCanvasElement || undefined,
+                            layoutPositions: store.layoutPositions.length > 0 ? store.layoutPositions : undefined,
                           });
                         }
                       }}

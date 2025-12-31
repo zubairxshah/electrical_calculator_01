@@ -13,7 +13,9 @@ import type {
   Luminaire,
   DesignParameters,
   CalculationResults,
+  FixturePosition,
 } from '@/lib/types/lighting';
+import { percentToMeters } from '@/lib/calculations/lighting/layoutAlgorithm';
 
 // ============================================================================
 // Types
@@ -30,6 +32,9 @@ export interface LightingReportData {
     engineerName?: string;
     date?: string;
   };
+  // Layout visualization (Feature: 005-lighting-layout-viz)
+  layoutCanvas?: HTMLCanvasElement;
+  layoutPositions?: FixturePosition[];
 }
 
 // ============================================================================
@@ -317,6 +322,66 @@ export function generateLightingPdf(data: LightingReportData): Blob {
       doc.setFontSize(9);
       doc.setFont('helvetica', 'normal');
       doc.text(`• ${rec}`, margin + 5, y);
+      y += 5;
+    }
+    y += 3;
+    addLine();
+  }
+
+  // =========================================================================
+  // Layout Visualization Section (Feature: 005-lighting-layout-viz)
+  // =========================================================================
+
+  if (data.layoutCanvas && data.layoutPositions && data.layoutPositions.length > 0) {
+    checkPageBreak(100);
+
+    // Section header
+    addText('Room Layout', 12, true);
+    y += 3;
+
+    // Add canvas image
+    try {
+      const canvasDataUrl = data.layoutCanvas.toDataURL('image/png', 1.0);
+      const imgWidth = contentWidth * 0.8;
+      const imgHeight = (data.layoutCanvas.height / data.layoutCanvas.width) * imgWidth;
+
+      doc.addImage(canvasDataUrl, 'PNG', margin + (contentWidth - imgWidth) / 2, y, imgWidth, imgHeight);
+      y += imgHeight + 5;
+    } catch (error) {
+      console.error('Failed to add canvas to PDF:', error);
+      addText('Layout visualization not available', 9);
+      y += 5;
+    }
+
+    // Add fixture positions table
+    checkPageBreak(50);
+    addText('Fixture Positions', 11, true);
+    y += 3;
+
+    // Table headers
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Fixture', margin, y);
+    doc.text('X Position (m)', margin + 30, y);
+    doc.text('Y Position (m)', margin + 70, y);
+    doc.text('X Position (ft)', margin + 110, y);
+    doc.text('Y Position (ft)', margin + 150, y);
+    y += 5;
+    addLine();
+
+    // Table rows
+    doc.setFont('helvetica', 'normal');
+    for (let i = 0; i < data.layoutPositions.length; i++) {
+      checkPageBreak(10);
+      const position = data.layoutPositions[i];
+      const meters = percentToMeters(position.x, position.y, room.width, room.length);
+      const feet = { x: meters.x * 3.28084, y: meters.y * 3.28084 };
+
+      doc.text(`#${i + 1}`, margin, y);
+      doc.text(meters.x.toFixed(2), margin + 30, y);
+      doc.text(meters.y.toFixed(2), margin + 70, y);
+      doc.text(feet.x.toFixed(2), margin + 110, y);
+      doc.text(feet.y.toFixed(2), margin + 150, y);
       y += 5;
     }
     y += 3;
