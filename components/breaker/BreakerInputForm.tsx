@@ -39,6 +39,18 @@ export interface BreakerInputFormProps {
   powerFactor: number;
   unitSystem: 'metric' | 'imperial';
 
+  // Voltage Drop (Optional)
+  circuitDistance?: number;
+  conductorMaterial?: 'copper' | 'aluminum';
+  conductorSizeValue?: number;
+  conductorSizeUnit?: 'AWG' | 'mm²';
+
+  // Short Circuit (Optional)
+  shortCircuitCurrentKA?: number;
+
+  // Load Type (Optional)
+  loadType?: 'resistive' | 'inductive' | 'mixed' | 'capacitive';
+
   // Validation Errors
   errors?: Record<string, string>;
 
@@ -51,6 +63,17 @@ export interface BreakerInputFormProps {
   onPowerFactorChange: (pf: number) => void;
   onUnitSystemChange: (system: 'metric' | 'imperial') => void;
 
+  // Voltage Drop Handlers
+  onCircuitDistanceChange?: (distance: number | undefined) => void;
+  onConductorMaterialChange?: (material: 'copper' | 'aluminum') => void;
+  onConductorSizeChange?: (size: number | undefined) => void;
+
+  // Short Circuit Handler
+  onShortCircuitCurrentChange?: (current: number | undefined) => void;
+
+  // Load Type Handler
+  onLoadTypeChange?: (loadType: 'resistive' | 'inductive' | 'mixed' | 'capacitive' | undefined) => void;
+
   // Optional: Show/hide advanced options
   showAdvanced?: boolean;
 }
@@ -61,6 +84,42 @@ export interface BreakerInputFormProps {
 const STANDARD_VOLTAGES: Record<'NEC' | 'IEC', number[]> = {
   NEC: [120, 208, 240, 277, 480],
   IEC: [230, 400, 690],
+};
+
+/**
+ * Standard AWG cable sizes (imperial)
+ */
+const AWG_CABLE_SIZES: number[] = [14, 12, 10, 8, 6, 4, 2, 1, 0, 2/0, 3/0, 4/0];
+
+/**
+ * Standard mm² cable sizes (metric)
+ */
+const MM2_CABLE_SIZES: number[] = [1.5, 2.5, 4, 6, 10, 16, 25, 35, 50, 70, 95, 120, 150, 185, 240];
+
+/**
+ * Get cable size display string
+ */
+function getCableSizeDisplay(value: number | undefined, unit: 'AWG' | 'mm²'): string {
+  if (value === undefined) return 'Select cable size';
+  if (unit === 'AWG') {
+    if (value < 0) {
+      const awg = Math.abs(value);
+      const gauge = awg === 0 ? '0' : `${awg}/0`;
+      return `#${gauge} AWG`;
+    }
+    return `#${value} AWG`;
+  }
+  return `${value}mm²`;
+}
+
+/**
+ * Load type descriptions
+ */
+const LOAD_TYPE_DESCRIPTIONS: Record<string, string> = {
+  resistive: 'Heating, lighting, resistive loads - minimal inrush',
+  inductive: 'Motors, transformers, inductive loads - high inrush current',
+  mixed: 'Combination of loads - moderate inrush',
+  capacitive: 'Capacitor banks, power factor correction - brief inrush',
 };
 
 /**
@@ -77,6 +136,12 @@ export function BreakerInputForm(props: BreakerInputFormProps) {
     loadValue,
     powerFactor,
     unitSystem,
+    circuitDistance,
+    conductorMaterial = 'copper',
+    conductorSizeValue,
+    conductorSizeUnit = 'AWG',
+    shortCircuitCurrentKA,
+    loadType,
     errors = {},
     onStandardChange,
     onVoltageChange,
@@ -85,6 +150,11 @@ export function BreakerInputForm(props: BreakerInputFormProps) {
     onLoadValueChange,
     onPowerFactorChange,
     onUnitSystemChange,
+    onCircuitDistanceChange,
+    onConductorMaterialChange,
+    onConductorSizeChange,
+    onShortCircuitCurrentChange,
+    onLoadTypeChange,
     showAdvanced = false,
   } = props;
 
@@ -92,6 +162,11 @@ export function BreakerInputForm(props: BreakerInputFormProps) {
    * Get standard voltage suggestions for current standard
    */
   const voltageOptions = STANDARD_VOLTAGES[standard];
+
+  /**
+   * Get cable size options based on unit system
+   */
+  const cableSizeOptions = unitSystem === 'imperial' ? AWG_CABLE_SIZES : MM2_CABLE_SIZES;
 
   /**
    * Handle voltage selection from dropdown
@@ -269,6 +344,141 @@ export function BreakerInputForm(props: BreakerInputFormProps) {
               <TabsTrigger value="imperial">Imperial (ft, AWG)</TabsTrigger>
             </TabsList>
           </Tabs>
+        </div>
+      )}
+
+      {/* Voltage Drop Calculation Section */}
+      {showAdvanced && (
+        <div className="space-y-4 rounded-lg border border-muted p-4">
+          <h3 className="text-sm font-semibold">Voltage Drop Analysis</h3>
+
+          {/* Circuit Distance */}
+          <div className="space-y-2">
+            <Label htmlFor="circuitDistance">Circuit Distance ({unitSystem === 'imperial' ? 'ft' : 'm'})</Label>
+            <Input
+              id="circuitDistance"
+              type="number"
+              value={circuitDistance ?? ''}
+              onChange={(e) => {
+                const value = e.target.value ? parseFloat(e.target.value) : undefined;
+                onCircuitDistanceChange?.(value);
+              }}
+              min={0}
+              max={unitSystem === 'imperial' ? 500 : 150}
+              step={1}
+              placeholder="Enter distance"
+              aria-label="Circuit distance"
+            />
+            <p className="text-xs text-muted-foreground">
+              Distance from source to load (one-way)
+            </p>
+            {errors.circuitDistance && <p className="text-sm text-destructive">{errors.circuitDistance}</p>}
+          </div>
+
+          {/* Conductor Material */}
+          <div className="space-y-2">
+            <Label htmlFor="conductorMaterial">Conductor Material</Label>
+            <Select
+              value={conductorMaterial}
+              onValueChange={(val) => onConductorMaterialChange?.(val as 'copper' | 'aluminum')}
+            >
+              <SelectTrigger id="conductorMaterial">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="copper">Copper (Better conductivity)</SelectItem>
+                <SelectItem value="aluminum">Aluminum (Lower cost, lighter)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Conductor Size */}
+          <div className="space-y-2">
+            <Label htmlFor="conductorSize">Conductor Size</Label>
+            <div className="flex gap-2">
+              <Select
+                value={conductorSizeValue?.toString() ?? ''}
+                onValueChange={(val) => onConductorSizeChange?.(val ? parseFloat(val) : undefined)}
+              >
+                <SelectTrigger id="conductorSize" className="flex-1">
+                  <SelectValue placeholder="Select conductor size" />
+                </SelectTrigger>
+                <SelectContent>
+                  {cableSizeOptions.map((size) => (
+                    <SelectItem key={size} value={size.toString()}>
+                      {getCableSizeDisplay(size, conductorSizeUnit)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {conductorSizeUnit === 'AWG' && (
+                <div className="flex items-center px-3 py-2 border rounded-md bg-muted text-sm">
+                  AWG
+                </div>
+              )}
+              {conductorSizeUnit === 'mm²' && (
+                <div className="flex items-center px-3 py-2 border rounded-md bg-muted text-sm">
+                  mm²
+                </div>
+              )}
+            </div>
+            {errors.conductorSize && <p className="text-sm text-destructive">{errors.conductorSize}</p>}
+          </div>
+        </div>
+      )}
+
+      {/* Short Circuit Current Section */}
+      {showAdvanced && (
+        <div className="space-y-2">
+          <Label htmlFor="shortCircuitCurrent">Available Short Circuit Current (kA) - Optional</Label>
+          <Input
+            id="shortCircuitCurrent"
+            type="number"
+            value={shortCircuitCurrentKA ?? ''}
+            onChange={(e) => {
+              const value = e.target.value ? parseFloat(e.target.value) : undefined;
+              onShortCircuitCurrentChange?.(value);
+            }}
+            min={0.1}
+            max={200}
+            step={0.1}
+            placeholder="Enter short circuit current (optional)"
+            aria-label="Short circuit current"
+          />
+          <p className="text-xs text-muted-foreground">
+            Available short circuit current at point of installation. Used to verify breaker interrupting capacity rating.
+          </p>
+          {errors.shortCircuitCurrent && <p className="text-sm text-destructive">{errors.shortCircuitCurrent}</p>}
+        </div>
+      )}
+
+      {/* Load Type Section */}
+      {showAdvanced && (
+        <div className="space-y-2">
+          <Label htmlFor="loadType">Load Type - Optional</Label>
+          <Select
+            value={loadType ?? 'mixed'}
+            onValueChange={(val) =>
+              onLoadTypeChange?.(val === 'none' ? undefined : (val as 'resistive' | 'inductive' | 'mixed' | 'capacitive'))
+            }
+          >
+            <SelectTrigger id="loadType">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="mixed">Not specified (Default)</SelectItem>
+              <SelectItem value="resistive">Resistive</SelectItem>
+              <SelectItem value="inductive">Inductive</SelectItem>
+              <SelectItem value="capacitive">Capacitive</SelectItem>
+            </SelectContent>
+          </Select>
+          {loadType && LOAD_TYPE_DESCRIPTIONS[loadType] && (
+            <p className="text-xs text-muted-foreground italic">{LOAD_TYPE_DESCRIPTIONS[loadType]}</p>
+          )}
+          <p className="text-xs text-muted-foreground">
+            Load type affects inrush current calculations and breaker trip characteristics.
+          </p>
+          {errors.loadType && <p className="text-sm text-destructive">{errors.loadType}</p>}
         </div>
       )}
 

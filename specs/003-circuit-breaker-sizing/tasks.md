@@ -96,9 +96,9 @@
 
 ### TDD Validation (Refactor Phase)
 
-- [ ] T035 [US1] Run all User Story 1 tests and verify 100% pass rate (load current ±0.5A, safety factor application, standard rating lookup)
-- [ ] T036 [US1] Profile calculation latency and confirm <200ms from input to result display per plan.md Performance Goals
-- [ ] T037 [US1] Test standard switch (NEC ↔ IEC) and verify recalculation completes within 500ms per SC-006
+- [X] T035 [US1] Run all User Story 1 tests and verify 100% pass rate (load current ±0.5A, safety factor application, standard rating lookup)
+- [X] T036 [US1] Profile calculation latency and confirm <200ms from input to result display per plan.md Performance Goals
+- [X] T037 [US1] Test standard switch (NEC ↔ IEC) and verify recalculation completes within 500ms per SC-006
 
 **Checkpoint**: At this point, User Story 1 (Basic Breaker Sizing) should be fully functional, tested, and independently deployable as MVP
 
