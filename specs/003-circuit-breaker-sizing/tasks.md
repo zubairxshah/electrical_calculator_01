@@ -141,23 +141,23 @@
 
 ### Tests for User Story 3 (TDD - Red Phase) ⚠️
 
-- [ ] T051 [P] [US3] Write temperature derating test in `__tests__/unit/calculations/breaker/deratingFactors.test.ts` validating NEC Table 310.15(B)(2)(a) lookups: 40°C → 0.80, 50°C → 0.71 (copper)
-- [ ] T052 [P] [US3] Write grouping derating test validating NEC Table 310.15(C)(1) lookups: 3 cables → 0.70, 6 cables → 0.60, 9+ cables → 0.50
-- [ ] T053 [P] [US3] Write IEC derating test validating IEC 60364-5-52 Table B.52.15 (temperature Ca) and Table B.52.17 (grouping Cg) per research.md Section 2
-- [ ] T054 [P] [US3] Write combined derating test validating cascade effect: 50A load with Ca=0.76, Cg=0.60 → adjusted breaker size = 50A / (0.76 × 0.60) = 109.6A → 110A per research.md combined example
+- [X] T051 [P] [US3] Write temperature derating test in `__tests__/unit/calculations/breaker/deratingFactors.test.ts` validating NEC Table 310.15(B)(2)(a) lookups: 40°C → 0.80, 50°C → 0.71 (copper)
+- [X] T052 [P] [US3] Write grouping derating test validating NEC Table 310.15(C)(1) lookups: 3 cables → 0.70, 6 cables → 0.60, 9+ cables → 0.50
+- [X] T053 [P] [US3] Write IEC derating test validating IEC 60364-5-52 Table B.52.15 (temperature Ca) and Table B.52.17 (grouping Cg) per research.md Section 2
+- [X] T054 [P] [US3] Write combined derating test validating cascade effect: 50A load with Ca=0.76, Cg=0.60 → adjusted breaker size = 50A / (0.76 × 0.60) = 109.6A → 110A per research.md combined example
 
 ### Implementation for User Story 3 (TDD - Green Phase)
 
-- [ ] T055 [P] [US3] Implement `getTemperatureDeratingFactor` in `lib/calculations/breaker/deratingFactors.ts` with table lookup from deratingTables.ts, interpolation for intermediate temperatures, separate NEC and IEC logic per FR-019
-- [ ] T056 [P] [US3] Implement `getGroupingDeratingFactor` in `lib/calculations/breaker/deratingFactors.ts` with table lookup from deratingTables.ts per FR-021
-- [ ] T057 [P] [US3] Implement `getInstallationMethodFactor` (IEC only) in `lib/calculations/breaker/deratingFactors.ts` for Methods A1, A2, B1, B2, C, D, E, F, G per FR-022
-- [ ] T058 [US3] Implement `applyDeratingFactors` orchestrator in `lib/calculations/breaker/deratingFactors.ts` calculating combined factor (Ca × Cg × Cc), adjusted breaker size = load / combined, return DeratingFactorsResult with breakdown per FR-023, FR-024
-- [ ] T059 [US3] Extend useBreakerStore to add derating fields: ambientTemperature, groupedCables, installationMethod (IEC)
-- [ ] T060 [US3] Update DeratingSidebar component (created in T016) to include input fields: ambient temperature slider (-40°C to +70°C), grouped cables number input (1-20+), installation method dropdown (IEC only, show/hide based on standard)
-- [ ] T061 [US3] Add DeratingFactorsResult section to BreakerResults component displaying each factor with code reference (e.g., "Ca = 0.76 per NEC Table 310.15(B)(2)(a)"), combined factor, adjusted breaker size per FR-023
-- [ ] T062 [US3] Integrate derating factors into breakerCalculator.ts main orchestrator, apply after base safety factor, recalculate standard breaker recommendation with adjusted size
-- [ ] T063 [US3] Add extreme temperature warning (>60°C or <-20°C) in assessVoltageDropCompliance recommending special equipment per edge case handling
-- [ ] T064 [US3] Run User Story 3 tests and verify derating factor compliance 100% per SC-004
+- [X] T055 [P] [US3] Implement `getTemperatureDeratingFactor` in `lib/calculations/breaker/deratingFactors.ts` with table lookup from deratingTables.ts, interpolation for intermediate temperatures, separate NEC and IEC logic per FR-019
+- [X] T056 [P] [US3] Implement `getGroupingDeratingFactor` in `lib/calculations/breaker/deratingFactors.ts` with table lookup from deratingTables.ts per FR-021
+- [X] T057 [P] [US3] Implement `getInstallationMethodFactor` (IEC only) in `lib/calculations/breaker/deratingFactors.ts` for Methods A1, A2, B1, B2, C, D, E, F, G per FR-022
+- [X] T058 [US3] Implement `applyDeratingFactors` orchestrator in `lib/calculations/breaker/deratingFactors.ts` calculating combined factor (Ca × Cg × Cc), adjusted breaker size = load / combined, return DeratingFactorsResult with breakdown per FR-023, FR-024
+- [X] T059 [US3] Extend useBreakerStore to add derating fields: ambientTemperature, groupedCables, installationMethod (IEC)
+- [X] T060 [US3] Update DeratingSidebar component (created in T016) to include input fields: ambient temperature slider (-40°C to +70°C), grouped cables number input (1-20+), installation method dropdown (IEC only, show/hide based on standard)
+- [X] T061 [US3] Add DeratingFactorsResult section to BreakerResults component displaying each factor with code reference (e.g., "Ca = 0.76 per NEC Table 310.15(B)(2)(a)"), combined factor, adjusted breaker size per FR-023
+- [X] T062 [US3] Integrate derating factors into breakerCalculator.ts main orchestrator, apply after base safety factor, recalculate standard breaker recommendation with adjusted size
+- [X] T063 [US3] Add extreme temperature warning (>60°C or <-20°C) in assessVoltageDropCompliance recommending special equipment per edge case handling
+- [X] T064 [US3] Run User Story 3 tests and verify derating factor compliance 100% per SC-004
 
 **Checkpoint**: At this point, User Stories 1, 2, AND 3 should all work independently (breaker sizing + voltage drop + derating)
 
