@@ -112,22 +112,22 @@
 
 ### Tests for User Story 2 (TDD - Red Phase) ⚠️
 
-- [ ] T038 [P] [US2] Write voltage drop calculation test in `__tests__/unit/calculations/breaker/voltageDrop.test.ts` validating formula VD% = (I × R × L) / (V × 10) with test case from research.md: 30A @ 240V, 150ft, #6 AWG → 0.7425% per IEEE 835
-- [ ] T039 [P] [US2] Write voltage drop warning threshold test validating 1-3% INFO, 3-5% YELLOW, >5% RED warnings per FR-015, FR-016, research.md Section 7
-- [ ] T040 [P] [US2] Write cable size recommendation test validating algorithm suggests next larger cable when VD exceeds limit per FR-017
+- [X] T038 [P] [US2] Write voltage drop calculation test in `__tests__/unit/calculations/breaker/voltageDrop.test.ts` validating formula VD% = (I × R × L) / (V × 10) with test case from research.md: 30A @ 240V, 150ft, #6 AWG → 0.7425% per IEEE 835
+- [X] T039 [P] [US2] Write voltage drop warning threshold test validating 1-3% INFO, 3-5% YELLOW, >5% RED warnings per FR-015, FR-016, research.md Section 7
+- [X] T040 [P] [US2] Write cable size recommendation test validating algorithm suggests next larger cable when VD exceeds limit per FR-017
 
 ### Implementation for User Story 2 (TDD - Green Phase)
 
-- [ ] T041 [P] [US2] Extend `lib/standards/cableTables.ts` (if exists from cable sizing feature) or create with conductor resistance values (Ω/1000ft and Ω/km) for standard wire sizes from NEC Chapter 9 Table 8 and IEC 60228
-- [ ] T042 [P] [US2] Implement `calculateVoltageDrop` in `lib/calculations/breaker/voltageDrop.ts` using Math.js BigNumber with formula VD% = (I × R × L) / (V × 10) for single-phase, adjust for three-phase per research.md Section 7
-- [ ] T043 [P] [US2] Implement `assessVoltageDropCompliance` in `lib/calculations/breaker/voltageDrop.ts` returning status ('acceptable'|'warning'|'exceed-limit') based on 3% and 5% thresholds per FR-015, FR-016
-- [ ] T044 [US2] Implement `recommendCableSizeForVD` in `lib/calculations/breaker/voltageDrop.ts` finding next larger cable size that reduces VD below acceptable limit per FR-017
-- [ ] T045 [US2] Extend useBreakerStore to add optional fields: circuitDistance, conductorMaterial ('copper'|'aluminum'), conductorSize { value, unit: 'AWG'|'mm²' }
-- [ ] T046 [US2] Add voltage drop input section to BreakerInputForm component with distance input (feet/meters toggle), conductor material select, conductor size select from cableTables.ts
-- [ ] T047 [US2] Add VoltageDropAnalysis section to BreakerResults component displaying VD percentage with color-coded status (green <1%, yellow 1-3%, red >3%), cable size recommendation if applicable per FR-038
-- [ ] T048 [US2] Integrate voltage drop calculation into breakerCalculator.ts main orchestrator, only perform if circuitDistance is provided (optional analysis) per FR-013
-- [ ] T049 [US2] Add unit conversion helper in unitConversion.ts for feet ↔ meters with Math.js precision per FR-014
-- [ ] T050 [US2] Run User Story 2 tests and verify voltage drop accuracy ±0.1% per SC-003
+- [X] T041 [P] [US2] Extend `lib/standards/cableTables.ts` (if exists from cable sizing feature) or create with conductor resistance values (Ω/1000ft and Ω/km) for standard wire sizes from NEC Chapter 9 Table 8 and IEC 60228
+- [X] T042 [P] [US2] Implement `calculateVoltageDrop` in `lib/calculations/breaker/voltageDrop.ts` using Math.js BigNumber with formula VD% = (I × R × L) / (V × 10) for single-phase, adjust for three-phase per research.md Section 7
+- [X] T043 [P] [US2] Implement `assessVoltageDropCompliance` in `lib/calculations/breaker/voltageDrop.ts` returning status ('acceptable'|'warning'|'exceed-limit') based on 3% and 5% thresholds per FR-015, FR-016
+- [X] T044 [US2] Implement `recommendCableSizeForVD` in `lib/calculations/breaker/voltageDrop.ts` finding next larger cable size that reduces VD below acceptable limit per FR-017
+- [X] T045 [US2] Extend useBreakerStore to add optional fields: circuitDistance, conductorMaterial ('copper'|'aluminum'), conductorSize { value, unit: 'AWG'|'mm²' }
+- [X] T046 [US2] Add voltage drop input section to BreakerInputForm component with distance input (feet/meters toggle), conductor material select, conductor size select from cableTables.ts
+- [X] T047 [US2] Add VoltageDropAnalysis section to BreakerResults component displaying VD percentage with color-coded status (green <1%, yellow 1-3%, red >3%), cable size recommendation if applicable per FR-038
+- [X] T048 [US2] Integrate voltage drop calculation into breakerCalculator.ts main orchestrator, only perform if circuitDistance is provided (optional analysis) per FR-013
+- [X] T049 [US2] Add unit conversion helper in unitConversion.ts for feet ↔ meters with Math.js precision per FR-014
+- [X] T050 [US2] Run User Story 2 tests and verify voltage drop accuracy ±0.1% per SC-003
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work independently (breaker sizing with optional voltage drop analysis)
 
