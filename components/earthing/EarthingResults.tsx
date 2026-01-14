@@ -28,7 +28,7 @@ export function EarthingResults({ result, inputs }: EarthingResultsProps) {
                 Earthing conductor sizing per {inputs.standard} standard
               </CardDescription>
             </div>
-            <EarthingPDFButton data={{ inputs, results }} size="sm" variant="outline" />
+            <EarthingPDFButton data={{ inputs, results: result }} size="sm" variant="outline" />
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
