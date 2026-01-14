@@ -5,6 +5,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
+    setupFiles: ['./vitest.setup.minimal.ts'],
     include: ['__tests__/unit/earthing/**/*.test.ts'],
   },
   resolve: {

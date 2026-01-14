@@ -126,8 +126,8 @@ export function EarthingInputForm({ inputs, onChange, onCalculate }: EarthingInp
               <Input
                 id="safetyFactor"
                 type="number"
-                value={inputs.safetyFactor || 0}
-                onChange={(e) => onChange({ safetyFactor: parseFloat(e.target.value) })}
+                value={inputs.safetyFactor ?? ''}
+                onChange={(e) => onChange({ safetyFactor: e.target.value ? parseFloat(e.target.value) : undefined })}
                 placeholder="0"
                 step="1"
               />

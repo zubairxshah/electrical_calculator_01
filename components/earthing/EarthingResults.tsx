@@ -35,8 +35,22 @@ export function EarthingResults({ result, inputs }: EarthingResultsProps) {
           <div className="bg-primary/5 p-6 rounded-lg border-2 border-primary/20">
             <div className="text-center">
               <p className="text-sm text-muted-foreground mb-2">Recommended Conductor Size</p>
-              <p className="text-5xl font-bold text-primary">{result.conductorSize}</p>
-              <p className="text-xl text-muted-foreground mt-1">mm²</p>
+              {result.stripFormatted ? (
+                <>
+                  <p className="text-3xl font-bold text-primary">{result.stripFormatted}</p>
+                  <p className="text-sm text-muted-foreground mt-1">Strip Conductor</p>
+                </>
+              ) : result.awgFormatted ? (
+                <>
+                  <p className="text-4xl font-bold text-primary">{result.awgFormatted}</p>
+                  <p className="text-xl text-muted-foreground mt-1">({result.conductorSize} mm²)</p>
+                </>
+              ) : (
+                <>
+                  <p className="text-5xl font-bold text-primary">{result.conductorSize}</p>
+                  <p className="text-xl text-muted-foreground mt-1">mm²</p>
+                </>
+              )}
             </div>
           </div>
 

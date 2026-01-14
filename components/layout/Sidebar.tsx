@@ -228,26 +228,26 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
           </nav>
 
           {/* Footer Links */}
-          <div className="border-t p-4">
+          <div className="border-t p-4 pb-6">
             <div className="space-y-2 text-xs text-muted-foreground">
               <Link
                 href="/about"
                 onClick={onClose}
-                className="block hover:text-foreground transition-colors"
+                className="block hover:text-foreground transition-colors truncate"
               >
                 About
               </Link>
               <Link
                 href="/standards"
                 onClick={onClose}
-                className="block hover:text-foreground transition-colors"
+                className="block hover:text-foreground transition-colors truncate"
               >
                 Standards Reference
               </Link>
               <Link
                 href="/help"
                 onClick={onClose}
-                className="block hover:text-foreground transition-colors"
+                className="block hover:text-foreground transition-colors truncate"
               >
                 Help & Documentation
               </Link>

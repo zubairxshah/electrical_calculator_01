@@ -3,14 +3,15 @@ import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
 
+// Use a grid layout for consistent icon and content alignment.
 const alertVariants = cva(
-  "relative w-full rounded-lg border p-4 [&>svg~*]:pl-7 [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4 [&>svg]:text-foreground",
+  "w-full rounded-lg border p-4 grid grid-cols-[48px,1fr] gap-4 items-start",
   {
     variants: {
       variant: {
-        default: "bg-background text-foreground",
+        default: "bg-background text-foreground border-border",
         destructive:
-          "border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive",
+          "border-destructive bg-destructive/10 text-destructive dark:border-destructive",
       },
     },
     defaultVariants: {
@@ -32,13 +33,19 @@ const Alert = React.forwardRef<
 ))
 Alert.displayName = "Alert"
 
+const IconShell = ({ children }: { children: React.ReactNode }) => (
+  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted/50 text-foreground/90">
+    {children}
+  </div>
+)
+
 const AlertTitle = React.forwardRef<
   HTMLParagraphElement,
   React.HTMLAttributes<HTMLHeadingElement>
 >(({ className, ...props }, ref) => (
   <h5
     ref={ref}
-    className={cn("mb-1 font-medium leading-none tracking-tight", className)}
+    className={cn("mb-1 flex items-center gap-2 text-sm font-semibold", className)}
     {...props}
   />
 ))
@@ -50,10 +57,10 @@ const AlertDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("text-sm [&_p]:leading-relaxed", className)}
+    className={cn("text-sm [&_p]:leading-relaxed [&_ul]:list-disc [&_ul]:pl-5", className)}
     {...props}
   />
 ))
 AlertDescription.displayName = "AlertDescription"
 
-export { Alert, AlertTitle, AlertDescription }
+export { Alert, AlertTitle, AlertDescription, IconShell }

@@ -2,10 +2,13 @@
  * Battery Input Validation
  *
  * Real-time validation with <100ms target (SC-002)
+ * Enhanced with security-focused input validation
  */
 
 import { toBigNumber, toNumber } from '../mathConfig'
 import { calculateDischargeRate } from '../calculations/battery'
+import { validateVoltage, validateCurrent, validatePower, validateEfficiency, ValidationError } from './inputValidation'
+import { handleValidationError } from '../utils/errorHandler'
 import type { BatteryCalculatorInputs, ValidationResult } from '../types'
 
 export interface BatteryValidationResult {
@@ -15,7 +18,7 @@ export interface BatteryValidationResult {
 }
 
 /**
- * Validate battery calculator inputs
+ * Validate battery calculator inputs with security checks
  *
  * @param inputs Battery calculation inputs
  * @returns Validation result with errors and warnings
@@ -24,44 +27,89 @@ export function validateBatteryInputs(inputs: BatteryCalculatorInputs): BatteryV
   const errors: ValidationResult[] = []
   const warnings: ValidationResult[] = []
 
-  // Voltage validation
-  if (inputs.voltage < 1 || inputs.voltage > 2000) {
-    errors.push({
-      severity: 'error',
-      field: 'voltage',
-      message: `Voltage must be between 1V and 2000V. Got: ${inputs.voltage}V`,
-      standardReference: undefined,
-    })
+  try {
+    // Secure voltage validation
+    const voltage = validateVoltage(inputs.voltage)
+    if (voltage < 1 || voltage > 2000) {
+      errors.push({
+        severity: 'error',
+        field: 'voltage',
+        message: `Voltage must be between 1V and 2000V. Got: ${voltage}V`,
+        standardReference: undefined,
+      })
+    }
+  } catch (error) {
+    if (error instanceof ValidationError) {
+      errors.push({
+        severity: 'error',
+        field: error.field,
+        message: error.message,
+        standardReference: undefined,
+      })
+    }
   }
 
-  // Amp-hours validation
-  if (inputs.ampHours < 1 || inputs.ampHours > 10000) {
+  // Amp-hours validation with security checks
+  try {
+    if (inputs.ampHours < 1 || inputs.ampHours > 10000) {
+      errors.push({
+        severity: 'error',
+        field: 'ampHours',
+        message: `Capacity must be between 1Ah and 10000Ah. Got: ${inputs.ampHours}Ah`,
+        standardReference: undefined,
+      })
+    }
+  } catch (error) {
     errors.push({
       severity: 'error',
       field: 'ampHours',
-      message: `Capacity must be between 1Ah and 10000Ah. Got: ${inputs.ampHours}Ah`,
+      message: 'Invalid capacity value',
       standardReference: undefined,
     })
   }
 
-  // Load watts validation
-  if (inputs.loadWatts < 1 || inputs.loadWatts > 1000000) {
-    errors.push({
-      severity: 'error',
-      field: 'loadWatts',
-      message: `Load must be between 1W and 1000000W. Got: ${inputs.loadWatts}W`,
-      standardReference: undefined,
-    })
+  // Secure power validation
+  try {
+    const power = validatePower(inputs.loadWatts)
+    if (power > 1000000) {
+      errors.push({
+        severity: 'error',
+        field: 'loadWatts',
+        message: `Load must not exceed 1000000W. Got: ${power}W`,
+        standardReference: undefined,
+      })
+    }
+  } catch (error) {
+    if (error instanceof ValidationError) {
+      errors.push({
+        severity: 'error',
+        field: error.field,
+        message: error.message,
+        standardReference: undefined,
+      })
+    }
   }
 
-  // Efficiency validation
-  if (inputs.efficiency < 0.1 || inputs.efficiency > 1.0) {
-    errors.push({
-      severity: 'error',
-      field: 'efficiency',
-      message: `Efficiency must be between 0.1 and 1.0. Got: ${inputs.efficiency}`,
-      standardReference: undefined,
-    })
+  // Secure efficiency validation
+  try {
+    const efficiency = validateEfficiency(inputs.efficiency)
+    if (efficiency < 0.1) {
+      errors.push({
+        severity: 'error',
+        field: 'efficiency',
+        message: `Efficiency must be at least 0.1 (10%). Got: ${efficiency}`,
+        standardReference: undefined,
+      })
+    }
+  } catch (error) {
+    if (error instanceof ValidationError) {
+      errors.push({
+        severity: 'error',
+        field: error.field,
+        message: error.message,
+        standardReference: undefined,
+      })
+    }
   }
 
   // Only check warnings if no errors

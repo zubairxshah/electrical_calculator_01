@@ -16,8 +16,7 @@ export function EarthingCalculatorTool() {
     faultDuration: 1,
     material: 'copper',
     installationType: 'cable',
-    standard: 'IEC',
-    safetyFactor: 0
+    standard: 'IEC'
   })
   
   const [result, setResult] = useState<EarthingResult | null>(null)

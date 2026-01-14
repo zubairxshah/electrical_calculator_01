@@ -41,7 +41,9 @@ export function CalculationCard({
           )}
         </div>
       </CardHeader>
-      <CardContent>{children}</CardContent>
+      <CardContent>
+        <div className="space-y-4">{children}</div>
+      </CardContent>
     </Card>
   )
 }

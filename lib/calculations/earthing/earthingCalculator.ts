@@ -6,6 +6,7 @@
 
 import { getKValue, Material, InstallationType, Standard } from './materialConstants'
 import { roundToStandardSize, getAlternativeSizes } from './standardSizes'
+import { mm2ToAWG, formatAWG, findStripSize, formatStripSize, type StripDimensions } from './awgConversion'
 
 export interface EarthingInputs {
   voltage: number
@@ -29,6 +30,12 @@ export interface EarthingResult {
   calculationSteps: string[]
   alternatives: { smaller?: number; larger?: number }
   warnings: string[]
+  // NEC-specific
+  awgSize?: string
+  awgFormatted?: string
+  // Strip-specific
+  stripDimensions?: StripDimensions
+  stripFormatted?: string
 }
 
 export interface ValidationError {
@@ -122,6 +129,22 @@ export function calculateEarthingConductor(inputs: EarthingInputs): EarthingResu
     ? 'IEC 60364-5-54 Section 543.1.3' 
     : 'NEC 250.122'
 
+  // NEC: Convert to AWG
+  let awgSize: string | undefined
+  let awgFormatted: string | undefined
+  if (inputs.standard === 'NEC' && inputs.installationType !== 'strip') {
+    awgSize = mm2ToAWG(conductorSize)
+    awgFormatted = formatAWG(awgSize)
+  }
+
+  // Strip: Convert to width × thickness
+  let stripDimensions: StripDimensions | undefined
+  let stripFormatted: string | undefined
+  if (inputs.installationType === 'strip') {
+    stripDimensions = findStripSize(conductorSize)
+    stripFormatted = formatStripSize(stripDimensions)
+  }
+
   return {
     conductorSize,
     calculatedSize,
@@ -131,6 +154,10 @@ export function calculateEarthingConductor(inputs: EarthingInputs): EarthingResu
     formula: `S = ${faultCurrentAmps} × √${inputs.faultDuration} / ${kValue}`,
     calculationSteps,
     alternatives: getAlternativeSizes(conductorSize),
-    warnings
+    warnings,
+    awgSize,
+    awgFormatted,
+    stripDimensions,
+    stripFormatted
   }
 }

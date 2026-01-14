@@ -131,7 +131,7 @@ describe('Breaker Calculator Performance Tests (T036, T037)', () => {
         ...testInput,
         circuit: {
           ...testInput.circuit,
-          standard: 'IEC',
+          standard: 'IEC' as const,
           voltage: 400, // Standard IEC voltage
         },
       };
@@ -166,7 +166,7 @@ describe('Breaker Calculator Performance Tests (T036, T037)', () => {
       const startTime = performance.now();
 
       let currentInput = testInput;
-      let currentStandard = 'NEC' as const;
+      let currentStandard: 'NEC' | 'IEC' = 'NEC';
 
       for (const switchOp of switches) {
         const result = await recalculateWithStandard(currentInput, switchOp.to);
@@ -225,7 +225,7 @@ describe('Breaker Calculator Performance Tests (T036, T037)', () => {
       // SC-006: Standard switch within 500ms
       const iecInput: BreakerCalculationInput = {
         ...testInput,
-        circuit: { ...testInput.circuit, standard: 'IEC', voltage: 400 },
+        circuit: { ...testInput.circuit, standard: 'IEC' as const, voltage: 400 },
       };
 
       const iecResult = await calculateBreakerSizing(iecInput);

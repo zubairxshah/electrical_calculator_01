@@ -66,6 +66,15 @@ export function InputField({
     const newValue = e.target.value
     setLocalValue(newValue)
 
+    // Security: Sanitize input to prevent XSS
+    if (typeof newValue === 'string' && newValue.length > 0) {
+      // Check for potentially dangerous characters
+      if (/<[^>]*>/.test(newValue) || /[<>"'&]/.test(newValue)) {
+        // Don't propagate dangerous input
+        return
+      }
+    }
+
     // Only propagate to parent when we have a valid complete number
     // Don't propagate incomplete input that would fail validation:
     // - empty string

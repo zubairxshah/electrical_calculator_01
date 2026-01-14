@@ -1,15 +1,14 @@
 /**
  * Warning Banner Component
  *
- * Displays validation warnings with severity levels:
- * - error: Red, requires attention (FR-004)
- * - warning: Yellow, recommended to address
- * - info: Blue, informational
+ * Consolidates validation messages by severity and presents them as grouped lists
+ * with improved spacing and clearer visual hierarchy.
  */
 
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Alert, AlertDescription, AlertTitle, IconShell } from '@/components/ui/alert'
 import { AlertCircle, AlertTriangle, Info } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { Badge } from '@/components/ui/badge'
 import type { ValidationResult } from '@/lib/types'
 
 export interface WarningBannerProps {
@@ -28,75 +27,80 @@ export function WarningBanner({ validations, className }: WarningBannerProps) {
   const infos = validations.filter((v) => v.severity === 'info')
 
   return (
-    <div className={cn('space-y-3', className)}>
-      {/* Errors - Red (WCAG AA compliant: 4.5:1 minimum contrast) */}
-      {errors.map((validation, index) => (
-        <Alert
-          key={`error-${index}`}
-          variant="destructive"
-          className="border-destructive bg-destructive/10 transition-all duration-200"
-        >
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle className="font-semibold">Safety Warning</AlertTitle>
-          <AlertDescription>
-            <p className="mb-2">{validation.message}</p>
-            {validation.standardReference && (
-              <p className="text-xs text-muted-foreground">
-                Reference: {validation.standardReference}
-              </p>
-            )}
-            {validation.recommendation && (
-              <p className="mt-2 text-sm font-medium">
-                ➤ {validation.recommendation}
-              </p>
-            )}
-          </AlertDescription>
+    <div className={cn('space-y-4', className)}>
+      {/* Errors - grouped */}
+      {errors.length > 0 && (
+        <Alert variant="destructive" className="animate-in fade-in">
+          <IconShell>
+            <AlertCircle className="h-5 w-5" />
+          </IconShell>
+          <div>
+            <div className="flex items-center gap-3">
+              <AlertTitle>Safety Warning</AlertTitle>
+              <Badge variant="destructive" className="text-xs">{errors.length} issue{errors.length>1?'s':''}</Badge>
+            </div>
+            <AlertDescription>
+              <ul className="mt-2 space-y-2">
+                {errors.map((err, i) => (
+                  <li key={i} className="text-sm">
+                    <span className="font-medium">{err.field}:</span> {err.message}
+                    {err.standardReference && (
+                      <div className="text-xs text-muted-foreground">Reference: {err.standardReference}</div>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </AlertDescription>
+          </div>
         </Alert>
-      ))}
+      )}
 
-      {/* Warnings - Yellow (WCAG AA compliant: yellow-800 on yellow-50 = 5.1:1 contrast) */}
-      {warnings.map((validation, index) => (
-        <Alert
-          key={`warning-${index}`}
-          className="border-yellow-500 bg-yellow-50 dark:bg-yellow-950/20 transition-all duration-200"
-        >
-          <AlertTriangle className="h-4 w-4 text-yellow-600" />
-          <AlertTitle className="font-semibold text-yellow-800 dark:text-yellow-200">
-            Recommendation
-          </AlertTitle>
-          <AlertDescription className="text-yellow-700 dark:text-yellow-300">
-            <p className="mb-2">{validation.message}</p>
-            {validation.standardReference && (
-              <p className="text-xs">
-                Reference: {validation.standardReference}
-              </p>
-            )}
-            {validation.recommendation && (
-              <p className="mt-2 text-sm font-medium">
-                ➤ {validation.recommendation}
-              </p>
-            )}
-          </AlertDescription>
+      {/* Warnings - grouped */}
+      {warnings.length > 0 && (
+        <Alert className="border-yellow-300 bg-yellow-50">
+          <IconShell>
+            <AlertTriangle className="h-5 w-5 text-yellow-700" />
+          </IconShell>
+          <div>
+            <div className="flex items-center gap-3">
+              <AlertTitle className="text-yellow-800">Recommendation{warnings.length>1?'s':''}</AlertTitle>
+              <Badge className="text-xs" variant="outline">{warnings.length}</Badge>
+            </div>
+            <AlertDescription className="text-yellow-700 mt-1">
+              <ul className="mt-2 space-y-1">
+                {warnings.map((w, i) => (
+                  <li key={i} className="text-sm">
+                    <span className="font-medium">{w.field}:</span> {w.message}
+                    {w.recommendation && <div className="text-xs text-muted-foreground">➤ {w.recommendation}</div>}
+                  </li>
+                ))}
+              </ul>
+            </AlertDescription>
+          </div>
         </Alert>
-      ))}
+      )}
 
-      {/* Info - Blue (WCAG AA compliant: blue-700 on blue-50 = 4.8:1 contrast) */}
-      {infos.map((validation, index) => (
-        <Alert key={`info-${index}`} className="border-blue-500 bg-blue-50 dark:bg-blue-950/20 transition-all duration-200">
-          <Info className="h-4 w-4 text-blue-600" />
-          <AlertTitle className="font-semibold text-blue-800 dark:text-blue-200">
-            Information
-          </AlertTitle>
-          <AlertDescription className="text-blue-700 dark:text-blue-300">
-            <p>{validation.message}</p>
-            {validation.standardReference && (
-              <p className="mt-1 text-xs">
-                Reference: {validation.standardReference}
-              </p>
-            )}
-          </AlertDescription>
+      {/* Infos - grouped */}
+      {infos.length > 0 && (
+        <Alert className="border-blue-300 bg-blue-50">
+          <IconShell>
+            <Info className="h-5 w-5 text-blue-700" />
+          </IconShell>
+          <div>
+            <div className="flex items-center gap-3">
+              <AlertTitle className="text-blue-800">Information</AlertTitle>
+              <Badge className="text-xs" variant="secondary">{infos.length}</Badge>
+            </div>
+            <AlertDescription className="text-blue-700 mt-1">
+              <ul className="mt-2 space-y-1">
+                {infos.map((info, i) => (
+                  <li key={i} className="text-sm">{info.message}</li>
+                ))}
+              </ul>
+            </AlertDescription>
+          </div>
         </Alert>
-      ))}
+      )}
     </div>
   )
 }
