@@ -6,6 +6,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { CheckCircle2, AlertTriangle, Info } from 'lucide-react'
 import { EarthingResult, EarthingInputs } from '@/lib/calculations/earthing/earthingCalculator'
 import { Separator } from '@/components/ui/separator'
+import { EarthingPDFButton } from './EarthingPDFButton'
 
 interface EarthingResultsProps {
   result: EarthingResult
@@ -17,13 +18,18 @@ export function EarthingResults({ result, inputs }: EarthingResultsProps) {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <CheckCircle2 className="h-5 w-5 text-green-600" />
-            Calculation Results
-          </CardTitle>
-          <CardDescription>
-            Earthing conductor sizing per {inputs.standard} standard
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <CheckCircle2 className="h-5 w-5 text-green-600" />
+                Calculation Results
+              </CardTitle>
+              <CardDescription>
+                Earthing conductor sizing per {inputs.standard} standard
+              </CardDescription>
+            </div>
+            <EarthingPDFButton data={{ inputs, results }} size="sm" variant="outline" />
+          </div>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="bg-primary/5 p-6 rounded-lg border-2 border-primary/20">
