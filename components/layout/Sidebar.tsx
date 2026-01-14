@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import { Battery, Zap, Cable, Sun, Settings, Scale, X, CircuitBoard, Lightbulb } from 'lucide-react'
+import { Battery, Zap, Cable, Sun, Settings, Scale, X, CircuitBoard, Lightbulb, Zap as Ground } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 /**
@@ -41,6 +41,13 @@ const navigationItems = [
     href: '/breaker',
     icon: CircuitBoard,
     description: 'Breaker sizing with NEC/IEC standards',
+    priority: 'P1',
+  },
+  {
+    name: 'Earthing Conductor',
+    href: '/earthing',
+    icon: Ground,
+    description: 'Earthing conductor sizing (IEC/NEC)',
     priority: 'P1',
   },
   {
@@ -151,7 +158,7 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
       >
         <div className="flex h-full flex-col">
           {/* Logo/Branding with Close Button on Mobile */}
-          <div className="border-b p-6 flex items-center justify-between">
+          <div className="border-b p-[0.63rem] flex items-center justify-between">
             <Link href="/" className="flex items-center space-x-2">
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
                 <Zap className="h-6 w-6" />
