@@ -28,6 +28,7 @@ All electrical engineering calculations MUST match published standards within sp
 - Cable ampacity: 100% compliance with NEC Table 310.15(B)(16) and IEC 60364-5-52
 - UPS sizing: Diversity factors per IEEE 1100 (Emerald Book) and IEC 62040
 - Solar array sizing: NREL standards for temperature derating and soiling losses
+- Earthing conductor sizing: IEC 60364-5-54 and NEC 250 within 0.01% accuracy
 
 **Rationale**: Engineers rely on calculation tools for professional work submitted to approval authorities and clients. Inaccurate calculations cause equipment malfunction, safety hazards, code violations, and professional liability. This principle is non-negotiable because human safety and regulatory compliance depend on calculation precision.
 
@@ -57,6 +58,8 @@ Every calculation MUST reference applicable standards and display references in 
 - NEC (National Electrical Code - North America)
 - IEC 62040 (UPS Standards)
 - NREL (Solar/Renewable Energy Standards)
+- IEC 60364-5-54 (Earthing and Bonding)
+- NEC 250 (Grounding and Bonding)
 
 System MUST clearly label which standard version applies to each calculation (e.g., "NEC 2020"). PDF reports MUST include standard references with section numbers where formulas are derived.
 
@@ -110,7 +113,7 @@ PDF reports MUST render correctly (95% success rate per SC-003) across Chrome, F
 ### VII. Progressive Enhancement and Incremental Value
 
 Feature development MUST follow prioritized delivery:
-- **P1 (Core Tools)**: Battery Backup Calculator, UPS Sizing, Voltage Drop/Cable Sizing - independently testable, deliver immediate value
+- **P1 (Core Tools)**: Battery Backup Calculator, UPS Sizing, Voltage Drop/Cable Sizing, Earthing Conductor Calculator - independently testable, deliver immediate value
 - **P2 (Expansion)**: Solar Array Sizing, Charge Controller Selection - extend market reach
 - **P3 (Decision Support)**: Battery Type Comparison - enhance existing tools
 
