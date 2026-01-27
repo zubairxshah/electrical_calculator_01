@@ -1,5 +1,6 @@
 import React from 'react';
-import { CalculationParameters, CalculationResult } from '../../models/ComplianceResult';
+import { CalculationResult } from '../../models/ComplianceResult';
+import { CalculationParameters } from '../../models/CalculationParameters';
 import { PdfGeneratorService } from '../../services/lightning-arrester/pdfGenerator';
 
 interface ReportPreviewProps {
