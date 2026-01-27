@@ -1,0 +1,122 @@
+# Lightning Arrester Calculator API Contract
+
+## Overview
+API endpoints for the Lightning Arrester Calculator feature, supporting calculation of appropriate arrester types and compliance validation according to IEC 60099-4 and NEC 2020/2023 standards.
+
+## Endpoints
+
+### POST /api/lightning-arrester/calculate
+Calculate recommended lightning arrester based on input parameters.
+
+#### Request Body
+```json
+{
+  "systemVoltage": 11,
+  "structureType": "tower",
+  "environmentalConditions": {
+    "humidity": 65,
+    "pollutionLevel": "medium",
+    "altitude": 150
+  },
+  "complianceRequirement": "type2",
+  "arresterRating": 12
+}
+```
+
+#### Response (200 OK)
+```json
+{
+  "arresterType": "ese",
+  "recommendedRating": 12,
+  "complianceResults": [
+    {
+      "standard": "IEC 60099-4",
+      "requirement": "residual voltage",
+      "requiredValue": 36.5,
+      "calculatedValue": 32.1,
+      "unit": "kV",
+      "compliant": true
+    },
+    {
+      "standard": "NEC 2020",
+      "requirement": "withstand voltage",
+      "requiredValue": 28,
+      "calculatedValue": 30,
+      "unit": "kV",
+      "compliant": true
+    }
+  ],
+  "installationRecommendation": "Line side of service disconnect per NEC requirements",
+  "warnings": [],
+  "calculationTimestamp": "2026-01-27T10:30:00Z"
+}
+```
+
+#### Validation Errors (400 Bad Request)
+```json
+{
+  "error": "Invalid input parameters",
+  "details": [
+    {
+      "field": "systemVoltage",
+      "message": "Must be a positive number"
+    }
+  ]
+}
+```
+
+### POST /api/lightning-arrester/generate-report
+Generate PDF report for lightning arrester calculation.
+
+#### Request Body
+```json
+{
+  "calculationId": "calc_abc123",
+  "inputParameters": {
+    "systemVoltage": 11,
+    "structureType": "tower",
+    "environmentalConditions": {
+      "humidity": 65,
+      "pollutionLevel": "medium",
+      "altitude": 150
+    },
+    "complianceRequirement": "type2"
+  },
+  "results": {
+    "arresterType": "ese",
+    "recommendedRating": 12,
+    "complianceResults": [
+      {
+        "standard": "IEC 60099-4",
+        "requirement": "residual voltage",
+        "requiredValue": 36.5,
+        "calculatedValue": 32.1,
+        "unit": "kV",
+        "compliant": true
+      }
+    ]
+  }
+}
+```
+
+#### Response (200 OK)
+Returns PDF binary data with `Content-Type: application/pdf` and `Content-Disposition: attachment; filename="lightning-arrester-report.pdf"`
+
+## Data Models
+
+### CalculationParameters
+- systemVoltage: number (positive, in kV)
+- structureType: enum ['home', 'tower', 'industry', 'traction']
+- environmentalConditions: object
+  - humidity: number (0-100%)
+  - pollutionLevel: enum ['light', 'medium', 'heavy']
+  - altitude: number (meters, 0-2000)
+- complianceRequirement: enum ['type1', 'type2']
+
+### ComplianceResult
+- standard: string (e.g., "IEC 60099-4", "NEC 2020")
+- requirement: string (e.g., "residual voltage", "withstand voltage")
+- requiredValue: number
+- calculatedValue: number
+- unit: string (e.g., "kV", "kg")
+- compliant: boolean
