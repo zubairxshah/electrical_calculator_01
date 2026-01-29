@@ -124,6 +124,7 @@ export const CalculatorGrid: React.FC<CalculatorGridProps> = ({
           key={card.id}
           variants={ANIMATION_PRESETS.slideUp}
           transition={{ duration: 0.3 }}
+          whileHover={{ y: -5, transition: { duration: 0.2 } }}
         >
           <EnhancedCalculatorCard card={card} />
         </motion.div>

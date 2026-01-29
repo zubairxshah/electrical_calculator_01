@@ -116,50 +116,49 @@ export const EnhancedCalculatorCard: React.FC<EnhancedCalculatorCardProps> = ({ 
   };
 
   return (
-    <motion.div
-      whileHover={{ y: -5, boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)' }}
-      whileTap={{ scale: 0.98 }}
-      transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-    >
-      <Link href={card.href}>
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 h-full flex flex-col">
-          <div className="p-5 flex-1">
-            <div className="flex justify-between items-start mb-3">
-              <div className="p-2 rounded-lg bg-gray-50 text-gray-700">
-                {getIcon()}
-              </div>
-              {card.isNew && (
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                  New
-                </span>
-              )}
+    <Link href={card.href} className="block">
+      <motion.div
+        whileHover={{ y: -5, boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)' }}
+        whileTap={{ scale: 0.98 }}
+        transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+        className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 h-full flex flex-col cursor-pointer"
+      >
+        <div className="p-5 flex-1">
+          <div className="flex justify-between items-start mb-3">
+            <div className="p-2 rounded-lg bg-gray-50 text-gray-700">
+              {getIcon()}
             </div>
-
-            <h3 className="font-semibold text-gray-900 mb-1 line-clamp-1">{card.title}</h3>
-            <p className="text-sm text-gray-600 mb-4 line-clamp-2">{card.description}</p>
-
-            <div className="flex flex-wrap gap-2">
-              {card.tags.map((tag, index) => (
-                <span
-                  key={index}
-                  className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800"
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
+            {card.isNew && (
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                New
+              </span>
+            )}
           </div>
 
-          <div className="px-5 py-3 bg-gray-50 border-t border-gray-100 flex justify-between items-center">
-            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getPriorityClass()}`}>
-              {card.priority}
-            </span>
-            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusClass()}`}>
-              {card.status}
-            </span>
+          <h3 className="font-semibold text-gray-900 mb-1 line-clamp-1">{card.title}</h3>
+          <p className="text-sm text-gray-600 mb-4 line-clamp-2">{card.description}</p>
+
+          <div className="flex flex-wrap gap-2">
+            {card.tags.map((tag, index) => (
+              <span
+                key={index}
+                className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800"
+              >
+                {tag}
+              </span>
+            ))}
           </div>
         </div>
-      </Link>
-    </motion.div>
+
+        <div className="px-5 py-3 bg-gray-50 border-t border-gray-100 flex justify-between items-center">
+          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getPriorityClass()}`}>
+            {card.priority}
+          </span>
+          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusClass()}`}>
+            {card.status}
+          </span>
+        </div>
+      </motion.div>
+    </Link>
   );
 };
