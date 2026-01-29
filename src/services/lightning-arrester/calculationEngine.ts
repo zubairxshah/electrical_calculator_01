@@ -27,7 +27,7 @@ export class LightningArresterCalculationEngine {
     const rating = this.calculateRecommendedRating(params.systemVoltage, arresterType, params);
 
     // Perform compliance checks
-    const complianceResults = this.performComplianceChecks(params, rating);
+    const complianceResults = this.performComplianceChecks(params, rating, arresterType);
 
     // Generate installation recommendation
     const installationRecommendation = this.generateInstallationRecommendation(params.complianceRequirement);
@@ -158,7 +158,7 @@ export class LightningArresterCalculationEngine {
   /**
    * Perform compliance checks against IEC and NEC standards
    */
-  private performComplianceChecks(params: CalculationParameters, calculatedRating: number): ComplianceResult[] {
+  private performComplianceChecks(params: CalculationParameters, calculatedRating: number, arresterType: string): ComplianceResult[] {
     const complianceResults: ComplianceResult[] = [];
 
     // IEC 60099-4: Check lightning impulse residual voltage
