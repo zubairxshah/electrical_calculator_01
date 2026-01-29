@@ -1,5 +1,6 @@
 import jsPDF from 'jspdf';
-import { CalculationParameters, CalculationResult, ComplianceResult } from '../../models/ComplianceResult';
+import { CalculationParameters } from '../../models/CalculationParameters';
+import { CalculationResult, ComplianceResult } from '../../models/ComplianceResult';
 import { IEC_60099_4, NEC_STANDARDS } from '../../constants/standards';
 
 /**
