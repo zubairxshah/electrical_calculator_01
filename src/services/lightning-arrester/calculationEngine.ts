@@ -176,8 +176,8 @@ export class LightningArresterCalculationEngine {
     });
 
     // IEC 60099-4: Check power frequency withstand voltage
-    const withstandVoltage = this.calculateWithstandVoltage(params.systemVoltage, params.structureType);
-    const requiredWithstandVoltage = params.systemVoltage * WITHSTAND_VOLTAGE_RATIOS[params.structureType.toUpperCase() as keyof typeof WITHSTAND_VOLTAGE_RATIOS] ||
+    const withstandVoltage = this.calculateWithstandVoltage(params.systemVoltage, arresterType);
+    const requiredWithstandVoltage = params.systemVoltage * WITHSTAND_VOLTAGE_RATIOS[arresterType.toUpperCase() as keyof typeof WITHSTAND_VOLTAGE_RATIOS] ||
                                     WITHSTAND_VOLTAGE_RATIOS.MOV; // Default to MOV ratio
 
     complianceResults.push({
@@ -246,11 +246,11 @@ export class LightningArresterCalculationEngine {
   }
 
   /**
-   * Calculate withstand voltage based on system voltage and structure type
+   * Calculate withstand voltage based on system voltage and arrester type
    */
-  private calculateWithstandVoltage(systemVoltage: number, structureType: string): number {
-    // Use the appropriate ratio based on structure type and arrester type
-    const ratioKey = structureType.toUpperCase() as keyof typeof WITHSTAND_VOLTAGE_RATIOS;
+  private calculateWithstandVoltage(systemVoltage: number, arresterType: string): number {
+    // Use the appropriate ratio based on arrester type
+    const ratioKey = arresterType.toUpperCase() as keyof typeof WITHSTAND_VOLTAGE_RATIOS;
     const ratio = WITHSTAND_VOLTAGE_RATIOS[ratioKey] || WITHSTAND_VOLTAGE_RATIOS.MOV;
 
     return systemVoltage * ratio;
