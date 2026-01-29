@@ -1,6 +1,6 @@
 import { math } from '../../lib/math';
-import { CalculationParameters, CalculationResult, ComplianceResult } from '../../models/ComplianceResult';
-import { VALIDATION_RULES } from '../../models/CalculationParameters';
+import { CalculationParameters, VALIDATION_RULES } from '../../models/CalculationParameters';
+import { CalculationResult, ComplianceResult } from '../../models/ComplianceResult';
 import { IEC_60099_4, NEC_STANDARDS, WITHSTAND_VOLTAGE_RATIOS, STRUCTURE_RECOMMENDATIONS, POLLUTION_LEVELS, ALTITUDE_DERATING } from '../../constants/standards';
 
 /**
@@ -24,7 +24,7 @@ export class LightningArresterCalculationEngine {
     const arresterType = this.determineArresterType(params);
 
     // Calculate recommended rating based on system voltage
-    const rating = this.calculateRecommendedRating(params.systemVoltage, arresterType);
+    const rating = this.calculateRecommendedRating(params.systemVoltage, arresterType, params);
 
     // Perform compliance checks
     const complianceResults = this.performComplianceChecks(params, rating);
@@ -106,7 +106,7 @@ export class LightningArresterCalculationEngine {
   /**
    * Calculate recommended arrester rating based on system voltage
    */
-  private calculateRecommendedRating(systemVoltage: number, arresterType: string): number {
+  private calculateRecommendedRating(systemVoltage: number, arresterType: string, params: CalculationParameters): number {
     // According to IEC 60099-4, the rated voltage should be selected based on the system's highest RMS voltage
     // For AC systems, the rated voltage is typically 1.2 to 1.5 times the system voltage
     let multiplier = 1.2;
