@@ -58,7 +58,7 @@ export class PdfGeneratorService {
       const statusText = compliance.compliant ? '✓ Compliant' : '✗ Non-Compliant';
       const statusColor = compliance.compliant ? [0, 128, 0] : [255, 0, 0]; // Green or red
 
-      doc.setTextColor(...statusColor);
+      doc.setTextColor(statusColor[0], statusColor[1], statusColor[2]);
       doc.text(`${compliance.standard}: ${compliance.requirement}`, 20, yPosition);
       yPosition += 5;
 
