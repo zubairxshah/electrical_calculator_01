@@ -1,4 +1,5 @@
-import { CalculationParameters, ComplianceResult } from '../../models/ComplianceResult';
+import { CalculationParameters } from '../../models/CalculationParameters';
+import { ComplianceResult } from '../../models/ComplianceResult';
 import { IEC_60099_4, NEC_STANDARDS, WITHSTAND_VOLTAGE_RATIOS, STRUCTURE_RECOMMENDATIONS, POLLUTION_LEVELS, ALTITUDE_DERATING } from '../../constants/standards';
 
 /**
