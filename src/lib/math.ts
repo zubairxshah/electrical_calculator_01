@@ -1,7 +1,7 @@
-import { create, all } from 'mathjs';
+import { create, all, type ConfigOptions } from 'mathjs';
 
 // Configure math.js with custom settings for electrical calculations
-const config = {
+const config: ConfigOptions = {
   epsilon: 1e-12, // Smaller epsilon for higher precision
   matrix: 'Matrix', // Default type of matrix
   number: 'BigNumber', // Use BigNumber for higher precision
