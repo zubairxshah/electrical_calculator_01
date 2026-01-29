@@ -6,6 +6,8 @@ import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { Battery, Zap, Cable, Sun, Settings, Scale, X, CircuitBoard, Lightbulb, Zap as Ground, ChevronDown, ChevronRight, Shield } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useMouseWheelScroll } from '@/hooks/useMouseWheelScroll'
+import { motion } from 'framer-motion'
 
 /**
  * Sidebar Navigation Component
@@ -120,6 +122,7 @@ interface SidebarProps {
 export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   const pathname = usePathname()
   const sidebarRef = useRef<HTMLElement>(null)
+  const scrollContainerRef = useRef<HTMLElement>(null)
   const closeButtonRef = useRef<HTMLButtonElement>(null)
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({
     'Power Systems': true,
@@ -136,6 +139,38 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
       [category]: !prev[category]
     }))
   }
+
+  // Persist scroll position across page navigations
+  useEffect(() => {
+    if (!scrollContainerRef.current) return;
+
+    const storedScrollPos = sessionStorage.getItem(`sidebar-scroll-${pathname}`);
+    if (storedScrollPos) {
+      scrollContainerRef.current.scrollTop = parseInt(storedScrollPos, 10);
+    }
+
+    const handleScroll = () => {
+      if (scrollContainerRef.current) {
+        sessionStorage.setItem(`sidebar-scroll-${pathname}`, scrollContainerRef.current.scrollTop.toString());
+      }
+    };
+
+    const scrollElement = scrollContainerRef.current;
+    scrollElement.addEventListener('scroll', handleScroll, { passive: true });
+
+    return () => {
+      scrollElement.removeEventListener('scroll', handleScroll);
+    };
+  }, [pathname]);
+
+  // Apply mouse wheel scrolling to the navigation container
+  useMouseWheelScroll({
+    targetRef: scrollContainerRef,
+    enabled: isOpen,
+    sensitivity: 1.2,
+    smoothScroll: true,
+    smoothDuration: 150
+  });
 
   // Focus trap: cycle through focusable elements when Tab is pressed
   useEffect(() => {
@@ -230,7 +265,10 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 overflow-y-auto p-4">
+          <nav
+            ref={scrollContainerRef}
+            className="flex-1 overflow-y-auto p-4"
+          >
             {navigationItems.map((categoryGroup) => (
               <div key={categoryGroup.category} className="mb-4">
                 <button

@@ -1,8 +1,12 @@
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Battery, Zap, Cable, Sun, Settings, BookOpen } from 'lucide-react'
+'use client';
+
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Battery, Zap, Cable, Sun, Settings, BookOpen, Shield, Lightbulb, CircuitBoard, Scale } from 'lucide-react';
+import { CalculatorGrid } from '@/components/landing/calculator-grid';
+import { CalculatorCard } from '@/types/ui';
 
 /**
  * Landing Page
@@ -13,73 +17,128 @@ import { Battery, Zap, Cable, Sun, Settings, BookOpen } from 'lucide-react'
  * - Standards compliance information
  */
 
-const calculators = [
+const calculatorCards: CalculatorCard[] = [
   {
+    id: 'battery',
     title: 'Battery Backup Calculator',
     description: 'Calculate backup time and capacity requirements for battery systems using IEEE 485-2020 standards.',
-    icon: Battery,
+    icon: 'battery',
     href: '/battery',
     priority: 'P1',
-    features: [
-      'Backup time calculation',
-      'Discharge rate analysis',
-      'Temperature compensation',
-      'Battery aging factors',
-    ],
+    status: 'active',
+    category: 'Power Systems',
+    isNew: false,
+    tags: ['backup', 'capacity', 'IEEE 485'],
   },
   {
+    id: 'ups',
     title: 'UPS Sizing Tool',
     description: 'Size UPS systems with diversity factors and battery requirements per IEEE 1100-2020.',
-    icon: Zap,
+    icon: 'zap',
     href: '/ups',
     priority: 'P1',
-    features: [
-      'VA/Watt sizing',
-      'Diversity factors',
-      'Battery capacity',
-      'Growth planning',
-    ],
+    status: 'active',
+    category: 'Power Systems',
+    isNew: false,
+    tags: ['sizing', 'diversity', 'IEEE 1100'],
   },
   {
+    id: 'cables',
     title: 'Cable Sizing Calculator',
     description: 'Conductor sizing with voltage drop calculations per NEC 2020 and IEC 60364.',
-    icon: Cable,
+    icon: 'cable',
     href: '/cables',
     priority: 'P1',
-    features: [
-      'Voltage drop analysis',
-      'Ampacity derating',
-      'AWG/mm² sizing',
-      'Temperature effects',
-    ],
+    status: 'active',
+    category: 'Design & Installation',
+    isNew: false,
+    tags: ['voltage drop', 'ampacity', 'NEC 2020'],
   },
   {
+    id: 'breaker',
+    title: 'Circuit Breaker Sizing',
+    description: 'Size circuit breakers with NEC/IEC standards compliance and coordination studies.',
+    icon: 'circuitboard',
+    href: '/breaker',
+    priority: 'P1',
+    status: 'active',
+    category: 'Power Systems',
+    isNew: false,
+    tags: ['protection', 'coordination', 'NEC'],
+  },
+  {
+    id: 'earthing',
+    title: 'Earthing Conductor Calculator',
+    description: 'Calculate earthing conductor sizing per IEC 60364-5-54 and NEC 250.',
+    icon: 'zap',
+    href: '/earthing',
+    priority: 'P1',
+    status: 'active',
+    category: 'Protection & Safety',
+    isNew: false,
+    tags: ['grounding', 'bonding', 'IEC 60364'],
+  },
+  {
+    id: 'lightning-arrester',
+    title: 'Lightning Arrester Calculator',
+    description: 'Surge protection calculations per IEC 60099-4 standards.',
+    icon: 'shield',
+    href: '/lightning-arrester',
+    priority: 'P1',
+    status: 'active',
+    category: 'Protection & Safety',
+    isNew: true,
+    tags: ['surge', 'protection', 'IEC 60099'],
+  },
+  {
+    id: 'lighting',
+    title: 'Lighting Design Calculator',
+    description: 'Indoor lighting calculations per IESNA standards.',
+    icon: 'lightbulb',
+    href: '/lighting',
+    priority: 'P1',
+    status: 'active',
+    category: 'Design & Installation',
+    isNew: false,
+    tags: ['illumination', 'lux', 'IESNA'],
+  },
+  {
+    id: 'solar',
     title: 'Solar Array Sizer',
     description: 'Design solar panel arrays for off-grid and grid-tied systems.',
-    icon: Sun,
+    icon: 'sun',
     href: '/solar',
     priority: 'P2',
-    features: [
-      'Array configuration',
-      'Energy yield',
-      'Battery bank sizing',
-      'String calculations',
-    ],
+    status: 'active',
+    category: 'Renewable Energy',
+    isNew: false,
+    tags: ['photovoltaic', 'energy', 'off-grid'],
   },
   {
+    id: 'charge-controller',
     title: 'Charge Controller Selector',
     description: 'Select and size charge controllers for solar installations.',
-    icon: Settings,
+    icon: 'settings',
     href: '/charge-controller',
     priority: 'P2',
-    features: [
-      'PWM vs MPPT',
-      'Current ratings',
-      'Voltage matching',
-      'Efficiency analysis',
-    ],
+    status: 'active',
+    category: 'Renewable Energy',
+    isNew: false,
+    tags: ['MPPT', 'PWM', 'efficiency'],
   },
-]
+  {
+    id: 'battery-comparison',
+    title: 'Battery Comparison Tool',
+    description: 'Compare different battery technologies for your application.',
+    icon: 'scale',
+    href: '/battery-comparison',
+    priority: 'P3',
+    status: 'active',
+    category: 'Analysis Tools',
+    isNew: false,
+    tags: ['comparison', 'lithium', 'lead-acid'],
+  },
+];
 
 export default function HomePage() {
   return (
@@ -143,47 +202,10 @@ export default function HomePage() {
         </CardContent>
       </Card>
 
-      {/* Calculator Cards */}
+      {/* Enhanced Calculator Cards */}
       <div className="space-y-4">
         <h2 className="text-2xl font-semibold">Available Calculators</h2>
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {calculators.map((calculator) => {
-            const Icon = calculator.icon
-            return (
-              <Card key={calculator.href} className="flex flex-col">
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
-                      <Icon className="h-6 w-6 text-primary" />
-                    </div>
-                    <Badge
-                      variant={calculator.priority === 'P1' ? 'default' : 'secondary'}
-                    >
-                      {calculator.priority}
-                    </Badge>
-                  </div>
-                  <CardTitle className="mt-4">{calculator.title}</CardTitle>
-                  <CardDescription>{calculator.description}</CardDescription>
-                </CardHeader>
-                <CardContent className="flex-1 space-y-4">
-                  <ul className="space-y-1 text-sm text-muted-foreground">
-                    {calculator.features.map((feature) => (
-                      <li key={feature} className="flex items-center">
-                        <span className="mr-2">•</span>
-                        {feature}
-                      </li>
-                    ))}
-                  </ul>
-                  <Button asChild className="w-full">
-                    <Link href={calculator.href}>
-                      Open Calculator
-                    </Link>
-                  </Button>
-                </CardContent>
-              </Card>
-            )
-          })}
-        </div>
+        <CalculatorGrid calculatorCards={calculatorCards} />
       </div>
 
       {/* Features Section */}
