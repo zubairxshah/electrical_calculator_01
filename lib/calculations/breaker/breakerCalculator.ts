@@ -397,8 +397,8 @@ export async function calculateBreakerSizing(
 
       let cableRecommendation = null;
       let recommendedVDPercent: number | undefined;
-      let costImpact: 'low' | 'medium' | 'high' | 'none' = 'none';
-      let installationDifficulty: 'easy' | 'moderate' | 'difficult' | 'none' = 'none';
+      let costImpact: 'low' | 'medium' | 'high' | undefined = undefined;
+      let installationDifficulty: 'easy' | 'moderate' | 'difficult' | undefined = undefined;
 
       if (vdResult.voltageDropPercent > 3.0) {
         cableRecommendation = recommendEnhancedCableSizeForVD({
