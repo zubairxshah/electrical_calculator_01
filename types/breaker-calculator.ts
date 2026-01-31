@@ -233,18 +233,25 @@ export interface VoltageDropAnalysis {
   // Calculation result
   voltageDrop: number;          // Volts
   voltageDropPercent: number;   // VD%
+  voltageAtLoad?: number;       // Voltage at load end (enhanced)
+  powerLossWatts?: number;      // Power loss due to voltage drop (enhanced)
 
   // NEC limits
   limitBranchCircuit: number;   // 3%
   limitCombined: number;        // 5%
 
   // Assessment
-  status: 'acceptable' | 'warning' | 'exceed-limit';
+  status: 'excellent' | 'good' | 'acceptable' | 'warning' | 'exceed-limit';
   assessment: string;           // e.g., "Exceeds NEC 3% limit for branch circuit"
 
   // Recommendation
   recommendedCableSize?: string; // Next larger size if limit exceeded
   recommendedVDPercent?: number; // VD% with larger cable
+
+  // Enhanced properties
+  costImpact?: 'low' | 'medium' | 'high' | 'none';  // Cost impact of upsizing
+  installationDifficulty?: 'easy' | 'moderate' | 'difficult' | 'none';  // Installation difficulty
+  recommendedAction?: string;  // Recommended action based on compliance
 }
 
 /**

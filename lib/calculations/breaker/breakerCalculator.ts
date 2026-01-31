@@ -12,6 +12,7 @@ import { applySafetyFactor } from './safetyFactors';
 import { recommendStandardBreaker } from '@/lib/standards/breakerRatings';
 import { recommendTripCurve } from '@/lib/standards/tripCurves';
 import { calculateVoltageDrop, assessVoltageDropCompliance, recommendCableSizeForVD } from './voltageDrop';
+import { calculateEnhancedVoltageDrop, assessEnhancedVoltageDropCompliance, recommendEnhancedCableSizeForVD } from './enhancedVoltageDrop';
 import { calculateCombinedDerating, getNECGroupingFactor, getIECTemperatureFactor, type IECInstallationMethod } from '@/lib/standards/deratingTables';
 import { validateCalculationInput, validateWithWarnings } from '@/lib/validation/breakerValidation';
 import { logger } from '@/lib/utils/logger';
@@ -367,13 +368,13 @@ export async function calculateBreakerSizing(
   }
 
   // ============================================================================
-  // STEP 9: VOLTAGE DROP ANALYSIS (Optional)
+  // STEP 9: ENHANCED VOLTAGE DROP ANALYSIS (Optional)
   // ============================================================================
 
   let voltageDropAnalysis: VoltageDropAnalysis | undefined;
 
   if (input.environment?.circuitDistance && input.environment?.conductorMaterial) {
-    logger.debug('BreakerCalculator', 'Calculating voltage drop');
+    logger.debug('BreakerCalculator', 'Calculating enhanced voltage drop');
 
     try {
       const vdInput = {
@@ -387,20 +388,28 @@ export async function calculateBreakerSizing(
         material: input.environment.conductorMaterial,
         phase: input.circuit.phase,
         powerFactor: input.circuit.powerFactor,
+        temperature: input.environment.ambientTemperature || 75, // Default to 75°C
       };
 
-      const vdResult = calculateVoltageDrop(vdInput);
-      const compliance = assessVoltageDropCompliance(vdResult.voltageDropPercent);
+      // Use enhanced voltage drop calculation
+      const vdResult = calculateEnhancedVoltageDrop(vdInput);
+      const compliance = assessEnhancedVoltageDropCompliance(vdResult.voltageDropPercent, vdInput.current, vdInput.voltage);
 
       let cableRecommendation = null;
       let recommendedVDPercent: number | undefined;
+      let costImpact: 'low' | 'medium' | 'high' | 'none' = 'none';
+      let installationDifficulty: 'easy' | 'moderate' | 'difficult' | 'none' = 'none';
+
       if (vdResult.voltageDropPercent > 3.0) {
-        cableRecommendation = recommendCableSizeForVD({
+        cableRecommendation = recommendEnhancedCableSizeForVD({
           ...vdInput,
           currentSize: vdInput.conductorSize,
           vdLimit: 3.0,
         });
+
         recommendedVDPercent = cableRecommendation.predictedVoltageDropPercent ?? undefined;
+        costImpact = cableRecommendation.costImpact;
+        installationDifficulty = cableRecommendation.installationDifficulty;
       }
 
       // Format conductor size string
@@ -408,16 +417,18 @@ export async function calculateBreakerSizing(
         ? `#${vdInput.conductorSize.sizeAWG} AWG`
         : vdInput.conductorSize.sizeMm2
           ? `${vdInput.conductorSize.sizeMm2}mm²`
-        : undefined;
+          : undefined;
 
       voltageDropAnalysis = {
         performed: true,
         loadCurrentAmps: vdResult.components.current,
         circuitDistance: vdResult.components.distance,
         conductorSize: conductorSizeStr,
-        conductorResistance: vdResult.components.resistance,
+        conductorResistance: vdResult.tempAdjustedResistance, // Use temperature-adjusted resistance
         voltageDrop: vdResult.voltageDropVolts,
         voltageDropPercent: vdResult.voltageDropPercent,
+        voltageAtLoad: vdResult.voltageAtLoad,
+        powerLossWatts: vdResult.powerLossWatts,
         limitBranchCircuit: 3.0,
         limitCombined: 5.0,
         status: compliance.status,
@@ -428,33 +439,29 @@ export async function calculateBreakerSizing(
             : `${cableRecommendation.recommendedSize.sizeMetric}mm²`
           : undefined,
         recommendedVDPercent,
+        costImpact,
+        installationDifficulty,
+        recommendedAction: compliance.recommendedAction,
       };
 
-      // Add alerts based on VD status
-      if (compliance.status === 'warning') {
+      // Add alerts based on enhanced VD status
+      if (compliance.status === 'warning' || compliance.status === 'exceed-limit') {
         alerts.push({
-          type: 'warning',
-          code: 'VOLTAGE_DROP_WARNING',
+          type: compliance.level,
+          code: 'VOLTAGE_DROP_ISSUE',
           message: compliance.message,
-          severity: compliance.level === 'error' ? 'major' : 'minor',
-          codeReference: compliance.codeReference,
-        });
-      } else if (compliance.status === 'exceed-limit') {
-        alerts.push({
-          type: 'error',
-          code: 'VOLTAGE_DROP_EXCEEDED',
-          message: compliance.message,
-          severity: 'critical',
+          severity: compliance.level === 'error' ? 'critical' : 'major',
           codeReference: compliance.codeReference,
         });
       }
 
-      logger.debug('BreakerCalculator', 'Voltage drop calculated', {
+      logger.debug('BreakerCalculator', 'Enhanced voltage drop calculated', {
         vdPercent: vdResult.voltageDropPercent,
         status: compliance.status,
+        compliancePercentage: compliance.compliancePercentage,
       });
     } catch (vdError) {
-      logger.warn('BreakerCalculator', 'Voltage drop calculation failed', {
+      logger.warn('BreakerCalculator', 'Enhanced voltage drop calculation failed', {
         error: vdError instanceof Error ? vdError.message : 'Unknown error',
       });
     }
