@@ -249,8 +249,8 @@ export interface VoltageDropAnalysis {
   recommendedVDPercent?: number; // VD% with larger cable
 
   // Enhanced properties
-  costImpact?: 'low' | 'medium' | 'high' | 'none';  // Cost impact of upsizing
-  installationDifficulty?: 'easy' | 'moderate' | 'difficult' | 'none';  // Installation difficulty
+  costImpact?: 'low' | 'medium' | 'high';  // Cost impact of upsizing
+  installationDifficulty?: 'easy' | 'moderate' | 'difficult';  // Installation difficulty
   recommendedAction?: string;  // Recommended action based on compliance
 }
 

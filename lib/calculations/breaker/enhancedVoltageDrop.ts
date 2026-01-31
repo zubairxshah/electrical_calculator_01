@@ -345,8 +345,8 @@ export function recommendEnhancedCableSizeForVD(input: {
       savingsPercent: null,
       message: `Voltage drop (${currentVD.voltageDropPercent.toFixed(2)}%) is within acceptable limit (${input.vdLimit}%). No larger cable needed.`,
       codeReference: 'NEC 210.19(A)',
-      costImpact: 'none',
-      installationDifficulty: 'none',
+      costImpact: undefined,
+      installationDifficulty: undefined,
     };
   }
 
