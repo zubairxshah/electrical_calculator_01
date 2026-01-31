@@ -397,7 +397,7 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
                   } catch (error) {
                     console.error('Error in footer link onClick:', error);
                     console.error('Error details:', {
-                      href: item.href || e.currentTarget.getAttribute('href'),
+                      href: e.currentTarget.getAttribute('href'),
                       event: e,
                       isOpen: isOpen,
                       error: error
@@ -419,7 +419,7 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
                   } catch (error) {
                     console.error('Error in footer link onClick:', error);
                     console.error('Error details:', {
-                      href: item.href || e.currentTarget.getAttribute('href'),
+                      href: e.currentTarget.getAttribute('href'),
                       event: e,
                       isOpen: isOpen,
                       error: error
@@ -441,7 +441,7 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
                   } catch (error) {
                     console.error('Error in footer link onClick:', error);
                     console.error('Error details:', {
-                      href: item.href || e.currentTarget.getAttribute('href'),
+                      href: e.currentTarget.getAttribute('href'),
                       event: e,
                       isOpen: isOpen,
                       error: error
