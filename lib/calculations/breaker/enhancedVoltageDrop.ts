@@ -422,13 +422,22 @@ export function recommendEnhancedCableSizeForVD(input: {
     : `${recommendedEntry.sizeMetric} mm²`;
 
   // Determine cost impact based on size jump
+  // Find the index of the recommended entry in the available cables
+  const recommendedIndex = availableCables.findIndex(cable =>
+    cable.sizeAWG === recommendedEntry.sizeAWG ||
+    parseFloat(cable.sizeMetric) === parseFloat(recommendedEntry.sizeMetric)
+  );
+
   let costImpact: 'low' | 'medium' | 'high' = 'medium';
-  if (Math.abs(i - currentIndex) <= 2) {
-    costImpact = 'low';
-  } else if (Math.abs(i - currentIndex) <= 4) {
-    costImpact = 'medium';
-  } else {
-    costImpact = 'high';
+  if (recommendedIndex !== -1) {
+    const sizeJump = Math.abs(recommendedIndex - currentIndex);
+    if (sizeJump <= 2) {
+      costImpact = 'low';
+    } else if (sizeJump <= 4) {
+      costImpact = 'medium';
+    } else {
+      costImpact = 'high';
+    }
   }
 
   // Determine installation difficulty
