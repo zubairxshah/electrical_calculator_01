@@ -477,7 +477,7 @@ export function calculateMinimumCableSizeForTargetVD(input: {
   targetVDPercent: number;
 }): CableTableEntry | null {
   // Start with smallest available cable and work up
-  // Default to NEC standard for copper, IEC for aluminum if no specific preference
+  // Default to NEC standard for copper, IEC for aluminum
   const standard = input.material === 'copper' ? 'NEC' : 'IEC';
   const material = input.material;
   const availableCables = getAvailableCableSizes(standard, material);
