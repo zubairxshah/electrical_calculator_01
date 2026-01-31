@@ -2,10 +2,8 @@
 
 import { Inter } from 'next/font/google'
 import './globals.css'
-import { Sidebar } from '@/components/layout/Sidebar'
-import { Header } from '@/components/layout/Header'
+import { TopNavigation } from '@/components/layout/TopNavigation'
 import { Footer } from '@/components/layout/Footer'
-import { useMobileMenu } from '@/hooks/useMobileMenu'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -17,8 +15,6 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-  const mobileMenu = useMobileMenu()
-
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -33,27 +29,17 @@ export default function RootLayout({
         />
       </head>
       <body className={inter.className}>
-        <div className="flex min-h-screen">
-          {/* Sidebar Navigation with mobile menu state */}
-          <Sidebar isOpen={mobileMenu.isOpen} onClose={mobileMenu.close} />
+        <div className="flex min-h-screen flex-col">
+          {/* Top Navigation */}
+          <TopNavigation />
 
-          {/* Main Content Area - CRITICAL FIX: md:pl-64 instead of pl-64 */}
-          <div className="flex flex-1 flex-col md:pl-64">
-            {/* Header with mobile menu button */}
-            <Header
-              mobileMenuOpen={mobileMenu.isOpen}
-              onMobileMenuToggle={mobileMenu.toggle}
-              triggerRef={mobileMenu.triggerRef}
-            />
+          {/* Main Content Area */}
+          <main className="flex-1">
+            {children}
+          </main>
 
-            {/* Page Content - Responsive padding */}
-            <main className="flex-1 p-4 md:p-6">
-              {children}
-            </main>
-
-            {/* Footer */}
-            <Footer />
-          </div>
+          {/* Footer */}
+          <Footer />
         </div>
       </body>
     </html>
