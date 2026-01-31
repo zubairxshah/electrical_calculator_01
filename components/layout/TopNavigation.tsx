@@ -131,16 +131,14 @@ export function TopNavigation() {
   const pathname = usePathname()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [openDropdown, setOpenDropdown] = useState<string | null>(null)
-  const dropdownRefs = useRef<Record<string, HTMLDivElement | null>>({})
 
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (openDropdown) {
-        const dropdownElement = dropdownRefs.current[openDropdown]
-        if (dropdownElement && !dropdownElement.contains(event.target as Node)) {
-          setOpenDropdown(null)
-        }
+      // Check if the click is outside of any dropdown trigger/content
+      const target = event.target as HTMLElement;
+      if (openDropdown && !target.closest(`[data-dropdown-category="${openDropdown}"]`)) {
+        setOpenDropdown(null)
       }
     }
 
@@ -195,7 +193,7 @@ export function TopNavigation() {
                 <DropdownMenuContent
                   className="w-64 p-0"
                   align="start"
-                  ref={(el) => (dropdownRefs.current[category.category] = el)}
+                  data-dropdown-category={category.category}
                 >
                   <div className="p-2">
                     <h3 className="px-2 py-1 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
