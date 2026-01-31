@@ -7,7 +7,6 @@ import { cn } from '@/lib/utils'
 import { Battery, Zap, Cable, Sun, Settings, Scale, X, CircuitBoard, Lightbulb, Zap as Ground, ChevronDown, ChevronRight, Shield } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useMouseWheelScroll } from '@/hooks/useMouseWheelScroll'
-import { motion } from 'framer-motion'
 
 /**
  * Sidebar Navigation Component
