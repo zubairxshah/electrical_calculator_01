@@ -296,7 +296,12 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
                         <Link
                           key={item.href}
                           href={item.href}
-                          onClick={onClose}
+                          onClick={() => {
+                            // Close sidebar only on mobile (when it's actually open as a modal)
+                            if (isOpen) {  // Only close if sidebar is currently open (mobile view)
+                              onClose?.();
+                            }
+                          }}
                           className={cn(
                             'group flex items-start space-x-3 rounded-lg px-3 py-2 transition-all hover:bg-accent',
                             isActive && 'bg-accent text-accent-foreground'
@@ -340,21 +345,36 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
             <div className="space-y-2 text-xs text-muted-foreground">
               <Link
                 href="/about"
-                onClick={onClose}
+                onClick={() => {
+                  // Close sidebar only on mobile (when it's actually open as a modal)
+                  if (isOpen) {  // Only close if sidebar is currently open (mobile view)
+                    onClose?.();
+                  }
+                }}
                 className="block hover:text-foreground transition-colors truncate"
               >
                 About
               </Link>
               <Link
                 href="/standards"
-                onClick={onClose}
+                onClick={() => {
+                  // Close sidebar only on mobile (when it's actually open as a modal)
+                  if (isOpen) {  // Only close if sidebar is currently open (mobile view)
+                    onClose?.();
+                  }
+                }}
                 className="block hover:text-foreground transition-colors truncate"
               >
                 Standards Reference
               </Link>
               <Link
                 href="/help"
-                onClick={onClose}
+                onClick={() => {
+                  // Close sidebar only on mobile (when it's actually open as a modal)
+                  if (isOpen) {  // Only close if sidebar is currently open (mobile view)
+                    onClose?.();
+                  }
+                }}
                 className="block hover:text-foreground transition-colors truncate"
               >
                 Help & Documentation
