@@ -115,9 +115,9 @@ export interface EnhancedCableSizeRecommendation {
   /** Code reference */
   codeReference: string;
   /** Cost impact estimate */
-  costImpact: 'low' | 'medium' | 'high';
+  costImpact?: 'low' | 'medium' | 'high';
   /** Installation difficulty */
-  installationDifficulty: 'easy' | 'moderate' | 'difficult';
+  installationDifficulty?: 'easy' | 'moderate' | 'difficult';
 }
 
 /**
