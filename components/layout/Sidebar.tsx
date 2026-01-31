@@ -133,33 +133,52 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
 
   // Toggle category expansion
   const toggleCategory = (category: string) => {
-    setExpandedCategories(prev => ({
-      ...prev,
-      [category]: !prev[category]
-    }))
+    try {
+      setExpandedCategories(prev => {
+        const newState = {
+          ...prev,
+          [category]: !prev[category]
+        };
+        return newState;
+      });
+    } catch (error) {
+      console.error('Error in toggleCategory:', error);
+      console.error('Error details:', { category, error });
+    }
   }
 
   // Persist scroll position across page navigations
   useEffect(() => {
-    if (!scrollContainerRef.current) return;
-
-    const storedScrollPos = sessionStorage.getItem(`sidebar-scroll-${pathname}`);
-    if (storedScrollPos) {
-      scrollContainerRef.current.scrollTop = parseInt(storedScrollPos, 10);
-    }
-
-    const handleScroll = () => {
-      if (scrollContainerRef.current) {
-        sessionStorage.setItem(`sidebar-scroll-${pathname}`, scrollContainerRef.current.scrollTop.toString());
+    try {
+      if (!scrollContainerRef.current) {
+        return;
       }
-    };
 
-    const scrollElement = scrollContainerRef.current;
-    scrollElement.addEventListener('scroll', handleScroll, { passive: true });
+      const storedScrollPos = sessionStorage.getItem(`sidebar-scroll-${pathname}`);
+      if (storedScrollPos) {
+        scrollContainerRef.current.scrollTop = parseInt(storedScrollPos, 10);
+      }
 
-    return () => {
-      scrollElement.removeEventListener('scroll', handleScroll);
-    };
+      const handleScroll = () => {
+        try {
+          if (scrollContainerRef.current) {
+            const currentScrollTop = scrollContainerRef.current.scrollTop;
+            sessionStorage.setItem(`sidebar-scroll-${pathname}`, currentScrollTop.toString());
+          }
+        } catch (error) {
+          console.error('Error in handleScroll:', error);
+        }
+      };
+
+      const scrollElement = scrollContainerRef.current;
+      scrollElement.addEventListener('scroll', handleScroll, { passive: true });
+
+      return () => {
+        scrollElement.removeEventListener('scroll', handleScroll);
+      };
+    } catch (error) {
+      console.error('Error in scroll persistence useEffect:', error);
+    }
   }, [pathname]);
 
   // Apply mouse wheel scrolling to the navigation container
@@ -173,40 +192,54 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
 
   // Focus trap: cycle through focusable elements when Tab is pressed
   useEffect(() => {
-    if (!isOpen) return
+    try {
+      if (!isOpen) return
 
-    const sidebar = sidebarRef.current
-    if (!sidebar) return
+      const sidebar = sidebarRef.current
+      if (!sidebar) {
+        console.warn('Sidebar ref not available for focus trap');
+        return
+      }
 
-    // Focus close button when sidebar opens (for accessibility)
-    closeButtonRef.current?.focus()
+      // Focus close button when sidebar opens (for accessibility)
+      closeButtonRef.current?.focus()
 
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key !== 'Tab') return
+      const handleKeyDown = (e: KeyboardEvent) => {
+        try {
+          if (e.key !== 'Tab') return
 
-      const focusableElements = sidebar.querySelectorAll<HTMLElement>(
-        'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
-      )
-      const firstElement = focusableElements[0]
-      const lastElement = focusableElements[focusableElements.length - 1]
+          const focusableElements = sidebar.querySelectorAll<HTMLElement>(
+            'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
+          )
 
-      if (e.shiftKey) {
-        // Shift+Tab: go to last element if at first
-        if (document.activeElement === firstElement) {
-          e.preventDefault()
-          lastElement?.focus()
-        }
-      } else {
-        // Tab: go to first element if at last
-        if (document.activeElement === lastElement) {
-          e.preventDefault()
-          firstElement?.focus()
+          const firstElement = focusableElements[0]
+          const lastElement = focusableElements[focusableElements.length - 1]
+
+          if (e.shiftKey) {
+            // Shift+Tab: go to last element if at first
+            if (document.activeElement === firstElement) {
+              e.preventDefault()
+              lastElement?.focus()
+            }
+          } else {
+            // Tab: go to first element if at last
+            if (document.activeElement === lastElement) {
+              e.preventDefault()
+              firstElement?.focus()
+            }
+          }
+        } catch (error) {
+          console.error('Error in handleKeyDown:', error);
         }
       }
-    }
 
-    document.addEventListener('keydown', handleKeyDown)
-    return () => document.removeEventListener('keydown', handleKeyDown)
+      document.addEventListener('keydown', handleKeyDown)
+      return () => {
+        document.removeEventListener('keydown', handleKeyDown)
+      }
+    } catch (error) {
+      console.error('Error in focus trap useEffect:', error);
+    }
   }, [isOpen])
 
   return (
@@ -296,10 +329,20 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
                         <Link
                           key={item.href}
                           href={item.href}
-                          onClick={() => {
-                            // Close sidebar only on mobile (when it's actually open as a modal)
-                            if (isOpen) {  // Only close if sidebar is currently open (mobile view)
-                              onClose?.();
+                          onClick={(e) => {
+                            try {
+                              // Close sidebar only on mobile (when it's actually open as a modal)
+                              if (isOpen) {  // Only close if sidebar is currently open (mobile view)
+                                onClose?.();
+                              }
+                            } catch (error) {
+                              console.error('Error in sidebar link onClick:', error);
+                              console.error('Error details:', {
+                                href: item.href || e.currentTarget.getAttribute('href'),
+                                event: e,
+                                isOpen: isOpen,
+                                error: error
+                              });
                             }
                           }}
                           className={cn(
@@ -345,10 +388,20 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
             <div className="space-y-2 text-xs text-muted-foreground">
               <Link
                 href="/about"
-                onClick={() => {
-                  // Close sidebar only on mobile (when it's actually open as a modal)
-                  if (isOpen) {  // Only close if sidebar is currently open (mobile view)
-                    onClose?.();
+                onClick={(e) => {
+                  try {
+                    // Close sidebar only on mobile (when it's actually open as a modal)
+                    if (isOpen) {  // Only close if sidebar is currently open (mobile view)
+                      onClose?.();
+                    }
+                  } catch (error) {
+                    console.error('Error in footer link onClick:', error);
+                    console.error('Error details:', {
+                      href: item.href || e.currentTarget.getAttribute('href'),
+                      event: e,
+                      isOpen: isOpen,
+                      error: error
+                    });
                   }
                 }}
                 className="block hover:text-foreground transition-colors truncate"
@@ -357,10 +410,20 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
               </Link>
               <Link
                 href="/standards"
-                onClick={() => {
-                  // Close sidebar only on mobile (when it's actually open as a modal)
-                  if (isOpen) {  // Only close if sidebar is currently open (mobile view)
-                    onClose?.();
+                onClick={(e) => {
+                  try {
+                    // Close sidebar only on mobile (when it's actually open as a modal)
+                    if (isOpen) {  // Only close if sidebar is currently open (mobile view)
+                      onClose?.();
+                    }
+                  } catch (error) {
+                    console.error('Error in footer link onClick:', error);
+                    console.error('Error details:', {
+                      href: item.href || e.currentTarget.getAttribute('href'),
+                      event: e,
+                      isOpen: isOpen,
+                      error: error
+                    });
                   }
                 }}
                 className="block hover:text-foreground transition-colors truncate"
@@ -369,10 +432,20 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
               </Link>
               <Link
                 href="/help"
-                onClick={() => {
-                  // Close sidebar only on mobile (when it's actually open as a modal)
-                  if (isOpen) {  // Only close if sidebar is currently open (mobile view)
-                    onClose?.();
+                onClick={(e) => {
+                  try {
+                    // Close sidebar only on mobile (when it's actually open as a modal)
+                    if (isOpen) {  // Only close if sidebar is currently open (mobile view)
+                      onClose?.();
+                    }
+                  } catch (error) {
+                    console.error('Error in footer link onClick:', error);
+                    console.error('Error details:', {
+                      href: item.href || e.currentTarget.getAttribute('href'),
+                      event: e,
+                      isOpen: isOpen,
+                      error: error
+                    });
                   }
                 }}
                 className="block hover:text-foreground transition-colors truncate"
