@@ -23,7 +23,8 @@ export class PdfGeneratorService {
 
     // Add timestamp and version
     doc.setFontSize(10);
-    doc.text(`Generated: ${new Date().toISOString()}`, 20, 30);
+    const timestamp = new Date().toLocaleString();
+    doc.text(`Generated: ${timestamp}`, 20, 30);
     doc.text('ElectroMate Engineering Calculator v1.0', 150, 30);
 
     // Add inputs summary
@@ -31,92 +32,155 @@ export class PdfGeneratorService {
     doc.text('Input Parameters:', 20, 45);
 
     doc.setFontSize(12);
-    doc.text(`System Voltage: ${calculationParams.systemVoltage} kV`, 20, 55);
-    doc.text(`Structure Type: ${calculationParams.structureType}`, 20, 60);
-    doc.text(`Environmental Conditions:`, 20, 65);
-    doc.text(`  Humidity: ${calculationParams.environmentalConditions.humidity}%`, 25, 70);
-    doc.text(`  Pollution Level: ${calculationParams.environmentalConditions.pollutionLevel}`, 25, 75);
-    doc.text(`  Altitude: ${calculationParams.environmentalConditions.altitude} m`, 25, 80);
-    doc.text(`Compliance Requirement: ${calculationParams.complianceRequirement}`, 20, 85);
+    let yPosition = 55;
+    doc.text(`System Voltage: ${calculationParams.systemVoltage} kV`, 20, yPosition);
+    yPosition += 5;
+    doc.text(`Structure Type: ${calculationParams.structureType}`, 20, yPosition);
+    yPosition += 5;
+    
+    // Add building height for high-rise
+    if (calculationParams.buildingHeight) {
+      doc.text(`Building Height: ${calculationParams.buildingHeight} m`, 20, yPosition);
+      yPosition += 5;
+    }
+    
+    doc.text(`Environmental Conditions:`, 20, yPosition);
+    yPosition += 5;
+    doc.text(`  Humidity: ${calculationParams.environmentalConditions.humidity}%`, 25, yPosition);
+    yPosition += 5;
+    doc.text(`  Pollution Level: ${calculationParams.environmentalConditions.pollutionLevel}`, 25, yPosition);
+    yPosition += 5;
+    doc.text(`  Altitude: ${calculationParams.environmentalConditions.altitude} m`, 25, yPosition);
+    yPosition += 5;
+    doc.text(`Compliance Requirement: ${calculationParams.complianceRequirement}`, 20, yPosition);
+    yPosition += 5;
 
     // Add results
     doc.setFontSize(14);
-    doc.text('Calculation Results:', 20, 100);
+    yPosition += 5;
+    doc.text('Calculation Results:', 20, yPosition);
 
     doc.setFontSize(12);
-    doc.text(`Recommended Arrester Type: ${result.arresterType}`, 20, 110);
-    doc.text(`Recommended Rating: ${result.rating} kV`, 20, 115);
-    doc.text(`Installation Recommendation: ${result.installationRecommendation}`, 20, 120);
+    yPosition += 10;
+    doc.text(`Recommended Arrester Type: ${result.arresterType}`, 20, yPosition);
+    yPosition += 5;
+    doc.text(`Recommended Rating: ${result.rating} kV`, 20, yPosition);
+    yPosition += 5;
+    doc.text(`Installation: ${result.installationRecommendation}`, 20, yPosition);
+    yPosition += 10;
 
     // Add compliance check results
     doc.setFontSize(14);
-    doc.text('Compliance Verification:', 20, 135);
+    doc.text('Compliance Verification:', 20, yPosition);
+    yPosition += 10;
 
-    doc.setFontSize(12);
-    let yPosition = 145;
+    doc.setFontSize(10);
     for (const compliance of result.complianceResults) {
-      const statusText = compliance.compliant ? '✓ Compliant' : '✗ Non-Compliant';
-      const statusColor = compliance.compliant ? [0, 128, 0] : [255, 0, 0]; // Green or red
-
+      // Check if we need a new page
+      if (yPosition > 250) {
+        doc.addPage();
+        yPosition = 20;
+      }
+      
+      const statusText = compliance.compliant ? '[PASS]' : '[FAIL]';
+      
+      doc.setFont('helvetica', 'bold');
+      doc.text(`${compliance.standard}: ${compliance.requirement.replace('_', ' ')}`, 20, yPosition);
+      yPosition += 5;
+      
+      doc.setFont('helvetica', 'normal');
+      doc.text(`  Required: ${compliance.requiredValue.toFixed(2)} ${compliance.unit}`, 25, yPosition);
+      yPosition += 5;
+      doc.text(`  Calculated: ${compliance.calculatedValue.toFixed(2)} ${compliance.unit}`, 25, yPosition);
+      yPosition += 5;
+      
+      // Color code the status
+      const statusColor = compliance.compliant ? [0, 150, 0] : [200, 0, 0];
       doc.setTextColor(statusColor[0], statusColor[1], statusColor[2]);
-      doc.text(`${compliance.standard}: ${compliance.requirement}`, 20, yPosition);
-      yPosition += 5;
-
-      doc.setTextColor(0, 0, 0); // Reset to black
-      doc.text(`  Required: ${compliance.requiredValue} ${compliance.unit}`, 25, yPosition);
-      yPosition += 5;
-      doc.text(`  Calculated: ${compliance.calculatedValue} ${compliance.unit}`, 25, yPosition);
-      yPosition += 5;
       doc.text(`  Status: ${statusText}`, 25, yPosition);
       yPosition += 5;
+      doc.setTextColor(0, 0, 0); // Reset to black
 
       if (compliance.details) {
-        doc.text(`  Details: ${compliance.details}`, 25, yPosition);
-        yPosition += 5;
+        const splitDetails = doc.splitTextToSize(`  Details: ${compliance.details}`, 160);
+        doc.text(splitDetails, 25, yPosition);
+        yPosition += (splitDetails.length * 5) + 2;
       }
 
-      yPosition += 2; // Extra space between checks
+      yPosition += 3; // Extra space between checks
     }
 
     // Add warnings if any
     if (result.warnings && result.warnings.length > 0) {
+      yPosition += 5;
+      
+      // Check if we need a new page
+      if (yPosition > 250) {
+        doc.addPage();
+        yPosition = 20;
+      }
+      
       doc.setFontSize(14);
-      doc.setTextColor(255, 165, 0); // Orange color
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(200, 100, 0); // Orange color
       doc.text('Warnings:', 20, yPosition);
 
-      doc.setFontSize(12);
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'normal');
       doc.setTextColor(0, 0, 0); // Reset to black
       yPosition += 10;
 
       for (const warning of result.warnings) {
-        doc.text(`• ${warning}`, 25, yPosition);
-        yPosition += 5;
+        if (yPosition > 270) {
+          doc.addPage();
+          yPosition = 20;
+        }
+        const splitWarning = doc.splitTextToSize(`• ${warning}`, 160);
+        doc.text(splitWarning, 25, yPosition);
+        yPosition += (splitWarning.length * 5) + 2;
       }
     }
 
     // Add standards information
     yPosition += 10;
+    
+    // Check if we need a new page
+    if (yPosition > 250) {
+      doc.addPage();
+      yPosition = 20;
+    }
+    
     doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
     doc.setTextColor(0, 0, 0); // Reset to black
     doc.text('Applied Standards:', 20, yPosition);
 
-    doc.setFontSize(12);
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
     yPosition += 10;
-    doc.text(`• ${IEC_60099_4.STANDARD_NAME}: ${IEC_60099_4.TITLE}`, 20, yPosition);
+    doc.text(`IEC 60099-4:2018 - ${IEC_60099_4.TITLE}`, 20, yPosition);
     yPosition += 5;
-    doc.text(`• ${NEC_STANDARDS.STANDARD_NAME}: ${NEC_STANDARDS.TITLE}`, 20, yPosition);
+    doc.text(`NEC 2020/2023 - ${NEC_STANDARDS.TITLE}`, 20, yPosition);
 
     // Add disclaimer
     yPosition += 15;
-    doc.setFontSize(10);
-    doc.setTextColor(255, 0, 0); // Red color
+    
+    // Check if we need a new page
+    if (yPosition > 260) {
+      doc.addPage();
+      yPosition = 20;
+    }
+    
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'italic');
+    doc.setTextColor(150, 0, 0); // Dark red color
     const disclaimer = "DISCLAIMER: Calculations for informational purposes only. Professional Engineer (PE) stamp/certification is user's responsibility.";
     const splitDisclaimer = doc.splitTextToSize(disclaimer, 180);
     doc.text(splitDisclaimer, 105, yPosition, { align: 'center' });
 
     // Save as blob
-    const pdfOutput = doc.output('blob');
-    return pdfOutput;
+    const pdfData = doc.output('arraybuffer');
+    return new Blob([pdfData], { type: 'application/pdf' });
   }
 
   /**
