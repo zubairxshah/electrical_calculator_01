@@ -1,7 +1,6 @@
 import { LightningArresterCalculationEngine } from '../calculationEngine';
 import { LightningArresterValidationService } from '../validation';
-import { CalculationParameters } from '../../models/CalculationParameters';
-import { VALIDATION_RULES } from '../../models/CalculationParameters';
+import { CalculationParameters, VALIDATION_RULES } from '../../../models/CalculationParameters';
 
 describe('LightningArresterCalculationEngine', () => {
   let calculationEngine: LightningArresterCalculationEngine;
@@ -175,6 +174,81 @@ describe('LightningArresterCalculationEngine', () => {
       };
 
       expect(() => calculationEngine.calculate(params)).not.toThrow();
+    });
+
+    it('should calculate ESE arrester for high-rise structure', () => {
+      const params: CalculationParameters = {
+        systemVoltage: 33,
+        structureType: 'highrise',
+        buildingHeight: 80, // 80 meters tall building
+        environmentalConditions: {
+          humidity: 60,
+          pollutionLevel: 'medium',
+          altitude: 100,
+        },
+        complianceRequirement: 'type1',
+      };
+
+      const result = calculationEngine.calculate(params);
+
+      // For high-rise structures, we expect ESE type
+      expect(result.arresterType).toBe('ese');
+      expect(result.rating).toBeGreaterThan(33); // Rating should be higher than system voltage
+      expect(result.complianceResults).toBeDefined();
+      
+      // Should have wind load compliance check for high-rise
+      const windLoadCheck = result.complianceResults.find(r => r.requirement === 'wind_load_factor');
+      expect(windLoadCheck).toBeDefined();
+      expect(windLoadCheck?.calculatedValue).toBeGreaterThan(1.0); // Wind load factor > 1 for 80m building
+      
+      // Should have higher cantilever strength requirement (1000 kg vs 500 kg)
+      const cantileverCheck = result.complianceResults.find(r => r.requirement === 'cantilever_strength');
+      expect(cantileverCheck).toBeDefined();
+      expect(cantileverCheck?.requiredValue).toBe(1000); // High-rise requires 1000 kg
+    });
+
+    it('should generate side flash warning for very tall buildings', () => {
+      const params: CalculationParameters = {
+        systemVoltage: 33,
+        structureType: 'highrise',
+        buildingHeight: 100, // Above 60m side flash threshold
+        environmentalConditions: {
+          humidity: 60,
+          pollutionLevel: 'light',
+          altitude: 100,
+        },
+        complianceRequirement: 'type1',
+      };
+
+      const result = calculationEngine.calculate(params);
+
+      // Should have side flash warning
+      expect(result.warnings).toContainEqual(
+        expect.stringContaining('SIDE FLASH RISK')
+      );
+      expect(result.warnings).toContainEqual(
+        expect.stringContaining('60m')
+      );
+    });
+
+    it('should apply enhanced pollution factors for high-rise', () => {
+      const params: CalculationParameters = {
+        systemVoltage: 33,
+        structureType: 'highrise',
+        buildingHeight: 30,
+        environmentalConditions: {
+          humidity: 60,
+          pollutionLevel: 'heavy',
+          altitude: 100,
+        },
+        complianceRequirement: 'type1',
+      };
+
+      const result = calculationEngine.calculate(params);
+
+      // Heavy pollution for high-rise should apply 2.5 factor
+      // Rating should be significantly higher due to pollution factor
+      expect(result.rating).toBeGreaterThan(33 * 1.35); // Base multiplier is 1.35 for high-rise
     });
   });
 });

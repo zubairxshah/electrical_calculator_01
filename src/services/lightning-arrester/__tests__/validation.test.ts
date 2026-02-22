@@ -1,6 +1,5 @@
 import { LightningArresterValidationService } from '../validation';
-import { CalculationParameters } from '../../models/CalculationParameters';
-import { VALIDATION_RULES } from '../../models/CalculationParameters';
+import { CalculationParameters, VALIDATION_RULES } from '../../../models/CalculationParameters';
 
 describe('LightningArresterValidationService', () => {
   let validationService: LightningArresterValidationService;

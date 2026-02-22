@@ -13,6 +13,7 @@ const calculationSchema = z.object({
     .min(VALIDATION_RULES.MIN_VOLTAGE, `Must be at least ${VALIDATION_RULES.MIN_VOLTAGE} kV`)
     .max(VALIDATION_RULES.MAX_VOLTAGE, `Must be at most ${VALIDATION_RULES.MAX_VOLTAGE} kV`),
   structureType: z.enum(VALIDATION_RULES.STRUCTURE_TYPES),
+  buildingHeight: z.number().optional().or(z.literal(0)),
   environmentalConditions: z.object({
     humidity: z.number()
       .min(VALIDATION_RULES.MIN_HUMIDITY, `Must be at least ${VALIDATION_RULES.MIN_HUMIDITY}%`)
@@ -79,6 +80,7 @@ const CalculatorForm: React.FC<CalculatorFormProps> = ({ onCalculationComplete, 
       const params: CalculationParameters = {
         systemVoltage: data.systemVoltage,
         structureType: data.structureType,
+        buildingHeight: data.buildingHeight || undefined,
         environmentalConditions: {
           humidity: data.environmentalConditions.humidity,
           pollutionLevel: data.environmentalConditions.pollutionLevel,
@@ -140,11 +142,39 @@ const CalculatorForm: React.FC<CalculatorFormProps> = ({ onCalculationComplete, 
             <option value="tower">Tower</option>
             <option value="industry">Industry</option>
             <option value="traction">Traction System</option>
+            <option value="highrise">High-Rise Building</option>
           </select>
           {errors.structureType && (
             <p className="mt-1 text-sm text-red-600">{errors.structureType.message}</p>
           )}
         </div>
+
+        {/* Building Height (only for high-rise) */}
+        {watchedFields.structureType === 'highrise' && (
+          <div>
+            <label htmlFor="buildingHeight" className="block text-sm font-medium text-gray-700 mb-1">
+              Building Height (m)
+            </label>
+            <input
+              id="buildingHeight"
+              type="number"
+              step="0.1"
+              {...register('buildingHeight', { valueAsNumber: true })}
+              className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 ${
+                errors.buildingHeight ? 'border-red-500' : 'border-gray-300'
+              }`}
+              placeholder="Height in meters (e.g., 30)"
+            />
+            {errors.buildingHeight && (
+              <p className="mt-1 text-sm text-red-600">{errors.buildingHeight.message}</p>
+            )}
+            {watchedFields.buildingHeight && watchedFields.buildingHeight > 23 && (
+              <p className="mt-1 text-xs text-gray-500">
+                High-rise classification: &gt;23m (75 ft) per IEC 62305
+              </p>
+            )}
+          </div>
+        )}
 
         {/* Humidity */}
         <div>

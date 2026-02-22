@@ -2,7 +2,7 @@ import { LightningArresterCalculationEngine } from '../calculationEngine';
 import { LightningArresterValidationService } from '../validation';
 import { StandardsComplianceService } from '../standardsCompliance';
 import { PdfGeneratorService } from '../pdfGenerator';
-import { CalculationParameters } from '../../models/CalculationParameters';
+import { CalculationParameters } from '../../../models/CalculationParameters';
 
 describe('Lightning Arrester Calculator - End to End', () => {
   let calculationEngine: LightningArresterCalculationEngine;

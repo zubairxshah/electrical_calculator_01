@@ -1,7 +1,7 @@
 import { math } from '../../lib/math';
 import { CalculationParameters, VALIDATION_RULES } from '../../models/CalculationParameters';
 import { CalculationResult, ComplianceResult } from '../../models/ComplianceResult';
-import { IEC_60099_4, NEC_STANDARDS, WITHSTAND_VOLTAGE_RATIOS, STRUCTURE_RECOMMENDATIONS, POLLUTION_LEVELS, ALTITUDE_DERATING } from '../../constants/standards';
+import { IEC_60099_4, NEC_STANDARDS, WITHSTAND_VOLTAGE_RATIOS, STRUCTURE_RECOMMENDATIONS, POLLUTION_LEVELS, ALTITUDE_DERATING, HIGHRISE_SPECIFIC, HIGHRISE_POLLUTION_FACTORS } from '../../constants/standards';
 
 /**
  * Core calculation engine for lightning arrester calculations based on IEC 60099-4 standards
@@ -98,6 +98,8 @@ export class LightningArresterCalculationEngine {
         return STRUCTURE_RECOMMENDATIONS.INDUSTRY.arresterType;
       case 'traction':
         return STRUCTURE_RECOMMENDATIONS.TRACTION.arresterType;
+      case 'highrise':
+        return STRUCTURE_RECOMMENDATIONS.HIGHRISE.arresterType; // ESE for high-rise
       default:
         return 'mov'; // Default to MOV for unknown structure types
     }
@@ -111,19 +113,24 @@ export class LightningArresterCalculationEngine {
     // For AC systems, the rated voltage is typically 1.2 to 1.5 times the system voltage
     let multiplier = 1.2;
 
-    // Adjust multiplier based on arrester type
-    switch (arresterType) {
-      case 'mov':
-        multiplier = 1.25; // MOV arresters typically use 1.25x multiplier
-        break;
-      case 'ese':
-        multiplier = 1.3; // ESE arresters may require slightly higher rating
-        break;
-      case 'conventional':
-        multiplier = 1.2; // Conventional arresters typically use 1.2x multiplier
-        break;
-      default:
-        multiplier = 1.25; // Default to MOV multiplier
+    // High-rise buildings require higher safety margin
+    if (params.structureType === 'highrise') {
+      multiplier = HIGHRISE_SPECIFIC.VOLTAGE_MULTIPLIER; // 1.35 for high-rise
+    } else {
+      // Adjust multiplier based on arrester type
+      switch (arresterType) {
+        case 'mov':
+          multiplier = 1.25; // MOV arresters typically use 1.25x multiplier
+          break;
+        case 'ese':
+          multiplier = 1.3; // ESE arresters may require slightly higher rating
+          break;
+        case 'conventional':
+          multiplier = 1.2; // Conventional arresters typically use 1.2x multiplier
+          break;
+        default:
+          multiplier = 1.25; // Default to MOV multiplier
+      }
     }
 
     // Calculate base rating
@@ -132,13 +139,34 @@ export class LightningArresterCalculationEngine {
     // Apply altitude correction if above 1000m
     if (params.environmentalConditions?.altitude > ALTITUDE_DERATING.BASE_ALTITUDE) {
       const altitudeDiff = params.environmentalConditions.altitude - ALTITUDE_DERATING.BASE_ALTITUDE;
-      const altitudeCorrection = 1 + (altitudeDiff / 100) * ALTITUDE_DERATING.DERATING_PER_100M;
+      
+      // High-rise buildings use enhanced altitude derating
+      const deratingRate = params.structureType === 'highrise' 
+        ? HIGHRISE_SPECIFIC.ALTITUDE_DERATING_ENHANCED 
+        : ALTITUDE_DERATING.DERATING_PER_100M;
+      
+      const altitudeCorrection = 1 + (altitudeDiff / 100) * deratingRate;
       rating = rating * altitudeCorrection;
     }
 
     // Apply pollution level correction
-    const pollutionFactor = POLLUTION_LEVELS[params.environmentalConditions?.pollutionLevel.toUpperCase() as keyof typeof POLLUTION_LEVELS]?.creepageDistanceFactor || 1.0;
+    let pollutionFactor: number;
+    if (params.structureType === 'highrise') {
+      // High-rise buildings have increased pollution accumulation at height
+      const highrisePollution = HIGHRISE_POLLUTION_FACTORS[params.environmentalConditions?.pollutionLevel.toUpperCase() as keyof typeof HIGHRISE_POLLUTION_FACTORS];
+      pollutionFactor = highrisePollution?.creepageDistanceFactor || 1.0;
+    } else {
+      const standardPollution = POLLUTION_LEVELS[params.environmentalConditions?.pollutionLevel.toUpperCase() as keyof typeof POLLUTION_LEVELS];
+      pollutionFactor = standardPollution?.creepageDistanceFactor || 1.0;
+    }
     rating = rating * pollutionFactor;
+
+    // Apply wind load factor for high-rise buildings
+    if (params.structureType === 'highrise' && params.buildingHeight && params.buildingHeight > HIGHRISE_SPECIFIC.MIN_HEIGHT_METERS) {
+      const heightAboveThreshold = params.buildingHeight - HIGHRISE_SPECIFIC.MIN_HEIGHT_METERS;
+      const windLoadFactor = 1.0 + (heightAboveThreshold * HIGHRISE_SPECIFIC.WIND_LOAD_FACTOR_PER_M);
+      rating = rating * windLoadFactor;
+    }
 
     // Round to standard voltage class
     return this.findClosestStandardRating(rating);
@@ -205,9 +233,12 @@ export class LightningArresterCalculationEngine {
     });
 
     // IEC 60099-4: Check cantilever strength (for rod-type arresters)
-    if (params.structureType === 'tower' || params.structureType === 'home') {
-      const cantileverStrength = this.calculateCantileverStrength();
-      const requiredCantileverStrength = 500; // Minimum 500 kg as per IEC 60099-4
+    if (params.structureType === 'tower' || params.structureType === 'home' || params.structureType === 'highrise') {
+      const cantileverStrength = this.calculateCantileverStrength(params);
+      // High-rise buildings require higher cantilever strength (1000 kg vs 500 kg)
+      const requiredCantileverStrength = params.structureType === 'highrise' 
+        ? HIGHRISE_SPECIFIC.BASE_CANTILEVER_KG 
+        : 500;
 
       complianceResults.push({
         standard: IEC_60099_4.STANDARD_NAME,
@@ -217,6 +248,22 @@ export class LightningArresterCalculationEngine {
         unit: 'kg',
         compliant: cantileverStrength >= requiredCantileverStrength,
         details: `Cantilever strength ${cantileverStrength}kg should be ≥ ${requiredCantileverStrength}kg`
+      });
+    }
+
+    // IEC 62305-2: High-rise specific wind load compliance
+    if (params.structureType === 'highrise' && params.buildingHeight) {
+      const windLoadFactor = this.calculateWindLoadFactor(params.buildingHeight);
+      const requiredWindLoadFactor = 1.0; // Minimum factor
+
+      complianceResults.push({
+        standard: 'IEC 62305-2:2010',
+        requirement: 'wind_load_factor',
+        requiredValue: requiredWindLoadFactor,
+        calculatedValue: windLoadFactor,
+        unit: 'factor',
+        compliant: windLoadFactor >= requiredWindLoadFactor,
+        details: `Wind load factor ${windLoadFactor.toFixed(2)} (building height: ${params.buildingHeight}m)`
       });
     }
 
@@ -267,10 +314,30 @@ export class LightningArresterCalculationEngine {
   /**
    * Calculate minimum cantilever strength for rod-type arresters
    */
-  private calculateCantileverStrength(): number {
-    // Minimum cantilever strength as per IEC 60099-4 is 500 kg
-    // For our implementation, we'll return the minimum required value
+  private calculateCantileverStrength(params: CalculationParameters): number {
+    // High-rise buildings require higher cantilever strength (1000 kg minimum)
+    if (params.structureType === 'highrise') {
+      // Apply wind load factor for high-rise
+      if (params.buildingHeight && params.buildingHeight > HIGHRISE_SPECIFIC.MIN_HEIGHT_METERS) {
+        const windLoadFactor = this.calculateWindLoadFactor(params.buildingHeight);
+        return HIGHRISE_SPECIFIC.BASE_CANTILEVER_KG * windLoadFactor;
+      }
+      return HIGHRISE_SPECIFIC.BASE_CANTILEVER_KG; // 1000 kg
+    }
+    
+    // Standard structures require 500 kg minimum
     return 500; // kg
+  }
+
+  /**
+   * Calculate wind load factor for high-rise buildings per ASCE 7-16
+   */
+  private calculateWindLoadFactor(buildingHeight: number): number {
+    if (buildingHeight <= HIGHRISE_SPECIFIC.MIN_HEIGHT_METERS) {
+      return 1.0;
+    }
+    const heightAboveThreshold = buildingHeight - HIGHRISE_SPECIFIC.MIN_HEIGHT_METERS;
+    return 1.0 + (heightAboveThreshold * HIGHRISE_SPECIFIC.WIND_LOAD_FACTOR_PER_M);
   }
 
   /**
@@ -311,6 +378,22 @@ export class LightningArresterCalculationEngine {
     // Check for heavy pollution
     if (params.environmentalConditions.pollutionLevel === 'heavy') {
       warnings.push('Heavy pollution conditions detected. Increased maintenance intervals may be required.');
+    }
+
+    // High-rise specific warnings
+    if (params.structureType === 'highrise') {
+      // Side flash protection warning for buildings >60m
+      if (params.buildingHeight && params.buildingHeight > HIGHRISE_SPECIFIC.SIDE_FLASH_HEIGHT) {
+        warnings.push(`SIDE FLASH RISK: Building height (${params.buildingHeight}m) exceeds ${HIGHRISE_SPECIFIC.SIDE_FLASH_HEIGHT}m threshold. Additional side flash protection required per IEC 62305-3.`);
+      }
+      
+      // High-rise cantilever strength warning
+      if (params.buildingHeight && params.buildingHeight > HIGHRISE_SPECIFIC.MIN_HEIGHT_METERS) {
+        const windLoadFactor = this.calculateWindLoadFactor(params.buildingHeight);
+        if (windLoadFactor > 1.5) {
+          warnings.push(`HIGH WIND LOAD: Wind load factor ${windLoadFactor.toFixed(2)}x. Verify arrester mounting specifications.`);
+        }
+      }
     }
 
     return warnings;

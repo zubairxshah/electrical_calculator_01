@@ -3,7 +3,7 @@
  */
 export interface CalculationParameters {
   systemVoltage: number; // Input voltage in kV
-  structureType: 'home' | 'tower' | 'industry' | 'traction';
+  structureType: 'home' | 'tower' | 'industry' | 'traction' | 'highrise';
   environmentalConditions: {
     humidity: number; // Percentage 0-100%
     pollutionLevel: 'light' | 'medium' | 'heavy'; // IEC classifications
@@ -12,6 +12,7 @@ export interface CalculationParameters {
   complianceRequirement: 'type1' | 'type2'; // For SPD classification
   arresterRating?: number; // Rated voltage in kV (optional, may be calculated)
   installationLocation?: string; // Location description
+  buildingHeight?: number; // Building height in meters (for high-rise calculations)
 }
 
 /**
@@ -25,6 +26,6 @@ export const VALIDATION_RULES = {
   MIN_ALTITUDE: 0, // meters
   MAX_ALTITUDE: 2000, // meters
   POLLUTION_LEVELS: ['light', 'medium', 'heavy'] as const,
-  STRUCTURE_TYPES: ['home', 'tower', 'industry', 'traction'] as const,
+  STRUCTURE_TYPES: ['home', 'tower', 'industry', 'traction', 'highrise'] as const,
   COMPLIANCE_REQUIREMENTS: ['type1', 'type2'] as const,
 };

@@ -1,6 +1,6 @@
 import { StandardsComplianceService } from '../standardsCompliance';
-import { CalculationParameters } from '../../models/CalculationParameters';
-import { IEC_60099_4, NEC_STANDARDS } from '../../constants/standards';
+import { CalculationParameters } from '../../../models/CalculationParameters';
+import { IEC_60099_4, NEC_STANDARDS } from '../../../constants/standards';
 
 describe('StandardsComplianceService', () => {
   let complianceService: StandardsComplianceService;

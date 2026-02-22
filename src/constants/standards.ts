@@ -62,6 +62,30 @@ export const STRUCTURE_RECOMMENDATIONS = {
     primaryUse: 'transportation systems',
     highCantileverStrength: true,
   },
+  HIGHRISE: {
+    arresterType: 'ese',
+    spdtype: 'type1',
+    material: 'copper',
+    primaryUse: 'high-rise building protection',
+    highCantileverStrength: true,
+  },
+};
+
+// High-rise building specific constants (per IEC 62305 and ASCE 7-16)
+export const HIGHRISE_SPECIFIC = {
+  MIN_HEIGHT_METERS: 23,      // 75 feet threshold for high-rise classification
+  SIDE_FLASH_HEIGHT: 60,      // Height requiring side flash protection (meters)
+  BASE_CANTILEVER_KG: 1000,   // Minimum cantilever strength for high-rise (kg)
+  WIND_LOAD_FACTOR_PER_M: 0.02, // 2% additional load per meter above threshold
+  ALTITUDE_DERATING_ENHANCED: 0.015, // 1.5% per 100m (vs 1% standard)
+  VOLTAGE_MULTIPLIER: 1.35,   // Higher safety margin for high-rise
+};
+
+// High-rise pollution level factors (increased contamination at height)
+export const HIGHRISE_POLLUTION_FACTORS = {
+  LIGHT: { severity: 1, creepageDistanceFactor: 1.2 },
+  MEDIUM: { severity: 2, creepageDistanceFactor: 1.8 },
+  HEAVY: { severity: 3, creepageDistanceFactor: 2.5 },
 };
 
 // Pollution levels for environmental conditions
