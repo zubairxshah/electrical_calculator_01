@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Battery, Zap, Cable, Sun, Settings, BookOpen, Shield, Lightbulb, CircuitBoard, Scale } from 'lucide-react';
+import { Battery, Zap, Cable, Sun, Settings, BookOpen, Shield, Lightbulb, CircuitBoard, Scale, Calculator } from 'lucide-react';
 import { CalculatorGrid } from '@/components/landing/calculator-grid';
 import { CalculatorCard } from '@/types/ui';
 
@@ -65,6 +65,18 @@ const calculatorCards: CalculatorCard[] = [
     category: 'Power Systems',
     isNew: false,
     tags: ['protection', 'coordination', 'NEC'],
+  },
+  {
+    id: 'demand-diversity',
+    title: 'Maximum Demand & Diversity',
+    description: 'Calculate maximum demand with IEC 60364 or NEC Article 220 diversity factors.',
+    icon: 'calculator',
+    href: '/demand-diversity',
+    priority: 'P1',
+    status: 'active',
+    category: 'Power Systems',
+    isNew: true,
+    tags: ['demand', 'diversity', 'IEC 60364', 'NEC 220'],
   },
   {
     id: 'earthing',

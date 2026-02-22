@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import { Battery, Zap, Cable, Sun, Settings, Scale, X, CircuitBoard, Lightbulb, Zap as Ground, ChevronDown, ChevronRight, Shield } from 'lucide-react'
+import { Battery, Zap, Cable, Sun, Settings, Scale, X, CircuitBoard, Lightbulb, Zap as Ground, ChevronDown, ChevronRight, Shield, Calculator } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useMouseWheelScroll } from '@/hooks/useMouseWheelScroll'
 
@@ -38,6 +38,13 @@ const navigationItems = [
         href: '/breaker',
         icon: CircuitBoard,
         description: 'Breaker sizing with NEC/IEC standards',
+        priority: 'P1',
+      },
+      {
+        name: 'Maximum Demand',
+        href: '/demand-diversity',
+        icon: Calculator,
+        description: 'Demand & diversity factors (IEC/NEC)',
         priority: 'P1',
       },
     ]
