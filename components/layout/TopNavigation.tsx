@@ -6,19 +6,18 @@ import { usePathname } from 'next/navigation'
 import { Menu, X, Zap, ChevronDown, Search, Activity } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu'
 import { Badge } from '@/components/ui/badge'
+import { cn } from '@/lib/utils'
 
 /**
  * Top Navigation Component
  *
- * Modern top navigation inspired by pipe.com with dropdown menus
- * Features collapsible mobile menu and organized navigation groups
+ * Modern top navigation with HOVER-ACTIVATED dropdown menus
+ * Features:
+ * - Mouseover dropdowns for quick access (NO clicking required)
+ * - Smooth transitions with animations
+ * - 150ms delay before closing for better UX
+ * - Collapsible mobile menu (click-based)
  */
 
 interface NavItem {
@@ -143,13 +142,37 @@ export function TopNavigation() {
   const pathname = usePathname()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [openDropdown, setOpenDropdown] = useState<string | null>(null)
+  const dropdownTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Handle dropdown open on hover - INSTANT response
+  const handleMouseEnter = (category: string) => {
+    if (dropdownTimeoutRef.current) {
+      clearTimeout(dropdownTimeoutRef.current)
+    }
+    setOpenDropdown(category)
+  }
+
+  // Handle dropdown close on leave with small delay for smooth UX
+  const handleMouseLeave = () => {
+    dropdownTimeoutRef.current = setTimeout(() => {
+      setOpenDropdown(null)
+    }, 150) // 150ms delay prevents accidental closes
+  }
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (dropdownTimeoutRef.current) {
+        clearTimeout(dropdownTimeoutRef.current)
+      }
+    }
+  }, [])
 
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      // Check if the click is outside of any dropdown trigger/content
-      const target = event.target as HTMLElement;
-      if (openDropdown && !target.closest(`[data-dropdown-category="${openDropdown}"]`)) {
+      const target = event.target as HTMLElement
+      if (openDropdown && !target.closest('[data-dropdown-container]')) {
         setOpenDropdown(null)
       }
     }
@@ -185,66 +208,81 @@ export function TopNavigation() {
             </Link>
           </div>
 
-          {/* Desktop Navigation */}
+          {/* Desktop Navigation with HOVER Dropdowns - No clicking needed! */}
           <nav className="hidden lg:flex items-center space-x-1">
             {navigationItems.map((category) => (
-              <DropdownMenu
+              <div
                 key={category.category}
-                open={openDropdown === category.category}
-                onOpenChange={(open) => setOpenDropdown(open ? category.category : null)}
+                data-dropdown-container
+                className="relative"
+                onMouseEnter={() => handleMouseEnter(category.category)}
+                onMouseLeave={handleMouseLeave}
               >
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    className="relative h-9 rounded-md px-3 text-sm font-medium hover:bg-accent hover:text-accent-foreground"
-                  >
-                    {category.category}
-                    <ChevronDown className="ml-1 h-4 w-4 transition-transform" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  className="w-64 p-0"
-                  align="start"
-                  data-dropdown-category={category.category}
+                {/* Trigger Button */}
+                <button
+                  className={cn(
+                    'relative h-9 rounded-md px-3 text-sm font-medium transition-all duration-200 flex items-center gap-1',
+                    openDropdown === category.category
+                      ? 'bg-accent text-accent-foreground'
+                      : 'hover:bg-accent/50 hover:text-accent-foreground'
+                  )}
                 >
-                  <div className="p-2">
-                    <h3 className="px-2 py-1 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      {category.category}
-                    </h3>
-                    {category.items.map((item) => (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        className={`flex items-start rounded-sm px-2 py-1.5 text-sm transition-colors ${
-                          isActive(item.href)
-                            ? 'bg-accent text-accent-foreground'
-                            : 'hover:bg-accent'
-                        }`}
-                      >
-                        <div className="flex-1 space-y-0.5">
-                          <div className="flex items-center justify-between">
-                            <span className="font-medium">{item.name}</span>
-                            {item.priority && (
-                              <span
-                                className={`text-xs font-medium ml-2 ${
-                                  item.priority === 'P1'
-                                    ? 'text-primary'
-                                    : 'text-muted-foreground'
-                                }`}
-                              >
-                                {item.priority}
-                              </span>
-                            )}
+                  {category.category}
+                  <ChevronDown
+                    className={cn(
+                      'h-4 w-4 transition-transform duration-200',
+                      openDropdown === category.category && 'rotate-180'
+                    )}
+                  />
+                </button>
+
+                {/* Dropdown Content - Shows instantly on HOVER */}
+                {openDropdown === category.category && (
+                  <div
+                    className="absolute top-full left-0 mt-1 w-64 bg-popover border rounded-md shadow-lg z-50 animate-in fade-in slide-in-from-top-2 duration-200"
+                    data-dropdown-category={category.category}
+                  >
+                    <div className="p-2">
+                      <h3 className="px-2 py-1 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                        {category.category}
+                      </h3>
+                      {category.items.map((item) => (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          className={cn(
+                            'flex items-start rounded-sm px-2 py-1.5 text-sm transition-colors',
+                            isActive(item.href)
+                              ? 'bg-accent text-accent-foreground'
+                              : 'hover:bg-accent'
+                          )}
+                        >
+                          <div className="flex-1 space-y-0.5">
+                            <div className="flex items-center justify-between">
+                              <span className="font-medium">{item.name}</span>
+                              {item.priority && (
+                                <span
+                                  className={cn(
+                                    'text-xs font-medium ml-2',
+                                    item.priority === 'P1'
+                                      ? 'text-primary'
+                                      : 'text-muted-foreground'
+                                  )}
+                                >
+                                  {item.priority}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                              {item.description}
+                            </p>
                           </div>
-                          <p className="text-xs text-muted-foreground">
-                            {item.description}
-                          </p>
-                        </div>
-                      </Link>
-                    ))}
+                        </Link>
+                      ))}
+                    </div>
                   </div>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                )}
+              </div>
             ))}
 
             {/* Search Button */}
@@ -298,22 +336,24 @@ export function TopNavigation() {
                                 key={item.href}
                                 href={item.href}
                                 onClick={() => setIsMobileMenuOpen(false)}
-                                className={`flex items-start rounded-lg px-3 py-2 text-sm transition-colors ${
+                                className={cn(
+                                  'flex items-start rounded-lg px-3 py-2 text-sm transition-colors',
                                   isActive(item.href)
                                     ? 'bg-accent text-accent-foreground'
                                     : 'hover:bg-accent'
-                                }`}
+                                )}
                               >
                                 <div className="flex-1 space-y-0.5">
                                   <div className="flex items-center justify-between">
                                     <span className="font-medium">{item.name}</span>
                                     {item.priority && (
                                       <span
-                                        className={`text-xs font-medium ${
+                                        className={cn(
+                                          'text-xs font-medium',
                                           item.priority === 'P1'
                                             ? 'text-primary'
                                             : 'text-muted-foreground'
-                                        }`}
+                                        )}
                                       >
                                         {item.priority}
                                       </span>
