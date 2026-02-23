@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import { Battery, Zap, Cable, Sun, Settings, Scale, X, CircuitBoard, Lightbulb, Zap as Ground, ChevronDown, ChevronRight, Shield, Calculator } from 'lucide-react'
+import { Battery, Zap, Cable, Sun, Settings, Scale, X, CircuitBoard, Lightbulb, Zap as Ground, ChevronDown, ChevronRight, Shield, Calculator, Activity } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useMouseWheelScroll } from '@/hooks/useMouseWheelScroll'
 
@@ -45,6 +45,13 @@ const navigationItems = [
         href: '/demand-diversity',
         icon: Calculator,
         description: 'Demand & diversity factors (IEC/NEC)',
+        priority: 'P1',
+      },
+      {
+        name: 'Power Calculator (P,Q,S)',
+        href: '/power-calculator',
+        icon: Activity,
+        description: 'Active, Reactive & Apparent Power',
         priority: 'P1',
       },
     ]

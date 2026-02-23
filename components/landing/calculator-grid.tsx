@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { CalculatorCard } from '@/types/ui';
 import {
   Battery, Zap, Cable, Sun, Settings,
-  Shield, Lightbulb, CircuitBoard, Scale, Calculator
+  Shield, Lightbulb, CircuitBoard, Scale, Calculator, Activity
 } from 'lucide-react';
 
 interface CalculatorGridProps {
@@ -25,6 +25,7 @@ const iconMap = {
   circuitboard: CircuitBoard,
   scale: Scale,
   calculator: Calculator,
+  activity: Activity,
 };
 
 export function CalculatorGrid({ calculatorCards }: CalculatorGridProps) {

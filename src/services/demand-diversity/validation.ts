@@ -87,6 +87,11 @@ export class DemandValidationService {
         continue;
       }
 
+      // Skip array values (motorLoads) - they're validated separately
+      if (Array.isArray(value)) {
+        continue;
+      }
+
       const numValue = Number(value);
 
       if (isNaN(numValue)) {

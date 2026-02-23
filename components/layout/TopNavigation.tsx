@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Menu, X, Zap, ChevronDown, Search } from 'lucide-react'
+import { Menu, X, Zap, ChevronDown, Search, Activity } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import {
@@ -53,6 +53,18 @@ const navigationItems: NavCategory[] = [
         name: 'Circuit Breaker',
         href: '/breaker',
         description: 'Breaker sizing with NEC/IEC standards',
+        priority: 'P1',
+      },
+      {
+        name: 'Maximum Demand & Diversity',
+        href: '/demand-diversity',
+        description: 'Demand & diversity factors (IEC/NEC)',
+        priority: 'P1',
+      },
+      {
+        name: 'Power Calculator (P,Q,S)',
+        href: '/power-calculator',
+        description: 'Active, Reactive & Apparent Power',
         priority: 'P1',
       },
     ]

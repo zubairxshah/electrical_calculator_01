@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Battery, Zap, Cable, Sun, Settings, BookOpen, Shield, Lightbulb, CircuitBoard, Scale, Calculator } from 'lucide-react';
+import { Battery, Zap, Cable, Sun, Settings, BookOpen, Shield, Lightbulb, CircuitBoard, Scale, Calculator, Activity } from 'lucide-react';
 import { CalculatorGrid } from '@/components/landing/calculator-grid';
 import { CalculatorCard } from '@/types/ui';
 
@@ -77,6 +77,18 @@ const calculatorCards: CalculatorCard[] = [
     category: 'Power Systems',
     isNew: true,
     tags: ['demand', 'diversity', 'IEC 60364', 'NEC 220'],
+  },
+  {
+    id: 'power-calculator',
+    title: 'Power Calculator (P,Q,S)',
+    description: 'Calculate Active, Reactive & Apparent Power for single-phase and three-phase systems.',
+    icon: 'activity',
+    href: '/power-calculator',
+    priority: 'P1',
+    status: 'active',
+    category: 'Power Systems',
+    isNew: true,
+    tags: ['power', 'kVA', 'kW', 'kVAR', 'IEC 60364', 'NEC 430'],
   },
   {
     id: 'earthing',
