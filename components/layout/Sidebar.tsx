@@ -20,6 +20,13 @@ const navigationItems = [
     category: 'Power Systems',
     items: [
       {
+        name: 'Basic Electrical',
+        href: '/basic-electrical',
+        icon: Zap,
+        description: 'V, I, P, R, X, Z, L, C calculations',
+        priority: 'P1',
+      },
+      {
         name: 'Battery Calculator',
         href: '/battery',
         icon: Battery,

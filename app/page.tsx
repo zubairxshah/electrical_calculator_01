@@ -19,6 +19,18 @@ import { CalculatorCard } from '@/types/ui';
 
 const calculatorCards: CalculatorCard[] = [
   {
+    id: 'basic-electrical',
+    title: 'Basic Electrical Calculations',
+    description: 'Calculate V, I, P, R, X, Z, L, C with series/parallel combinations. IEC & NEC compliant.',
+    icon: 'zap',
+    href: '/basic-electrical',
+    priority: 'P1',
+    status: 'active',
+    category: 'Power Systems',
+    isNew: true,
+    tags: ['Ohms Law', 'impedance', 'reactance', 'IEC 60038', 'NEC 220'],
+  },
+  {
     id: 'battery',
     title: 'Battery Backup Calculator',
     description: 'Calculate backup time and capacity requirements for battery systems using IEEE 485-2020 standards.',
