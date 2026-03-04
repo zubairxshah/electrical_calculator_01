@@ -72,6 +72,12 @@ const navigationItems: NavCategory[] = [
         description: 'Active, Reactive & Apparent Power',
         priority: 'P1',
       },
+      {
+        name: 'Motor & HVAC Breaker',
+        href: '/motor-breaker',
+        description: 'Motor/HVAC breaker sizing (NEC 430/440, IEC)',
+        priority: 'P1',
+      },
     ]
   },
   {

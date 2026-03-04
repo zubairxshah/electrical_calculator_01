@@ -103,6 +103,18 @@ const calculatorCards: CalculatorCard[] = [
     tags: ['power', 'kVA', 'kW', 'kVAR', 'IEC 60364', 'NEC 430'],
   },
   {
+    id: 'motor-breaker',
+    title: 'Motor & HVAC Breaker Sizing',
+    description: 'Size breakers for motors (NEC 430.52), HVAC (NEC 440 MCA/MOP), DC systems, and IEC utilization categories.',
+    icon: 'settings',
+    href: '/motor-breaker',
+    priority: 'P1',
+    status: 'active',
+    category: 'Power Systems',
+    isNew: true,
+    tags: ['motor', 'HVAC', 'NEC 430', 'NEC 440', 'IEC 60947', 'DC breaker'],
+  },
+  {
     id: 'earthing',
     title: 'Earthing Conductor Calculator',
     description: 'Calculate earthing conductor sizing per IEC 60364-5-54 and NEC 250.',
