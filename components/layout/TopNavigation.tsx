@@ -78,6 +78,12 @@ const navigationItems: NavCategory[] = [
         description: 'Motor/HVAC breaker sizing (NEC 430/440, IEC)',
         priority: 'P1',
       },
+      {
+        name: 'Power Factor Correction',
+        href: '/power-factor-correction',
+        description: 'Capacitor bank sizing for PF correction',
+        priority: 'P1',
+      },
     ]
   },
   {
