@@ -26,19 +26,22 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Info } from 'lucide-react';
-import { InstallationMethod } from '@/types/breaker-calculator';
+import { InstallationMethod, InsulationRating, EnclosureType } from '@/types/breaker-calculator';
 
 /**
  * DeratingSidebar Props
  */
 export interface DeratingSidebarProps {
-  // Current standard (affects which fields are shown)
   standard: 'NEC' | 'IEC';
 
   // Environmental Factors
   ambientTemperature?: number;
   groupedCables?: number;
   installationMethod?: InstallationMethod;
+  altitude?: number;
+  insulationRating?: InsulationRating;
+  enclosureType?: EnclosureType;
+  harmonicDistortion?: number;
 
   // Validation Errors
   errors?: Record<string, string>;
@@ -47,8 +50,11 @@ export interface DeratingSidebarProps {
   onTemperatureChange: (temp: number | undefined) => void;
   onGroupedCablesChange: (count: number | undefined) => void;
   onInstallationMethodChange: (method: InstallationMethod | undefined) => void;
+  onAltitudeChange: (altitude: number | undefined) => void;
+  onInsulationRatingChange: (rating: InsulationRating | undefined) => void;
+  onEnclosureTypeChange: (type: EnclosureType | undefined) => void;
+  onHarmonicDistortionChange: (thd: number | undefined) => void;
 
-  // Optional: Allow clearing values
   allowClear?: boolean;
 }
 
@@ -78,10 +84,18 @@ export function DeratingSidebar(props: DeratingSidebarProps) {
     ambientTemperature,
     groupedCables,
     installationMethod,
+    altitude,
+    insulationRating,
+    enclosureType,
+    harmonicDistortion,
     errors = {},
     onTemperatureChange,
     onGroupedCablesChange,
     onInstallationMethodChange,
+    onAltitudeChange,
+    onInsulationRatingChange,
+    onEnclosureTypeChange,
+    onHarmonicDistortionChange,
     allowClear = true,
   } = props;
 
@@ -122,6 +136,10 @@ export function DeratingSidebar(props: DeratingSidebarProps) {
     onTemperatureChange(undefined);
     onGroupedCablesChange(undefined);
     onInstallationMethodChange(undefined);
+    onAltitudeChange(undefined);
+    onInsulationRatingChange(undefined);
+    onEnclosureTypeChange(undefined);
+    onHarmonicDistortionChange(undefined);
   };
 
   return (
@@ -293,10 +311,162 @@ export function DeratingSidebar(props: DeratingSidebarProps) {
           </>
         )}
 
+        <Separator />
+
+        {/* Altitude */}
+        <div className="space-y-3">
+          <Label htmlFor="altitude" className="flex items-center gap-2">
+            Altitude (m)
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs">
+                  <p className="text-sm">
+                    Above 1000m (3300ft), reduced air density decreases cooling capacity.
+                    Per {standard === 'NEC' ? 'NEC 110.40' : 'IEC 60947-1 Annex B'}.
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </Label>
+          <Input
+            id="altitude"
+            type="number"
+            value={altitude ?? ''}
+            onChange={(e) => onAltitudeChange(e.target.value ? parseInt(e.target.value) : undefined)}
+            placeholder="0 (sea level)"
+            min={0}
+            max={5000}
+            step={100}
+          />
+          {altitude !== undefined && altitude > 1000 && (
+            <p className="text-xs text-yellow-600">
+              ⚠️ Altitude &gt;1000m: derating factor will be applied
+            </p>
+          )}
+        </div>
+
+        <Separator />
+
+        {/* Insulation Rating */}
+        <div className="space-y-3">
+          <Label htmlFor="insulationRating" className="flex items-center gap-2">
+            Cable Insulation Rating
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs">
+                  <p className="text-sm">
+                    Insulation temperature rating affects temperature derating factors.
+                    Higher rating = less derating at elevated temperatures.
+                    Note: termination temperature (often 60°C or 75°C) may limit actual capacity.
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </Label>
+          <Select
+            value={insulationRating?.toString() ?? 'auto'}
+            onValueChange={(val) => onInsulationRatingChange(val === 'auto' ? undefined : (parseInt(val) as 60 | 75 | 90))}
+          >
+            <SelectTrigger id="insulationRating">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="auto">Auto (90°C default)</SelectItem>
+              <SelectItem value="60">60°C (TW, UF)</SelectItem>
+              <SelectItem value="75">75°C (THW, THWN, XHHW)</SelectItem>
+              <SelectItem value="90">90°C (THWN-2, XHHW-2, XLPE)</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <Separator />
+
+        {/* Enclosure Type */}
+        <div className="space-y-3">
+          <Label htmlFor="enclosureType" className="flex items-center gap-2">
+            Enclosure Type
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs">
+                  <p className="text-sm">
+                    Enclosed panels have higher internal temperature than ambient.
+                    Temperature rise is added to ambient for derating calculation.
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </Label>
+          <Select
+            value={enclosureType ?? 'none'}
+            onValueChange={(val) => onEnclosureTypeChange(val === 'none' ? undefined : (val as any))}
+          >
+            <SelectTrigger id="enclosureType">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">Open / Not Enclosed</SelectItem>
+              <SelectItem value="NEMA-1">NEMA 1 (Indoor, +10°C)</SelectItem>
+              <SelectItem value="NEMA-3R">NEMA 3R (Outdoor rain-tight, +10°C)</SelectItem>
+              <SelectItem value="NEMA-4">NEMA 4 (Watertight, +15°C)</SelectItem>
+              <SelectItem value="NEMA-4X">NEMA 4X (Corrosion-resistant, +15°C)</SelectItem>
+              <SelectItem value="NEMA-12">NEMA 12 (Industrial dust-tight, +15°C)</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <Separator />
+
+        {/* Harmonic Distortion */}
+        <div className="space-y-3">
+          <Label htmlFor="harmonicDistortion" className="flex items-center gap-2">
+            Harmonic Distortion (THD %)
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs">
+                  <p className="text-sm">
+                    Total Harmonic Distortion from non-linear loads (VFDs, LEDs, computers).
+                    High THD causes additional heating and requires neutral oversizing per NEC 210.4(D).
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </Label>
+          <Input
+            id="harmonicDistortion"
+            type="number"
+            value={harmonicDistortion ?? ''}
+            onChange={(e) => onHarmonicDistortionChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+            placeholder="0 (no harmonics)"
+            min={0}
+            max={50}
+            step={1}
+          />
+          {harmonicDistortion !== undefined && harmonicDistortion > 15 && (
+            <p className="text-xs text-yellow-600">
+              ⚠️ THD &gt;15%: neutral oversizing and detuned filters recommended
+            </p>
+          )}
+        </div>
+
         {/* Derating Summary (if any factors applied) */}
         {(ambientTemperature !== undefined ||
           groupedCables !== undefined ||
-          installationMethod !== undefined) && (
+          installationMethod !== undefined ||
+          altitude !== undefined ||
+          enclosureType !== undefined ||
+          harmonicDistortion !== undefined) && (
           <>
             <Separator />
             <div className="p-3 bg-muted/50 rounded-md space-y-2">
@@ -313,6 +483,15 @@ export function DeratingSidebar(props: DeratingSidebarProps) {
                 )}
                 {installationMethod !== undefined && (
                   <li>• Installation: Method {installationMethod} (Cc factor will be applied)</li>
+                )}
+                {altitude !== undefined && altitude > 1000 && (
+                  <li>• Altitude: {altitude}m (Ca factor will be applied)</li>
+                )}
+                {enclosureType !== undefined && (
+                  <li>• Enclosure: {enclosureType} (temperature rise added)</li>
+                )}
+                {harmonicDistortion !== undefined && harmonicDistortion > 5 && (
+                  <li>• Harmonics: {harmonicDistortion}% THD (Ch factor will be applied)</li>
                 )}
               </ul>
             </div>

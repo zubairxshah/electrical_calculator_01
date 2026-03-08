@@ -34,6 +34,35 @@ export type InstallationMethod =
 export type LoadType = 'resistive' | 'inductive' | 'mixed' | 'capacitive';
 
 /**
+ * Load Duty Cycle
+ */
+export type LoadDuty = 'continuous' | 'non-continuous';
+
+/**
+ * Insulation Temperature Rating
+ */
+export type InsulationRating = 60 | 75 | 90;
+
+/**
+ * Enclosure Type (affects internal temperature rise)
+ */
+export type EnclosureType = 'open' | 'NEMA-1' | 'NEMA-3R' | 'NEMA-4' | 'NEMA-4X' | 'NEMA-12';
+
+/**
+ * Circuit Application (for GFCI/RCD recommendations)
+ */
+export type CircuitApplication =
+  | 'general'
+  | 'kitchen'
+  | 'bathroom'
+  | 'outdoor'
+  | 'garage'
+  | 'basement'
+  | 'pool-spa'
+  | 'industrial'
+  | 'data-center';
+
+/**
  * IEC Trip Curve Types
  */
 export type TripCurveType = 'B' | 'C' | 'D' | 'K' | 'Z';
@@ -67,8 +96,14 @@ export interface CircuitConfiguration {
   // Power Factor (optional, defaults to 0.8)
   powerFactor: number;          // 0.5-1.0 range
 
+  // Load Duty Cycle (NEC continuous = 3+ hours)
+  loadDuty: LoadDuty;           // 'continuous' | 'non-continuous'
+
   // Unit System
   unitSystem: 'metric' | 'imperial';
+
+  // Future load growth factor (1.0 = no growth, 1.25 = 25% growth)
+  growthFactor: number;         // 1.0-1.5 range
 }
 
 /**
@@ -85,6 +120,21 @@ export interface EnvironmentalConditions {
 
   // Installation Method (IEC only)
   installationMethod?: InstallationMethod;
+
+  // Altitude (affects breaker and cable derating)
+  altitude?: number;            // Meters above sea level (0-5000)
+
+  // Insulation Temperature Rating
+  insulationRating?: InsulationRating;  // 60, 75, or 90°C
+
+  // Enclosure Type
+  enclosureType?: EnclosureType;
+
+  // Harmonic Distortion (THD %)
+  harmonicDistortion?: number;  // 0-50%
+
+  // Circuit Application (for GFCI/RCD recommendation)
+  circuitApplication?: CircuitApplication;
 
   // Voltage Drop Analysis
   circuitDistance?: number;     // Meters or feet (depending on unitSystem)
@@ -209,6 +259,28 @@ export interface DeratingFactorsResult {
     method?: InstallationMethod;
     factor: number;
     codeReference?: string;     // "IEC 60364-5-52 Table B.52.5"
+  };
+
+  altitudeFactor?: {
+    label: string;              // "Ca (Altitude)"
+    altitude?: number;          // meters
+    factor: number;
+    codeReference?: string;     // "NEC 110.40 / IEC 60947-1"
+  };
+
+  harmonicFactor?: {
+    label: string;              // "Ch (Harmonics)"
+    thdPercent?: number;
+    factor: number;
+    codeReference?: string;
+  };
+
+  enclosureFactor?: {
+    label: string;
+    enclosureType?: EnclosureType;
+    tempRise?: number;          // °C rise inside enclosure
+    factor: number;
+    codeReference?: string;
   };
 
   // Combined effect
@@ -419,11 +491,18 @@ export interface BreakerCalculatorState {
   loadValue: number;
   powerFactor: number;
   unitSystem: 'metric' | 'imperial';
+  loadDuty: LoadDuty;
+  growthFactor: number;
 
   // Environmental (optional)
   ambientTemperature?: number;
   groupedCables?: number;
   installationMethod?: InstallationMethod;
+  altitude?: number;
+  insulationRating?: InsulationRating;
+  enclosureType?: EnclosureType;
+  harmonicDistortion?: number;
+  circuitApplication?: CircuitApplication;
   circuitDistance?: number;
   conductorMaterial?: 'copper' | 'aluminum';
   conductorSizeValue?: number;
@@ -477,10 +556,19 @@ export interface BreakerCalculatorActions {
   setPowerFactor: (pf: number) => void;
   setUnitSystem: (system: 'metric' | 'imperial') => void;
 
+  // Load
+  setLoadDuty: (duty: LoadDuty) => void;
+  setGrowthFactor: (factor: number) => void;
+
   // Environmental
   setAmbientTemperature: (temp: number | undefined) => void;
   setGroupedCables: (count: number | undefined) => void;
   setInstallationMethod: (method: InstallationMethod | undefined) => void;
+  setAltitude: (altitude: number | undefined) => void;
+  setInsulationRating: (rating: InsulationRating | undefined) => void;
+  setEnclosureType: (type: EnclosureType | undefined) => void;
+  setHarmonicDistortion: (thd: number | undefined) => void;
+  setCircuitApplication: (app: CircuitApplication | undefined) => void;
   setCircuitDistance: (distance: number | undefined) => void;
   setShortCircuitCurrent: (current: number | undefined) => void;
   setLoadType: (type: LoadType | undefined) => void;

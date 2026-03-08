@@ -131,6 +131,8 @@ export const circuitConfigSchema = z.object({
   loadValue: loadValueSchema,
   powerFactor: powerFactorSchema,
   unitSystem: z.enum(['metric', 'imperial']),
+  loadDuty: z.enum(['continuous', 'non-continuous']).default('continuous'),
+  growthFactor: z.number().min(1.0).max(1.5).default(1.0),
 });
 
 /**
@@ -143,6 +145,11 @@ export const environmentalConditionsSchema = z
     ambientTemperature: temperatureSchema,
     groupedCables: groupedCablesSchema,
     installationMethod: installationMethodSchema,
+    altitude: z.number().min(0).max(5000).optional(),
+    insulationRating: z.union([z.literal(60), z.literal(75), z.literal(90)]).optional(),
+    enclosureType: z.enum(['open', 'NEMA-1', 'NEMA-3R', 'NEMA-4', 'NEMA-4X', 'NEMA-12']).optional(),
+    harmonicDistortion: z.number().min(0).max(50).optional(),
+    circuitApplication: z.enum(['general', 'kitchen', 'bathroom', 'outdoor', 'garage', 'basement', 'pool-spa', 'industrial', 'data-center']).optional(),
     circuitDistance: circuitDistanceSchema,
     conductorMaterial: z.enum(['copper', 'aluminum']).optional(),
     conductorSize: conductorSizeSchema,

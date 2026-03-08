@@ -38,6 +38,8 @@ export interface BreakerInputFormProps {
   loadValue: number;
   powerFactor: number;
   unitSystem: 'metric' | 'imperial';
+  loadDuty: 'continuous' | 'non-continuous';
+  growthFactor: number;
 
   // Voltage Drop (Optional)
   circuitDistance?: number;
@@ -51,6 +53,9 @@ export interface BreakerInputFormProps {
   // Load Type (Optional)
   loadType?: 'resistive' | 'inductive' | 'mixed' | 'capacitive';
 
+  // Circuit Application (Optional)
+  circuitApplication?: string;
+
   // Validation Errors
   errors?: Record<string, string>;
 
@@ -62,6 +67,8 @@ export interface BreakerInputFormProps {
   onLoadValueChange: (value: number) => void;
   onPowerFactorChange: (pf: number) => void;
   onUnitSystemChange: (system: 'metric' | 'imperial') => void;
+  onLoadDutyChange: (duty: 'continuous' | 'non-continuous') => void;
+  onGrowthFactorChange: (factor: number) => void;
 
   // Voltage Drop Handlers
   onCircuitDistanceChange?: (distance: number | undefined) => void;
@@ -73,6 +80,9 @@ export interface BreakerInputFormProps {
 
   // Load Type Handler
   onLoadTypeChange?: (loadType: 'resistive' | 'inductive' | 'mixed' | 'capacitive' | undefined) => void;
+
+  // Circuit Application Handler
+  onCircuitApplicationChange?: (app: string | undefined) => void;
 
   // Optional: Show/hide advanced options
   showAdvanced?: boolean;
@@ -136,12 +146,15 @@ export function BreakerInputForm(props: BreakerInputFormProps) {
     loadValue,
     powerFactor,
     unitSystem,
+    loadDuty,
+    growthFactor,
     circuitDistance,
     conductorMaterial = 'copper',
     conductorSizeValue,
     conductorSizeUnit = 'AWG',
     shortCircuitCurrentKA,
     loadType,
+    circuitApplication,
     errors = {},
     onStandardChange,
     onVoltageChange,
@@ -150,11 +163,14 @@ export function BreakerInputForm(props: BreakerInputFormProps) {
     onLoadValueChange,
     onPowerFactorChange,
     onUnitSystemChange,
+    onLoadDutyChange,
+    onGrowthFactorChange,
     onCircuitDistanceChange,
     onConductorMaterialChange,
     onConductorSizeChange,
     onShortCircuitCurrentChange,
     onLoadTypeChange,
+    onCircuitApplicationChange,
     showAdvanced = false,
   } = props;
 
@@ -331,6 +347,51 @@ export function BreakerInputForm(props: BreakerInputFormProps) {
         </div>
       )}
 
+      {/* Load Duty Cycle (NEC continuous vs non-continuous) */}
+      <div className="space-y-2">
+        <Label htmlFor="loadDuty">Load Duty Cycle</Label>
+        <Tabs
+          value={loadDuty}
+          onValueChange={(val) => onLoadDutyChange(val as 'continuous' | 'non-continuous')}
+        >
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="continuous">Continuous (3+ hrs)</TabsTrigger>
+            <TabsTrigger value="non-continuous">Non-Continuous</TabsTrigger>
+          </TabsList>
+        </Tabs>
+        <p className="text-xs text-muted-foreground">
+          {loadDuty === 'continuous'
+            ? standard === 'NEC'
+              ? 'NEC 210.20(A): 125% factor applied for loads running 3+ hours'
+              : 'IEC: Correction factors applied separately'
+            : 'No continuous load factor applied — load runs less than 3 hours continuously'}
+        </p>
+      </div>
+
+      {/* Future Load Growth Factor */}
+      {showAdvanced && (
+        <div className="space-y-2">
+          <div className="flex justify-between">
+            <Label htmlFor="growthFactor">Future Load Growth</Label>
+            <span className="text-sm font-medium">{(growthFactor * 100).toFixed(0)}%</span>
+          </div>
+          <Slider
+            id="growthFactor"
+            min={1.0}
+            max={1.5}
+            step={0.05}
+            value={[growthFactor]}
+            onValueChange={(values) => onGrowthFactorChange(values[0])}
+            className="w-full"
+          />
+          <div className="flex justify-between text-xs text-muted-foreground">
+            <span>100% (No growth)</span>
+            <span>125% (Typical)</span>
+            <span>150% (Maximum)</span>
+          </div>
+        </div>
+      )}
+
       {/* Unit System Toggle */}
       {showAdvanced && (
         <div className="space-y-2">
@@ -479,6 +540,37 @@ export function BreakerInputForm(props: BreakerInputFormProps) {
             Load type affects inrush current calculations and breaker trip characteristics.
           </p>
           {errors.loadType && <p className="text-sm text-destructive">{errors.loadType}</p>}
+        </div>
+      )}
+
+      {/* Circuit Application (for GFCI/RCD recommendations) */}
+      {showAdvanced && (
+        <div className="space-y-2">
+          <Label htmlFor="circuitApplication">Circuit Application - Optional</Label>
+          <Select
+            value={circuitApplication ?? 'general'}
+            onValueChange={(val) =>
+              onCircuitApplicationChange?.(val === 'general' ? undefined : val)
+            }
+          >
+            <SelectTrigger id="circuitApplication">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="general">General Purpose</SelectItem>
+              <SelectItem value="kitchen">Kitchen</SelectItem>
+              <SelectItem value="bathroom">Bathroom</SelectItem>
+              <SelectItem value="outdoor">Outdoor</SelectItem>
+              <SelectItem value="garage">Garage</SelectItem>
+              <SelectItem value="basement">Basement (unfinished)</SelectItem>
+              <SelectItem value="pool-spa">Pool / Spa</SelectItem>
+              <SelectItem value="industrial">Industrial</SelectItem>
+              <SelectItem value="data-center">Data Center / IT</SelectItem>
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">
+            Determines GFCI/RCD protection requirements per {standard === 'NEC' ? 'NEC 210.8' : 'IEC 60364-4-41'}.
+          </p>
         </div>
       )}
 

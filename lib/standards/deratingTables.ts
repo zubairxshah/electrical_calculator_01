@@ -267,6 +267,114 @@ export function getIECGroupingFactor(
   }
 }
 
+// ============================================================================
+// ALTITUDE DERATING
+// ============================================================================
+
+/**
+ * Altitude derating factors
+ * Per NEC 110.40 and IEC 60947-1 Annex B
+ * Breakers and cables derate above 1000m (3300ft) due to reduced air cooling
+ */
+export interface AltitudeDeratingEntry {
+  altitudeMinM: number;
+  altitudeMaxM: number;
+  factor: number;
+}
+
+export const ALTITUDE_DERATING: AltitudeDeratingEntry[] = [
+  { altitudeMinM: 0, altitudeMaxM: 1000, factor: 1.00 },
+  { altitudeMinM: 1001, altitudeMaxM: 1500, factor: 0.99 },
+  { altitudeMinM: 1501, altitudeMaxM: 2000, factor: 0.96 },
+  { altitudeMinM: 2001, altitudeMaxM: 2500, factor: 0.93 },
+  { altitudeMinM: 2501, altitudeMaxM: 3000, factor: 0.90 },
+  { altitudeMinM: 3001, altitudeMaxM: 3500, factor: 0.87 },
+  { altitudeMinM: 3501, altitudeMaxM: 4000, factor: 0.84 },
+  { altitudeMinM: 4001, altitudeMaxM: 5000, factor: 0.80 },
+];
+
+/**
+ * Get altitude derating factor
+ */
+export function getAltitudeDerating(altitudeM: number): number {
+  const entry = ALTITUDE_DERATING.find(
+    (e) => altitudeM >= e.altitudeMinM && altitudeM <= e.altitudeMaxM
+  );
+  if (!entry) {
+    return altitudeM < 0 ? 1.0 : 0.80;
+  }
+  return entry.factor;
+}
+
+// ============================================================================
+// HARMONIC DERATING (K-FACTOR)
+// ============================================================================
+
+/**
+ * Harmonic derating for neutral conductor sizing
+ * High THD from non-linear loads (VFDs, LEDs, computers) causes
+ * triplen harmonics to add in the neutral
+ */
+export interface HarmonicDeratingEntry {
+  thdMinPercent: number;
+  thdMaxPercent: number;
+  factor: number;
+  neutralSizingFactor: number; // Multiply neutral ampacity by this
+}
+
+export const HARMONIC_DERATING: HarmonicDeratingEntry[] = [
+  { thdMinPercent: 0, thdMaxPercent: 5, factor: 1.00, neutralSizingFactor: 1.0 },
+  { thdMinPercent: 6, thdMaxPercent: 10, factor: 0.97, neutralSizingFactor: 1.0 },
+  { thdMinPercent: 11, thdMaxPercent: 15, factor: 0.94, neutralSizingFactor: 1.2 },
+  { thdMinPercent: 16, thdMaxPercent: 20, factor: 0.90, neutralSizingFactor: 1.4 },
+  { thdMinPercent: 21, thdMaxPercent: 30, factor: 0.85, neutralSizingFactor: 1.6 },
+  { thdMinPercent: 31, thdMaxPercent: 40, factor: 0.78, neutralSizingFactor: 1.73 },
+  { thdMinPercent: 41, thdMaxPercent: 50, factor: 0.70, neutralSizingFactor: 1.73 },
+];
+
+/**
+ * Get harmonic derating factor
+ */
+export function getHarmonicDerating(thdPercent: number): { factor: number; neutralSizingFactor: number } {
+  const entry = HARMONIC_DERATING.find(
+    (e) => thdPercent >= e.thdMinPercent && thdPercent <= e.thdMaxPercent
+  );
+  if (!entry) {
+    return thdPercent <= 0 ? { factor: 1.0, neutralSizingFactor: 1.0 } : { factor: 0.70, neutralSizingFactor: 1.73 };
+  }
+  return { factor: entry.factor, neutralSizingFactor: entry.neutralSizingFactor };
+}
+
+// ============================================================================
+// ENCLOSURE TEMPERATURE RISE
+// ============================================================================
+
+/**
+ * Internal temperature rise in enclosed panels
+ * Breakers in enclosed panels run hotter than ambient
+ */
+export type EnclosureTypeKey = 'open' | 'NEMA-1' | 'NEMA-3R' | 'NEMA-4' | 'NEMA-4X' | 'NEMA-12';
+
+export const ENCLOSURE_TEMP_RISE: Record<EnclosureTypeKey, number> = {
+  'open': 0,       // No rise
+  'NEMA-1': 10,    // Indoor general purpose
+  'NEMA-3R': 10,   // Outdoor rain-tight
+  'NEMA-4': 15,    // Watertight
+  'NEMA-4X': 15,   // Corrosion-resistant watertight
+  'NEMA-12': 15,   // Industrial dust-tight
+};
+
+/**
+ * Get effective ambient temperature inside enclosure
+ */
+export function getEnclosureEffectiveTemp(ambientTemp: number, enclosureType: EnclosureTypeKey): number {
+  return ambientTemp + (ENCLOSURE_TEMP_RISE[enclosureType] ?? 0);
+}
+
+// ============================================================================
+// COMBINED DERATING
+// ============================================================================
+
 /**
  * Calculate combined derating factors
  */
@@ -276,11 +384,18 @@ export interface DeratingInput {
   numberOfConductors: number;
   installationMethod?: IECInstallationMethod;
   standard: 'NEC' | 'IEC';
+  altitude?: number;
+  harmonicTHD?: number;
+  enclosureType?: EnclosureTypeKey;
 }
 
 export interface DeratingResult {
   temperatureFactor: number;
   groupingFactor: number;
+  altitudeFactor: number;
+  harmonicFactor: number;
+  enclosureTempRise: number;
+  neutralSizingFactor: number;
   totalFactor: number;
   standardReference: string;
 }
@@ -290,18 +405,19 @@ export function calculateCombinedDerating(input: DeratingInput): DeratingResult 
   let groupingFactor: number;
   let standardReference: string;
 
+  // Apply enclosure temperature rise to effective ambient temp
+  const enclosureTempRise = input.enclosureType ? (ENCLOSURE_TEMP_RISE[input.enclosureType] ?? 0) : 0;
+  const effectiveTemp = input.ambientTemp + enclosureTempRise;
+
   if (input.standard === 'NEC') {
-    // Map IEC insulation ratings to NEC equivalents
     const necRating =
       input.insulationRating === 70 ? 75 : (input.insulationRating as 60 | 75 | 90);
-    temperatureFactor = getNECTemperatureFactor(input.ambientTemp, necRating);
+    temperatureFactor = getNECTemperatureFactor(effectiveTemp, necRating);
     groupingFactor = getNECGroupingFactor(input.numberOfConductors);
     standardReference = 'NEC 310.15(B)(2)(a), NEC 310.15(C)(1)';
   } else {
-    // IEC standard
     const iecRating = input.insulationRating === 75 ? 70 : (input.insulationRating as 70 | 90);
-    temperatureFactor = getIECTemperatureFactor(input.ambientTemp, iecRating);
-    // For IEC, convert conductors to circuits (assuming 3 conductors per circuit)
+    temperatureFactor = getIECTemperatureFactor(effectiveTemp, iecRating);
     const circuits = Math.ceil(input.numberOfConductors / 3);
     groupingFactor = getIECGroupingFactor(
       circuits,
@@ -310,10 +426,25 @@ export function calculateCombinedDerating(input: DeratingInput): DeratingResult 
     standardReference = 'IEC 60364-5-52 Table B.52.14, Table B.52.17';
   }
 
+  // Altitude derating
+  const altitudeFactor = input.altitude ? getAltitudeDerating(input.altitude) : 1.0;
+  if (altitudeFactor < 1.0) {
+    standardReference += input.standard === 'NEC' ? ', NEC 110.40' : ', IEC 60947-1 Annex B';
+  }
+
+  // Harmonic derating
+  const harmonicResult = input.harmonicTHD ? getHarmonicDerating(input.harmonicTHD) : { factor: 1.0, neutralSizingFactor: 1.0 };
+
+  const totalFactor = temperatureFactor * groupingFactor * altitudeFactor * harmonicResult.factor;
+
   return {
     temperatureFactor,
     groupingFactor,
-    totalFactor: temperatureFactor * groupingFactor,
+    altitudeFactor,
+    harmonicFactor: harmonicResult.factor,
+    enclosureTempRise,
+    neutralSizingFactor: harmonicResult.neutralSizingFactor,
+    totalFactor,
     standardReference,
   };
 }

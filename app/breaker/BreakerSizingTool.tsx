@@ -59,6 +59,10 @@ export function BreakerSizingTool() {
       console.log('[BreakerSizingTool] Starting calculation...');
 
       // Build calculation input from store state
+      const hasEnvironment = store.ambientTemperature || store.groupedCables || store.installationMethod
+        || store.altitude || store.enclosureType || store.harmonicDistortion || store.circuitApplication
+        || store.circuitDistance;
+
       const input: BreakerCalculationInput = {
         circuit: {
           standard: store.standard,
@@ -68,23 +72,29 @@ export function BreakerSizingTool() {
           loadValue: store.loadValue,
           powerFactor: store.powerFactor,
           unitSystem: store.unitSystem,
+          loadDuty: store.loadDuty,
+          growthFactor: store.growthFactor,
         },
-        environment:
-          store.ambientTemperature || store.groupedCables || store.installationMethod
-            ? {
-                ambientTemperature: store.ambientTemperature,
-                groupedCables: store.groupedCables,
-                installationMethod: store.installationMethod,
-                circuitDistance: store.circuitDistance,
-                conductorMaterial: store.conductorMaterial,
-                conductorSize: store.conductorSizeValue
-                  ? {
-                      value: store.conductorSizeValue,
-                      unit: store.conductorSizeUnit!,
-                    }
-                  : undefined,
-              }
-            : undefined,
+        environment: hasEnvironment
+          ? {
+              ambientTemperature: store.ambientTemperature,
+              groupedCables: store.groupedCables,
+              installationMethod: store.installationMethod,
+              altitude: store.altitude,
+              insulationRating: store.insulationRating,
+              enclosureType: store.enclosureType,
+              harmonicDistortion: store.harmonicDistortion,
+              circuitApplication: store.circuitApplication,
+              circuitDistance: store.circuitDistance,
+              conductorMaterial: store.conductorMaterial,
+              conductorSize: store.conductorSizeValue
+                ? {
+                    value: store.conductorSizeValue,
+                    unit: store.conductorSizeUnit!,
+                  }
+                : undefined,
+            }
+          : undefined,
         shortCircuitCurrentKA: store.shortCircuitCurrentKA,
         loadType: store.loadType,
       };
@@ -132,6 +142,8 @@ export function BreakerSizingTool() {
           loadValue: store.loadValue,
           powerFactor: store.powerFactor,
           unitSystem: store.unitSystem,
+          loadDuty: store.loadDuty,
+          growthFactor: store.growthFactor,
         },
         results: store.results,
         project: store.projectName || store.engineerName || store.projectLocation
@@ -247,6 +259,9 @@ export function BreakerSizingTool() {
               loadValue={store.loadValue}
               powerFactor={store.powerFactor}
               unitSystem={store.unitSystem}
+              loadDuty={store.loadDuty}
+              growthFactor={store.growthFactor}
+              circuitApplication={store.circuitApplication}
               errors={{}}
               onStandardChange={handleStandardChange}
               onVoltageChange={store.setVoltage}
@@ -255,6 +270,9 @@ export function BreakerSizingTool() {
               onLoadValueChange={store.setLoadValue}
               onPowerFactorChange={store.setPowerFactor}
               onUnitSystemChange={store.setUnitSystem}
+              onLoadDutyChange={store.setLoadDuty}
+              onGrowthFactorChange={store.setGrowthFactor}
+              onCircuitApplicationChange={(val) => store.setCircuitApplication(val as any)}
               showAdvanced={true}
             />
 
@@ -341,10 +359,18 @@ export function BreakerSizingTool() {
             ambientTemperature={store.ambientTemperature}
             groupedCables={store.groupedCables}
             installationMethod={store.installationMethod}
+            altitude={store.altitude}
+            insulationRating={store.insulationRating}
+            enclosureType={store.enclosureType}
+            harmonicDistortion={store.harmonicDistortion}
             errors={{}}
             onTemperatureChange={store.setAmbientTemperature}
             onGroupedCablesChange={store.setGroupedCables}
             onInstallationMethodChange={store.setInstallationMethod}
+            onAltitudeChange={store.setAltitude}
+            onInsulationRatingChange={store.setInsulationRating}
+            onEnclosureTypeChange={store.setEnclosureType}
+            onHarmonicDistortionChange={store.setHarmonicDistortion}
             allowClear={true}
           />
         )}

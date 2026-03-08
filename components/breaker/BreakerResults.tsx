@@ -368,6 +368,91 @@ export function BreakerResults(props: BreakerResultsProps) {
               </div>
             )}
 
+            {/* Altitude Factor */}
+            {deratingFactors.altitudeFactor && (
+              <>
+                <Separator />
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <p className="text-sm font-medium">{deratingFactors.altitudeFactor.label}</p>
+                    <p className="text-lg font-semibold">
+                      {(deratingFactors.altitudeFactor.factor * 100).toFixed(0)}%
+                    </p>
+                  </div>
+                  {deratingFactors.altitudeFactor.altitude !== undefined && (
+                    <p className="text-xs text-muted-foreground">
+                      Altitude: {deratingFactors.altitudeFactor.altitude}m
+                    </p>
+                  )}
+                  {deratingFactors.altitudeFactor.codeReference && (
+                    <p className="text-xs text-muted-foreground">
+                      Per {deratingFactors.altitudeFactor.codeReference}
+                    </p>
+                  )}
+                  <div className="h-2 bg-muted rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-purple-500"
+                      style={{ width: `${deratingFactors.altitudeFactor.factor * 100}%` }}
+                    />
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* Harmonic Factor */}
+            {deratingFactors.harmonicFactor && (
+              <>
+                <Separator />
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <p className="text-sm font-medium">{deratingFactors.harmonicFactor.label}</p>
+                    <p className="text-lg font-semibold">
+                      {(deratingFactors.harmonicFactor.factor * 100).toFixed(0)}%
+                    </p>
+                  </div>
+                  {deratingFactors.harmonicFactor.thdPercent !== undefined && (
+                    <p className="text-xs text-muted-foreground">
+                      THD: {deratingFactors.harmonicFactor.thdPercent}%
+                    </p>
+                  )}
+                  {deratingFactors.harmonicFactor.codeReference && (
+                    <p className="text-xs text-muted-foreground">
+                      Per {deratingFactors.harmonicFactor.codeReference}
+                    </p>
+                  )}
+                  <div className="h-2 bg-muted rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-purple-500"
+                      style={{ width: `${deratingFactors.harmonicFactor.factor * 100}%` }}
+                    />
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* Enclosure Factor */}
+            {deratingFactors.enclosureFactor && (
+              <>
+                <Separator />
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <p className="text-sm font-medium">{deratingFactors.enclosureFactor.label}</p>
+                    <p className="text-lg font-semibold">
+                      +{deratingFactors.enclosureFactor.tempRise}°C rise
+                    </p>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Enclosure: {deratingFactors.enclosureFactor.enclosureType}
+                  </p>
+                  {deratingFactors.enclosureFactor.codeReference && (
+                    <p className="text-xs text-muted-foreground">
+                      Per {deratingFactors.enclosureFactor.codeReference}
+                    </p>
+                  )}
+                </div>
+              </>
+            )}
+
             {/* Combined Factor */}
             <Separator />
             <div className="p-3 bg-purple-50 border border-purple-200 rounded-md">

@@ -26,6 +26,10 @@ import type {
   ProjectInformation,
   InstallationMethod,
   LoadType,
+  LoadDuty,
+  InsulationRating,
+  EnclosureType,
+  CircuitApplication,
 } from '@/types/breaker-calculator';
 
 /**
@@ -40,11 +44,18 @@ const initialState: BreakerCalculatorState = {
   loadValue: 10,
   powerFactor: 0.9,
   unitSystem: 'imperial',
+  loadDuty: 'continuous',
+  growthFactor: 1.0,
 
   // Environmental (optional) - all undefined by default
   ambientTemperature: undefined,
   groupedCables: undefined,
   installationMethod: undefined,
+  altitude: undefined,
+  insulationRating: undefined,
+  enclosureType: undefined,
+  harmonicDistortion: undefined,
+  circuitApplication: undefined,
   circuitDistance: undefined,
   conductorMaterial: 'copper',
   conductorSizeValue: undefined,
@@ -109,12 +120,26 @@ export const useBreakerStore = create<BreakerCalculatorState & BreakerCalculator
 
       setUnitSystem: (unitSystem) => set({ unitSystem }),
 
+      // Load
+      setLoadDuty: (loadDuty) => set({ loadDuty }),
+      setGrowthFactor: (growthFactor) => set({ growthFactor }),
+
       // Environmental Setters
       setAmbientTemperature: (ambientTemperature) => set({ ambientTemperature }),
 
       setGroupedCables: (groupedCables) => set({ groupedCables }),
 
       setInstallationMethod: (installationMethod) => set({ installationMethod }),
+
+      setAltitude: (altitude) => set({ altitude }),
+
+      setInsulationRating: (insulationRating) => set({ insulationRating }),
+
+      setEnclosureType: (enclosureType) => set({ enclosureType }),
+
+      setHarmonicDistortion: (harmonicDistortion) => set({ harmonicDistortion }),
+
+      setCircuitApplication: (circuitApplication) => set({ circuitApplication }),
 
       setCircuitDistance: (circuitDistance) => set({ circuitDistance }),
 
@@ -191,12 +216,20 @@ export const useBreakerStore = create<BreakerCalculatorState & BreakerCalculator
               loadValue: state.loadValue,
               powerFactor: state.powerFactor,
               unitSystem: state.unitSystem,
+              loadDuty: state.loadDuty,
+              growthFactor: state.growthFactor,
             },
             environment: state.ambientTemperature || state.groupedCables || state.installationMethod
+              || state.altitude || state.enclosureType || state.harmonicDistortion || state.circuitApplication
               ? {
                   ambientTemperature: state.ambientTemperature,
                   groupedCables: state.groupedCables,
                   installationMethod: state.installationMethod,
+                  altitude: state.altitude,
+                  insulationRating: state.insulationRating,
+                  enclosureType: state.enclosureType,
+                  harmonicDistortion: state.harmonicDistortion,
+                  circuitApplication: state.circuitApplication,
                   circuitDistance: state.circuitDistance,
                   conductorMaterial: state.conductorMaterial,
                   conductorSize: state.conductorSizeValue
@@ -282,9 +315,16 @@ export const useBreakerStore = create<BreakerCalculatorState & BreakerCalculator
             loadValue: entry.circuit.loadValue,
             powerFactor: entry.circuit.powerFactor,
             unitSystem: entry.circuit.unitSystem,
+            loadDuty: entry.circuit.loadDuty ?? 'continuous',
+            growthFactor: entry.circuit.growthFactor ?? 1.0,
             ambientTemperature: entry.environment?.ambientTemperature,
             groupedCables: entry.environment?.groupedCables,
             installationMethod: entry.environment?.installationMethod,
+            altitude: entry.environment?.altitude,
+            insulationRating: entry.environment?.insulationRating,
+            enclosureType: entry.environment?.enclosureType,
+            harmonicDistortion: entry.environment?.harmonicDistortion,
+            circuitApplication: entry.environment?.circuitApplication,
             circuitDistance: entry.environment?.circuitDistance,
             conductorMaterial: entry.environment?.conductorMaterial,
             conductorSizeValue: entry.environment?.conductorSize?.value,
@@ -373,9 +413,16 @@ export const useBreakerStore = create<BreakerCalculatorState & BreakerCalculator
         loadValue: state.loadValue,
         powerFactor: state.powerFactor,
         unitSystem: state.unitSystem,
+        loadDuty: state.loadDuty,
+        growthFactor: state.growthFactor,
         ambientTemperature: state.ambientTemperature,
         groupedCables: state.groupedCables,
         installationMethod: state.installationMethod,
+        altitude: state.altitude,
+        insulationRating: state.insulationRating,
+        enclosureType: state.enclosureType,
+        harmonicDistortion: state.harmonicDistortion,
+        circuitApplication: state.circuitApplication,
         circuitDistance: state.circuitDistance,
         conductorMaterial: state.conductorMaterial,
         conductorSizeValue: state.conductorSizeValue,
@@ -385,7 +432,6 @@ export const useBreakerStore = create<BreakerCalculatorState & BreakerCalculator
         projectName: state.projectName,
         projectLocation: state.projectLocation,
         engineerName: state.engineerName,
-        // Don't persist: results, UI state, validation errors
       }),
     }
   )

@@ -13,7 +13,7 @@ import { recommendStandardBreaker } from '@/lib/standards/breakerRatings';
 import { recommendTripCurve } from '@/lib/standards/tripCurves';
 import { calculateVoltageDrop, assessVoltageDropCompliance, recommendCableSizeForVD } from './voltageDrop';
 import { calculateEnhancedVoltageDrop, assessEnhancedVoltageDropCompliance, recommendEnhancedCableSizeForVD } from './enhancedVoltageDrop';
-import { calculateCombinedDerating, getNECGroupingFactor, getIECTemperatureFactor, type IECInstallationMethod } from '@/lib/standards/deratingTables';
+import { calculateCombinedDerating, type IECInstallationMethod, type EnclosureTypeKey } from '@/lib/standards/deratingTables';
 import { validateCalculationInput, validateWithWarnings } from '@/lib/validation/breakerValidation';
 import { logger } from '@/lib/utils/logger';
 import type {
@@ -29,6 +29,7 @@ import type {
   VoltageDropAnalysis,
   DeratingFactorsResult,
   InstallationMethod,
+  EnclosureType,
 } from '@/types/breaker-calculator';
 
 /**
@@ -126,14 +127,17 @@ export async function calculateBreakerSizing(
     standard: input.circuit.standard,
   });
 
+  const loadDuty = input.circuit.loadDuty ?? 'continuous';
+  const continuousLoadFactor =
+    input.circuit.standard === 'NEC' && loadDuty === 'continuous' ? 1.25 : 1.0;
+
   const loadAnalysis: LoadAnalysis = {
     inputPower: input.circuit.loadMode === 'kw' ? input.circuit.loadValue : undefined,
     inputCurrent: input.circuit.loadMode === 'amps' ? input.circuit.loadValue : undefined,
     calculatedCurrentAmps: loadCurrentResult.currentAmps,
     formula: loadCurrentResult.formula,
     components: loadCurrentResult.components,
-    continuousLoadFactor:
-      input.circuit.standard === 'NEC' ? 1.25 : 1.0,
+    continuousLoadFactor,
   };
 
   logger.debug('BreakerCalculator', 'Load current calculated', {
@@ -147,10 +151,25 @@ export async function calculateBreakerSizing(
 
   logger.debug('BreakerCalculator', 'Applying safety factor');
 
+  // Apply growth factor to load current
+  const growthFactor = input.circuit.growthFactor ?? 1.0;
+  const effectiveLoadCurrent = loadCurrentResult.currentAmps * growthFactor;
+
+  if (growthFactor > 1.0) {
+    alerts.push({
+      type: 'info',
+      code: 'GROWTH_FACTOR_APPLIED',
+      message: `Future load growth factor of ${(growthFactor * 100).toFixed(0)}% applied. Effective load: ${effectiveLoadCurrent.toFixed(1)}A (base: ${loadCurrentResult.currentAmps.toFixed(1)}A).`,
+      severity: 'minor',
+    });
+  }
+
+  const loadDutyMapped = (input.circuit.loadDuty ?? 'continuous') === 'non-continuous' ? 'intermittent' : 'continuous';
+
   const safetyFactorResult = applySafetyFactor({
-    loadCurrent: loadCurrentResult.currentAmps,
+    loadCurrent: effectiveLoadCurrent,
     standard: input.circuit.standard,
-    loadType: 'continuous', // Default to continuous for safety
+    loadType: loadDutyMapped,
   });
 
   logger.debug('BreakerCalculator', 'Safety factor applied', {
@@ -165,24 +184,31 @@ export async function calculateBreakerSizing(
 
   let deratingFactorsResult: DeratingFactorsResult | undefined;
 
-  if (input.environment?.ambientTemperature || input.environment?.groupedCables) {
+  const hasDerating = input.environment?.ambientTemperature || input.environment?.groupedCables
+    || input.environment?.altitude || input.environment?.harmonicDistortion
+    || input.environment?.enclosureType;
+
+  if (hasDerating) {
     logger.debug('BreakerCalculator', 'Applying derating factors');
 
     try {
-      const ambientTemp = input.environment.ambientTemperature ?? 30; // Default to 30°C
-      const numConductors = input.environment.groupedCables ?? 1;
-      const installationMethod = input.environment.installationMethod as IECInstallationMethod | undefined;
+      const ambientTemp = input.environment!.ambientTemperature ?? 30;
+      const numConductors = input.environment!.groupedCables ?? 1;
+      const installationMethod = input.environment!.installationMethod as IECInstallationMethod | undefined;
+      const insulationRating = input.environment!.insulationRating ?? 90;
+      const enclosureType = input.environment!.enclosureType as EnclosureTypeKey | undefined;
 
-      // Calculate derating factors
       const derating = calculateCombinedDerating({
         ambientTemp,
-        insulationRating: 90, // Use 90°C for modern cables
+        insulationRating,
         numberOfConductors: numConductors,
         installationMethod,
         standard: input.circuit.standard,
+        altitude: input.environment!.altitude,
+        harmonicTHD: input.environment!.harmonicDistortion,
+        enclosureType,
       });
 
-      // Calculate adjusted breaker size due to derating
       const adjustedBreakerSize = safetyFactorResult.minimumBreakerSize / derating.totalFactor;
 
       deratingFactorsResult = {
@@ -207,11 +233,35 @@ export async function calculateBreakerSizing(
               codeReference: 'IEC 60364-5-52 Table B.52.5',
             }
           : undefined,
+        altitudeFactor: derating.altitudeFactor < 1.0
+          ? {
+              label: 'Ca (Altitude)',
+              altitude: input.environment!.altitude,
+              factor: derating.altitudeFactor,
+              codeReference: input.circuit.standard === 'NEC' ? 'NEC 110.40' : 'IEC 60947-1 Annex B',
+            }
+          : undefined,
+        harmonicFactor: derating.harmonicFactor < 1.0
+          ? {
+              label: 'Ch (Harmonics)',
+              thdPercent: input.environment!.harmonicDistortion,
+              factor: derating.harmonicFactor,
+              codeReference: 'IEEE 519, NEC 210.4(D)',
+            }
+          : undefined,
+        enclosureFactor: derating.enclosureTempRise > 0
+          ? {
+              label: 'Ce (Enclosure)',
+              enclosureType: input.environment!.enclosureType as EnclosureType,
+              tempRise: derating.enclosureTempRise,
+              factor: derating.temperatureFactor, // Already factored into temp
+              codeReference: 'NEMA / IEC 61439',
+            }
+          : undefined,
         combinedFactor: derating.totalFactor,
         adjustedBreakerSizeAmps: adjustedBreakerSize,
       };
 
-      // Add warning for significant derating
       if (derating.totalFactor < 0.7) {
         alerts.push({
           type: 'warning',
@@ -222,11 +272,45 @@ export async function calculateBreakerSizing(
         });
       }
 
+      // Altitude warning
+      if (derating.altitudeFactor < 1.0) {
+        alerts.push({
+          type: 'info',
+          code: 'ALTITUDE_DERATING',
+          message: `Altitude ${input.environment!.altitude}m: breaker and cable derated to ${(derating.altitudeFactor * 100).toFixed(0)}%. Verify equipment altitude rating.`,
+          severity: 'minor',
+          codeReference: input.circuit.standard === 'NEC' ? 'NEC 110.40' : 'IEC 60947-1',
+        });
+      }
+
+      // Enclosure warning
+      if (derating.enclosureTempRise > 0) {
+        alerts.push({
+          type: 'info',
+          code: 'ENCLOSURE_TEMP_RISE',
+          message: `Enclosed panel (${input.environment!.enclosureType}): +${derating.enclosureTempRise}°C internal rise. Effective ambient: ${ambientTemp + derating.enclosureTempRise}°C.`,
+          severity: 'minor',
+        });
+      }
+
+      // Harmonic / neutral sizing warning
+      if (derating.neutralSizingFactor > 1.0) {
+        alerts.push({
+          type: 'warning',
+          code: 'NEUTRAL_OVERSIZING_REQUIRED',
+          message: `THD of ${input.environment!.harmonicDistortion}%: neutral conductor must be sized at ${(derating.neutralSizingFactor * 100).toFixed(0)}% of phase conductor. Triplen harmonics add in neutral.`,
+          severity: 'major',
+          codeReference: 'NEC 210.4(D), IEEE 519',
+        });
+      }
+
       logger.debug('BreakerCalculator', 'Derating factors applied', {
         tempFactor: derating.temperatureFactor,
         groupingFactor: derating.groupingFactor,
+        altitudeFactor: derating.altitudeFactor,
+        harmonicFactor: derating.harmonicFactor,
         combinedFactor: derating.totalFactor,
-        adjustedBreakerSize: adjustedBreakerSize,
+        adjustedBreakerSize,
       });
     } catch (deratingError) {
       logger.warn('BreakerCalculator', 'Derating calculation failed', {
@@ -466,6 +550,89 @@ export async function calculateBreakerSizing(
       });
     }
   }
+
+  // ============================================================================
+  // STEP 9.5: ADDITIONAL SAFETY CHECKS & RECOMMENDATIONS
+  // ============================================================================
+
+  // GFCI / RCD Recommendation based on circuit application
+  if (input.environment?.circuitApplication) {
+    const app = input.environment.circuitApplication;
+    const gfciRequired = ['kitchen', 'bathroom', 'outdoor', 'garage', 'basement', 'pool-spa'];
+    if (gfciRequired.includes(app)) {
+      const sensitivity = app === 'pool-spa' ? '5mA' : '30mA';
+      alerts.push({
+        type: 'warning',
+        code: 'GFCI_RCD_REQUIRED',
+        message: `${app.charAt(0).toUpperCase() + app.slice(1)} circuit: GFCI/RCD protection required (${sensitivity} sensitivity). ${input.circuit.standard === 'NEC' ? 'Per NEC 210.8.' : 'Per IEC 60364-4-41.'}`,
+        severity: 'major',
+        codeReference: input.circuit.standard === 'NEC' ? 'NEC 210.8' : 'IEC 60364-4-41',
+      });
+    }
+    if (app === 'data-center') {
+      alerts.push({
+        type: 'warning',
+        code: 'DATA_CENTER_HARMONICS',
+        message: 'Data center circuit: high harmonic content expected from IT loads. Ensure neutral is oversized and consider detuned filters.',
+        severity: 'major',
+        codeReference: 'NEC 210.4(D)',
+      });
+    }
+  }
+
+  // Cable coordination check — breaker should not exceed cable ampacity
+  // (informational since we don't know exact cable ampacity without full cable calc)
+  if (recommendedBreaker > 200) {
+    alerts.push({
+      type: 'info',
+      code: 'CABLE_COORDINATION_CHECK',
+      message: `Breaker rated ${recommendedBreaker}A — verify cable ampacity ≥ ${recommendedBreaker}A after all derating factors. Cable must be protected by the breaker (${input.circuit.standard === 'NEC' ? 'NEC 240.4' : 'IEC 60364-4-43'}).`,
+      severity: 'minor',
+      codeReference: input.circuit.standard === 'NEC' ? 'NEC 240.4' : 'IEC 60364-4-43',
+    });
+  }
+
+  // Motor inrush / inductive load warning
+  if (input.loadType === 'inductive') {
+    alerts.push({
+      type: 'info',
+      code: 'MOTOR_INRUSH_WARNING',
+      message: 'Inductive load detected. Motor starting current (typically 6-8× FLA) may cause nuisance tripping. For dedicated motor circuits, use the Motor & HVAC Breaker calculator for NEC 430 compliance.',
+      severity: 'minor',
+      codeReference: input.circuit.standard === 'NEC' ? 'NEC 430.52' : 'IEC 60947-4-1',
+    });
+  }
+
+  // Arc flash awareness for higher voltage/current
+  if (input.circuit.voltage >= 208 && recommendedBreaker >= 100) {
+    alerts.push({
+      type: 'info',
+      code: 'ARC_FLASH_AWARENESS',
+      message: `System ≥208V at ${recommendedBreaker}A: arc flash hazard may exist. Perform incident energy analysis per NFPA 70E and label equipment with PPE requirements.`,
+      severity: 'minor',
+      codeReference: 'NFPA 70E',
+    });
+  }
+
+  // Parallel conductor guidance for very high current
+  if (recommendedBreaker > 500) {
+    alerts.push({
+      type: 'info',
+      code: 'PARALLEL_CONDUCTOR_GUIDANCE',
+      message: `High current (${recommendedBreaker}A): consider parallel conductors per phase. Each set must be same length, material, and size (${input.circuit.standard === 'NEC' ? 'NEC 310.10(G)' : 'IEC 60364-5-52'}).`,
+      severity: 'minor',
+      codeReference: input.circuit.standard === 'NEC' ? 'NEC 310.10(G)' : 'IEC 60364-5-52',
+    });
+  }
+
+  // Selectivity/discrimination note
+  alerts.push({
+    type: 'info',
+    code: 'SELECTIVITY_NOTE',
+    message: `Verify selectivity with upstream breaker. The upstream device should have a higher rating and slower trip curve to ensure only the faulted circuit trips.`,
+    severity: 'minor',
+    codeReference: input.circuit.standard === 'NEC' ? 'NEC 240.12' : 'IEC 60364-4-43',
+  });
 
   // ============================================================================
   // STEP 10: BUILD FINAL RESULTS
