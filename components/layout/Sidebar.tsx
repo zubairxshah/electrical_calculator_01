@@ -88,6 +88,13 @@ const navigationItems = [
     category: 'Protection & Safety',
     items: [
       {
+        name: 'Short Circuit Analysis',
+        href: '/short-circuit',
+        icon: Zap,
+        description: 'Fault current calculations (IEC 60909/IEEE 551)',
+        priority: 'P1',
+      },
+      {
         name: 'Earthing Conductor',
         href: '/earthing',
         icon: Ground,

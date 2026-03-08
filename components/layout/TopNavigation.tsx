@@ -96,6 +96,12 @@ const navigationItems: NavCategory[] = [
     category: 'Protection & Safety',
     items: [
       {
+        name: 'Short Circuit Analysis',
+        href: '/short-circuit',
+        description: 'Fault current calculations (IEC 60909/IEEE 551)',
+        priority: 'P1',
+      },
+      {
         name: 'Earthing Conductor',
         href: '/earthing',
         description: 'Earthing conductor sizing (IEC/NEC)',
