@@ -84,6 +84,12 @@ const navigationItems: NavCategory[] = [
         description: 'Capacitor bank sizing for PF correction',
         priority: 'P1',
       },
+      {
+        name: 'Transformer Sizing',
+        href: '/transformer-sizing',
+        description: 'kVA rating, losses & regulation (IEC/IEEE)',
+        priority: 'P1',
+      },
     ]
   },
   {
