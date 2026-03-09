@@ -121,6 +121,13 @@ const navigationItems = [
         priority: 'P1',
       },
       {
+        name: 'Voltage Drop',
+        href: '/voltage-drop',
+        icon: Activity,
+        description: 'Cable & busway voltage drop (IEC/NEC)',
+        priority: 'P1',
+      },
+      {
         name: 'Lighting Design',
         href: '/lighting',
         icon: Lightbulb,

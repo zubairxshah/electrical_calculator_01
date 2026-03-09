@@ -125,6 +125,12 @@ const navigationItems: NavCategory[] = [
         priority: 'P1',
       },
       {
+        name: 'Voltage Drop',
+        href: '/voltage-drop',
+        description: 'Cable & busway voltage drop (IEC/NEC)',
+        priority: 'P1',
+      },
+      {
         name: 'Lighting Design',
         href: '/lighting',
         description: 'Indoor lighting calculations (IESNA)',
