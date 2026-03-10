@@ -159,6 +159,12 @@ const navigationItems: NavCategory[] = [
     category: 'Analysis Tools',
     items: [
       {
+        name: 'Harmonic Analysis',
+        href: '/harmonic-analysis',
+        description: 'THDi, THDv, TDD & IEEE 519 compliance',
+        priority: 'P1',
+      },
+      {
         name: 'Battery Comparison',
         href: '/battery-comparison',
         description: 'Compare battery technologies',

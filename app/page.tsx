@@ -175,6 +175,18 @@ const calculatorCards: CalculatorCard[] = [
     tags: ['MPPT', 'PWM', 'efficiency'],
   },
   {
+    id: 'harmonic-analysis',
+    title: 'Harmonic Analysis & THD',
+    description: 'Calculate THDi, THDv, TDD, K-Factor with IEEE 519 / IEC 61000 compliance and filter sizing.',
+    icon: 'activity',
+    href: '/harmonic-analysis',
+    priority: 'P1',
+    status: 'active',
+    category: 'Analysis Tools',
+    isNew: true,
+    tags: ['harmonics', 'THD', 'IEEE 519', 'power quality', 'K-factor'],
+  },
+  {
     id: 'battery-comparison',
     title: 'Battery Comparison Tool',
     description: 'Compare different battery technologies for your application.',
