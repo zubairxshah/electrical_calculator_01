@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { useGeneratorSizingStore } from '@/stores/useGeneratorSizingStore'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -12,6 +13,28 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import type { VolumeUnit } from '@/types/generator-sizing'
+
+function NumericInput({
+  value, onChange, min, max, step,
+}: {
+  value: number; onChange: (v: number) => void; min?: number; max?: number; step?: number
+}) {
+  const [local, setLocal] = useState<string | null>(null)
+  return (
+    <Input
+      type="number"
+      min={min} max={max} step={step}
+      value={local !== null ? local : value}
+      onFocus={() => setLocal(value === 0 ? '' : String(value))}
+      onBlur={() => {
+        const p = parseFloat(local ?? '')
+        if (!isNaN(p)) onChange(Math.max(min ?? -Infinity, Math.min(max ?? Infinity, p)))
+        setLocal(null)
+      }}
+      onChange={(e) => local !== null ? setLocal(e.target.value) : onChange(Number(e.target.value))}
+    />
+  )
+}
 
 export default function FuelEstimationPanel() {
   const { fuelConfig, setFuelConfig, result } = useGeneratorSizingStore()
@@ -26,23 +49,21 @@ export default function FuelEstimationPanel() {
           {/* Runtime */}
           <div className="space-y-1.5">
             <Label>Required Runtime (hours)</Label>
-            <Input
-              type="number"
+            <NumericInput
               min={1}
               value={fuelConfig.requiredRuntime}
-              onChange={(e) => setFuelConfig({ requiredRuntime: Number(e.target.value) })}
+              onChange={(v) => setFuelConfig({ requiredRuntime: v })}
             />
           </div>
 
           {/* Average Loading */}
           <div className="space-y-1.5">
             <Label>Average Loading (%)</Label>
-            <Input
-              type="number"
+            <NumericInput
               min={30}
               max={100}
               value={fuelConfig.averageLoadingPercent}
-              onChange={(e) => setFuelConfig({ averageLoadingPercent: Number(e.target.value) })}
+              onChange={(v) => setFuelConfig({ averageLoadingPercent: v })}
             />
             <p className="text-xs text-muted-foreground">Min 30% (wet stacking)</p>
           </div>

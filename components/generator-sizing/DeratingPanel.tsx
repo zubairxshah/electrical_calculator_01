@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { useGeneratorSizingStore } from '@/stores/useGeneratorSizingStore'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -13,6 +14,28 @@ import {
 } from '@/components/ui/select'
 import { mToFt, ftToM, cToF, fToC } from '@/lib/calculations/generator-sizing/generatorData'
 import type { AltitudeUnit, TempUnit } from '@/types/generator-sizing'
+
+function NumericInput({
+  value, onChange, min, max, step, className,
+}: {
+  value: number; onChange: (v: number) => void; min?: number; max?: number; step?: number; className?: string
+}) {
+  const [local, setLocal] = useState<string | null>(null)
+  return (
+    <Input
+      type="number"
+      min={min} max={max} step={step} className={className}
+      value={local !== null ? local : value}
+      onFocus={() => setLocal(value === 0 ? '' : String(value))}
+      onBlur={() => {
+        const p = parseFloat(local ?? '')
+        if (!isNaN(p)) onChange(Math.max(min ?? -Infinity, Math.min(max ?? Infinity, p)))
+        setLocal(null)
+      }}
+      onChange={(e) => local !== null ? setLocal(e.target.value) : onChange(Number(e.target.value))}
+    />
+  )
+}
 
 export default function DeratingPanel() {
   const { siteConditions, setSiteConditions, result } = useGeneratorSizingStore()
@@ -54,11 +77,10 @@ export default function DeratingPanel() {
           <div className="space-y-1.5">
             <Label>Altitude</Label>
             <div className="flex gap-1">
-              <Input
-                type="number"
+              <NumericInput
                 min={0}
                 value={displayAltitude}
-                onChange={(e) => handleAltitudeChange(Number(e.target.value))}
+                onChange={handleAltitudeChange}
                 className="flex-1"
               />
               <Select
@@ -81,13 +103,12 @@ export default function DeratingPanel() {
           <div className="space-y-1.5">
             <Label>Ambient Temperature</Label>
             <div className="flex gap-1">
-              <Input
-                type="number"
+              <NumericInput
                 min={-40}
                 max={60}
                 step={0.5}
                 value={displayTemp}
-                onChange={(e) => handleTempChange(Number(e.target.value))}
+                onChange={handleTempChange}
                 className="flex-1"
               />
               <Select

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { useGeneratorSizingStore } from '@/stores/useGeneratorSizingStore'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -48,14 +48,127 @@ function createDefaultLoad(): LoadItem {
   }
 }
 
+/**
+ * Numeric input that allows clearing the field (no stuck-on-zero problem).
+ * Stores local string state while focused, commits number on blur.
+ */
+function NumericInput({
+  value,
+  onChange,
+  min,
+  max,
+  step,
+  placeholder,
+  className,
+}: {
+  value: number
+  onChange: (v: number) => void
+  min?: number
+  max?: number
+  step?: number
+  placeholder?: string
+  className?: string
+}) {
+  const [localValue, setLocalValue] = useState<string | null>(null)
+  const isFocused = localValue !== null
+
+  const handleFocus = () => {
+    setLocalValue(value === 0 ? '' : String(value))
+  }
+
+  const handleBlur = () => {
+    const parsed = parseFloat(localValue ?? '')
+    if (!isNaN(parsed)) {
+      const clamped = Math.max(min ?? -Infinity, Math.min(max ?? Infinity, parsed))
+      onChange(clamped)
+    }
+    setLocalValue(null)
+  }
+
+  return (
+    <Input
+      type="number"
+      min={min}
+      max={max}
+      step={step}
+      placeholder={placeholder}
+      className={className}
+      value={isFocused ? localValue! : value}
+      onFocus={handleFocus}
+      onBlur={handleBlur}
+      onChange={(e) => {
+        if (isFocused) {
+          setLocalValue(e.target.value)
+        } else {
+          onChange(Number(e.target.value))
+        }
+      }}
+    />
+  )
+}
+
+/** Nullable numeric input for optional fields like Motor HP, IEC ratio */
+function NullableNumericInput({
+  value,
+  onChange,
+  min,
+  max,
+  step,
+  placeholder,
+}: {
+  value: number | null
+  onChange: (v: number | null) => void
+  min?: number
+  max?: number
+  step?: number
+  placeholder?: string
+}) {
+  const [localValue, setLocalValue] = useState<string | null>(null)
+  const isFocused = localValue !== null
+
+  const handleFocus = () => {
+    setLocalValue(value === null ? '' : String(value))
+  }
+
+  const handleBlur = () => {
+    if (!localValue || localValue.trim() === '') {
+      onChange(null)
+    } else {
+      const parsed = parseFloat(localValue)
+      if (!isNaN(parsed)) {
+        onChange(Math.max(min ?? -Infinity, Math.min(max ?? Infinity, parsed)))
+      }
+    }
+    setLocalValue(null)
+  }
+
+  return (
+    <Input
+      type="number"
+      min={min}
+      max={max}
+      step={step}
+      placeholder={placeholder}
+      value={isFocused ? localValue! : (value ?? '')}
+      onFocus={handleFocus}
+      onBlur={handleBlur}
+      onChange={(e) => {
+        if (isFocused) {
+          setLocalValue(e.target.value)
+        } else {
+          onChange(e.target.value ? Number(e.target.value) : null)
+        }
+      }}
+    />
+  )
+}
+
 export default function LoadTable() {
   const { loads, addLoad, updateLoad, removeLoad, generatorConfig } = useGeneratorSizingStore()
-  const [editingId, setEditingId] = useState<string | null>(null)
 
   const handleAddLoad = () => {
     const load = createDefaultLoad()
     addLoad(load)
-    setEditingId(load.id)
   }
 
   const handleTypeChange = (id: string, type: LoadType) => {
@@ -68,18 +181,7 @@ export default function LoadTable() {
     })
   }
 
-  const handlePowerUnitChange = (id: string, unit: PowerUnit, currentPower: number) => {
-    // Convert the displayed value
-    if (unit === 'HP') {
-      // User is switching TO HP display — store value stays in kW
-      updateLoad(id, { powerInputUnit: 'HP' })
-    } else {
-      updateLoad(id, { powerInputUnit: 'kW' })
-    }
-  }
-
   const handlePowerChange = (id: string, value: number, unit: PowerUnit) => {
-    // Always store in kW internally
     const kw = unit === 'HP' ? hpToKw(value) : value
     updateLoad(id, { ratedPower: kw })
   }
@@ -87,7 +189,7 @@ export default function LoadTable() {
   return (
     <div className="space-y-3">
       {/* Header row */}
-      <div className="hidden md:grid md:grid-cols-[2fr_1fr_1fr_0.7fr_0.5fr_0.5fr_0.3fr] gap-2 text-xs font-medium text-muted-foreground px-1">
+      <div className="hidden md:grid md:grid-cols-[2fr_1.2fr_1.8fr_0.8fr_0.6fr_0.6fr_0.3fr] gap-2 text-xs font-medium text-muted-foreground px-1">
         <span>Name</span>
         <span>Type</span>
         <span>Power</span>
@@ -100,7 +202,7 @@ export default function LoadTable() {
       {loads.map((load) => (
         <div key={load.id} className="space-y-2 border rounded-lg p-3">
           {/* Main row */}
-          <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_0.7fr_0.5fr_0.5fr_0.3fr] gap-2 items-end">
+          <div className="grid grid-cols-1 md:grid-cols-[2fr_1.2fr_1.8fr_0.8fr_0.6fr_0.6fr_0.3fr] gap-2 items-end">
             <Input
               placeholder="Load name"
               value={load.name}
@@ -119,20 +221,20 @@ export default function LoadTable() {
                 ))}
               </SelectContent>
             </Select>
-            <div className="flex gap-1">
-              <Input
-                type="number"
+            <div className="flex gap-1 min-w-0">
+              <NumericInput
                 min={0}
                 step={0.1}
                 value={load.powerInputUnit === 'HP' ? +(load.ratedPower / 0.7457).toFixed(2) : load.ratedPower}
-                onChange={(e) => handlePowerChange(load.id, Number(e.target.value), load.powerInputUnit)}
-                className="flex-1"
+                onChange={(v) => handlePowerChange(load.id, v, load.powerInputUnit)}
+                placeholder="Power"
+                className="min-w-0 flex-1"
               />
               <Select
                 value={load.powerInputUnit}
-                onValueChange={(v) => handlePowerUnitChange(load.id, v as PowerUnit, load.ratedPower)}
+                onValueChange={(v) => updateLoad(load.id, { powerInputUnit: v as PowerUnit })}
               >
-                <SelectTrigger className="w-[70px]">
+                <SelectTrigger className="w-[65px] shrink-0">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -141,27 +243,25 @@ export default function LoadTable() {
                 </SelectContent>
               </Select>
             </div>
-            <Input
-              type="number"
+            <NumericInput
               min={0.01}
               max={1}
               step={0.01}
               value={load.powerFactor}
-              onChange={(e) => updateLoad(load.id, { powerFactor: Number(e.target.value) })}
+              onChange={(v) => updateLoad(load.id, { powerFactor: v })}
             />
-            <Input
-              type="number"
+            <NumericInput
               min={1}
+              step={1}
               value={load.quantity}
-              onChange={(e) => updateLoad(load.id, { quantity: Number(e.target.value) })}
+              onChange={(v) => updateLoad(load.id, { quantity: Math.max(1, Math.round(v)) })}
             />
-            <Input
-              type="number"
+            <NumericInput
               min={0.01}
               max={1}
               step={0.01}
               value={load.diversityFactor}
-              onChange={(e) => updateLoad(load.id, { diversityFactor: Number(e.target.value) })}
+              onChange={(v) => updateLoad(load.id, { diversityFactor: v })}
             />
             <Button
               variant="ghost"
@@ -178,13 +278,12 @@ export default function LoadTable() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pl-2 border-l-2 border-yellow-400 ml-1">
               <div className="space-y-1">
                 <Label className="text-xs">Motor HP</Label>
-                <Input
-                  type="number"
+                <NullableNumericInput
                   min={0}
                   step={0.5}
-                  value={load.motorHp ?? ''}
+                  value={load.motorHp}
                   placeholder="HP"
-                  onChange={(e) => updateLoad(load.id, { motorHp: e.target.value ? Number(e.target.value) : null })}
+                  onChange={(v) => updateLoad(load.id, { motorHp: v })}
                 />
               </div>
               {generatorConfig.frequency === 60 ? (
@@ -208,13 +307,12 @@ export default function LoadTable() {
               ) : (
                 <div className="space-y-1">
                   <Label className="text-xs">IEC LR Ratio (kVA/kW)</Label>
-                  <Input
-                    type="number"
+                  <NullableNumericInput
                     min={0}
                     step={0.1}
-                    value={load.iecLockedRotorRatio ?? ''}
+                    value={load.iecLockedRotorRatio}
                     placeholder="e.g. 6.0"
-                    onChange={(e) => updateLoad(load.id, { iecLockedRotorRatio: e.target.value ? Number(e.target.value) : null })}
+                    onChange={(v) => updateLoad(load.id, { iecLockedRotorRatio: v })}
                   />
                 </div>
               )}
@@ -237,26 +335,24 @@ export default function LoadTable() {
               {load.startingMethod === 'vfd' && (
                 <div className="space-y-1">
                   <Label className="text-xs">VFD Multiplier (0.02–0.50)</Label>
-                  <Input
-                    type="number"
+                  <NumericInput
                     min={0.02}
                     max={0.50}
                     step={0.01}
                     value={load.vfdMultiplier ?? 0.30}
-                    onChange={(e) => updateLoad(load.id, { vfdMultiplier: Number(e.target.value) })}
+                    onChange={(v) => updateLoad(load.id, { vfdMultiplier: v })}
                   />
                 </div>
               )}
               {load.startingMethod === 'soft-starter' && (
                 <div className="space-y-1">
                   <Label className="text-xs">Soft Starter Multiplier (0.30–0.70)</Label>
-                  <Input
-                    type="number"
+                  <NumericInput
                     min={0.30}
                     max={0.70}
                     step={0.01}
                     value={load.softStarterMultiplier ?? 0.50}
-                    onChange={(e) => updateLoad(load.id, { softStarterMultiplier: Number(e.target.value) })}
+                    onChange={(v) => updateLoad(load.id, { softStarterMultiplier: v })}
                   />
                 </div>
               )}

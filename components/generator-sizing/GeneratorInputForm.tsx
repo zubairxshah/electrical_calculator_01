@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { useGeneratorSizingStore } from '@/stores/useGeneratorSizingStore'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
@@ -12,6 +13,29 @@ import {
 } from '@/components/ui/select'
 import { NEC_CLASSIFICATION_CONSTRAINTS } from '@/lib/calculations/generator-sizing/generatorData'
 import type { DutyType, Phases, Frequency, FuelType, NecClassification } from '@/types/generator-sizing'
+
+function NumericInput({
+  id, value, onChange, min, max, step,
+}: {
+  id?: string; value: number; onChange: (v: number) => void; min?: number; max?: number; step?: number
+}) {
+  const [local, setLocal] = useState<string | null>(null)
+  return (
+    <Input
+      id={id}
+      type="number"
+      min={min} max={max} step={step}
+      value={local !== null ? local : value}
+      onFocus={() => setLocal(value === 0 ? '' : String(value))}
+      onBlur={() => {
+        const p = parseFloat(local ?? '')
+        if (!isNaN(p)) onChange(Math.max(min ?? -Infinity, Math.min(max ?? Infinity, p)))
+        setLocal(null)
+      }}
+      onChange={(e) => local !== null ? setLocal(e.target.value) : onChange(Number(e.target.value))}
+    />
+  )
+}
 
 export default function GeneratorInputForm() {
   const { generatorConfig, setGeneratorConfig, fuelConfig, setFuelConfig } = useGeneratorSizingStore()
@@ -53,15 +77,12 @@ export default function GeneratorInputForm() {
       {generatorConfig.dutyType === 'prime' && (
         <div className="space-y-1.5">
           <Label htmlFor="primeLimit">Prime Loading Limit (%)</Label>
-          <Input
+          <NumericInput
             id="primeLimit"
-            type="number"
             min={50}
             max={100}
             value={Math.round(generatorConfig.primeLoadingLimit * 100)}
-            onChange={(e) =>
-              setGeneratorConfig({ primeLoadingLimit: Number(e.target.value) / 100 })
-            }
+            onChange={(v) => setGeneratorConfig({ primeLoadingLimit: v / 100 })}
           />
         </div>
       )}
@@ -69,12 +90,11 @@ export default function GeneratorInputForm() {
       {/* Voltage */}
       <div className="space-y-1.5">
         <Label htmlFor="voltage">System Voltage (V)</Label>
-        <Input
+        <NumericInput
           id="voltage"
-          type="number"
           min={100}
           value={generatorConfig.voltage}
-          onChange={(e) => setGeneratorConfig({ voltage: Number(e.target.value) })}
+          onChange={(v) => setGeneratorConfig({ voltage: v })}
         />
       </div>
 
@@ -115,16 +135,13 @@ export default function GeneratorInputForm() {
       {/* Subtransient Reactance */}
       <div className="space-y-1.5">
         <Label htmlFor="xd">Xd&apos;&apos; (pu)</Label>
-        <Input
+        <NumericInput
           id="xd"
-          type="number"
           step={0.01}
           min={0.05}
           max={0.35}
           value={generatorConfig.subtransientReactance}
-          onChange={(e) =>
-            setGeneratorConfig({ subtransientReactance: Number(e.target.value) })
-          }
+          onChange={(v) => setGeneratorConfig({ subtransientReactance: v })}
         />
       </div>
 
