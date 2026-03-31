@@ -82,6 +82,13 @@ const navigationItems = [
         description: 'kVA rating, losses & regulation (IEC/IEEE)',
         priority: 'P1',
       },
+      {
+        name: 'Generator Sizing',
+        href: '/generator-sizing',
+        icon: Zap,
+        description: 'Standby/prime gen sizing (ISO 8528, IEEE 3006.4)',
+        priority: 'P1',
+      },
     ]
   },
   {
