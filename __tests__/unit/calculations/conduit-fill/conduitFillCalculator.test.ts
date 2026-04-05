@@ -10,11 +10,13 @@ function makeConductor(wireSize: string, insulationType: string, quantity: numbe
     quantity,
     isCompact: false,
     areaSqIn,
+    areaMm2: areaSqIn * 645.16,
   };
 }
 
 function makeInput(overrides: Partial<ConduitFillInput> = {}): ConduitFillInput {
   return {
+    standard: 'NEC',
     conduitType: 'EMT',
     tradeSize: '3/4',
     conductors: [],

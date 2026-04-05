@@ -201,7 +201,7 @@ describe('NEC Chapter 9 Table Data', () => {
 
   describe('Metadata arrays', () => {
     it('should export conduit types with id and label', () => {
-      expect(CONDUIT_TYPES.length).toBe(7);
+      expect(CONDUIT_TYPES.length).toBe(12); // 7 NEC + 5 IEC
       const emt = CONDUIT_TYPES.find(t => t.id === 'EMT');
       expect(emt).toBeDefined();
       expect(emt!.label).toContain('EMT');

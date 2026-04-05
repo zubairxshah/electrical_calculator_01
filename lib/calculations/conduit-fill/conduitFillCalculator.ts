@@ -1,4 +1,4 @@
-// Conduit Fill Calculator — NEC 2020 Chapter 9
+// Conduit Fill Calculator — NEC 2020 Chapter 9 + IEC 61386 / BS 7671
 // Core calculation logic for conduit/raceway fill compliance
 
 import { create, all } from 'mathjs';
@@ -7,13 +7,17 @@ import type {
   ConduitFillResult,
   ConductorDetail,
   ConductorEntry,
+  ConduitStandard,
   TradeSize,
 } from '@/types/conduit-fill';
 import {
   getConduitArea,
+  getConduitAreaMm2,
+  getConductorAreaMm2,
   getFillLimit,
   getAvailableTradeSizes,
   INSULATION_TYPES,
+  isIECInsulation,
 } from './conduitFillData';
 
 const math = create(all, { number: 'BigNumber', precision: 16 });
@@ -30,13 +34,26 @@ export function calculateConduitFill(input: ConduitFillInput): ConduitFillResult
     throw new Error('At least one conductor is required for fill calculation');
   }
 
-  // Look up conduit internal area from NEC Table 4
+  const standard: ConduitStandard = input.standard ?? 'NEC';
+  const isIEC = standard === 'IEC';
+
+  // Look up conduit internal area
   const conduitInternalArea = getConduitArea(input.conduitType, input.tradeSize);
+  const conduitInternalAreaMm2 = getConduitAreaMm2(input.conduitType, input.tradeSize);
 
   // Calculate total conductor count and area
   let totalConductorCount = 0;
   let totalConductorArea = math.bignumber(0);
-  const necTableRefs = new Set<string>(['NEC Table 1', 'NEC Chapter 9 Table 4']);
+  let totalConductorAreaMm2Bn = math.bignumber(0);
+
+  const tableRefs = new Set<string>();
+  if (isIEC) {
+    tableRefs.add('BS 7671 / IEC 60364-5-52');
+    tableRefs.add('IEC 61386 (Conduit Sizes)');
+  } else {
+    tableRefs.add('NEC Table 1');
+    tableRefs.add('NEC Chapter 9 Table 4');
+  }
 
   const conductorDetails: ConductorDetail[] = input.conductors.map((conductor) => {
     const qty = conductor.quantity;
@@ -46,14 +63,26 @@ export function calculateConduitFill(input: ConduitFillInput): ConduitFillResult
     const entryTotal = math.multiply(areaPerConductor, math.bignumber(qty));
     totalConductorArea = math.add(totalConductorArea, entryTotal) as math.BigNumber;
 
-    // Determine NEC table reference for this conductor
+    // mm² area
+    const areaMm2 = conductor.areaMm2 ?? conductor.areaSqIn * 645.16;
+    const entryTotalMm2 = math.multiply(math.bignumber(areaMm2), math.bignumber(qty));
+    totalConductorAreaMm2Bn = math.add(totalConductorAreaMm2Bn, entryTotalMm2) as math.BigNumber;
+
+    // Determine table reference for this conductor
     const insulationInfo = INSULATION_TYPES.find((t) => t.id === conductor.insulationType);
-    const tableRef = conductor.insulationType === 'BARE'
-      ? 'NEC Chapter 9 Table 8'
-      : conductor.isCompact
-        ? 'NEC Chapter 9 Table 5A'
-        : 'NEC Chapter 9 Table 5';
-    necTableRefs.add(tableRef);
+    let tableRef: string;
+    if (isIEC) {
+      tableRef = conductor.insulationType === 'BARE_IEC'
+        ? 'BS 7671 Table 54.7'
+        : 'BS 7671 Appendix C';
+    } else {
+      tableRef = conductor.insulationType === 'BARE'
+        ? 'NEC Chapter 9 Table 8'
+        : conductor.isCompact
+          ? 'NEC Chapter 9 Table 5A'
+          : 'NEC Chapter 9 Table 5';
+    }
+    tableRefs.add(tableRef);
 
     return {
       entryId: conductor.id,
@@ -61,16 +90,19 @@ export function calculateConduitFill(input: ConduitFillInput): ConduitFillResult
       insulationType: insulationInfo?.label ?? conductor.insulationType,
       quantity: qty,
       areaPerConductor: conductor.areaSqIn,
+      areaPerConductorMm2: areaMm2,
       totalArea: Number(entryTotal.toString()),
+      totalAreaMm2: Number(entryTotalMm2.toString()),
       percentOfFill: 0, // filled after total is known
       necTableRef: tableRef,
     };
   });
 
   const totalAreaNum = Number(totalConductorArea.toString());
+  const totalAreaMm2Num = Number(totalConductorAreaMm2Bn.toString());
 
-  // Determine fill limit from NEC Table 1
-  const fillLimit = getFillLimit(totalConductorCount, input.isNipple);
+  // Determine fill limit
+  const fillLimit = getFillLimit(totalConductorCount, input.isNipple, standard);
 
   // Calculate fill percentage
   const fillPercentage = (totalAreaNum / conduitInternalArea) * 100;
@@ -78,6 +110,8 @@ export function calculateConduitFill(input: ConduitFillInput): ConduitFillResult
   // Calculate allowable fill area and remaining
   const allowableFillArea = conduitInternalArea * (fillLimit / 100);
   const remainingArea = allowableFillArea - totalAreaNum;
+  const allowableFillAreaMm2 = conduitInternalAreaMm2 * (fillLimit / 100);
+  const remainingAreaMm2 = allowableFillAreaMm2 - totalAreaMm2Num;
 
   // Pass/fail determination
   const pass = fillPercentage <= fillLimit;
@@ -92,20 +126,23 @@ export function calculateConduitFill(input: ConduitFillInput): ConduitFillResult
 
   // Add nipple reference if applicable
   if (input.isNipple) {
-    necTableRefs.add('NEC 376.22 (Conduit Nipple)');
+    tableRefs.add(isIEC ? 'IEC 60364 (Short Run)' : 'NEC 376.22 (Conduit Nipple)');
   }
 
   return {
     conduitInternalArea,
+    conduitInternalAreaMm2,
     totalConductorArea: totalAreaNum,
+    totalConductorAreaMm2: totalAreaMm2Num,
     fillPercentage,
     fillLimit,
     totalConductorCount,
     pass,
     remainingArea,
+    remainingAreaMm2,
     utilizationRatio,
     conductorDetails,
-    necReferences: Array.from(necTableRefs),
+    necReferences: Array.from(tableRefs),
     minimumConduitSize: null,
     noConduitFits: false,
   };
@@ -122,7 +159,8 @@ export function calculateConduitFill(input: ConduitFillInput): ConduitFillResult
 export function findMinimumConduitSize(
   conduitType: string,
   conductors: ConductorEntry[],
-  isNipple: boolean
+  isNipple: boolean,
+  standard: ConduitStandard = 'NEC'
 ): TradeSize | null {
   if (conductors.length === 0) return null;
 
@@ -140,7 +178,7 @@ export function findMinimumConduitSize(
   }
 
   const totalAreaNum = Number(totalArea.toString());
-  const fillLimit = getFillLimit(totalCount, isNipple);
+  const fillLimit = getFillLimit(totalCount, isNipple, standard);
 
   // Iterate ascending trade sizes
   const tradeSizes = getAvailableTradeSizes(conduitType as any);

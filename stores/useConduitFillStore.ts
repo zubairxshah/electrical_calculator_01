@@ -5,17 +5,24 @@ import type {
   ConduitFillActions,
   ConduitFillHistoryEntry,
   ConduitFillResult,
+  ConduitStandard,
   ConduitTypeId,
   InsulationTypeId,
   UnitSystem,
   ConductorEntry,
 } from '@/types/conduit-fill'
-import { getConductorArea, getAvailableTradeSizes } from '@/lib/calculations/conduit-fill/conduitFillData'
+import {
+  getConductorArea,
+  getConductorAreaMm2,
+  getAvailableTradeSizes,
+  getConduitTypesForStandard,
+} from '@/lib/calculations/conduit-fill/conduitFillData'
 
 const HISTORY_KEY = 'electromate-conduit-fill-history'
 const MAX_HISTORY = 50
 
 const initialState: ConduitFillState = {
+  standard: 'NEC',
   conduitType: 'EMT',
   tradeSize: '3/4',
   conductors: [],
@@ -48,8 +55,21 @@ export const useConduitFillStore = create<ConduitFillState & ConduitFillActions>
       ...initialState,
       history: getHistory(),
 
+      setStandard: (std: ConduitStandard) => {
+        const types = getConduitTypesForStandard(std)
+        const defaultType = types[0]?.id ?? 'EMT'
+        const sizes = getAvailableTradeSizes(defaultType)
+        set({
+          standard: std,
+          conduitType: defaultType,
+          tradeSize: sizes[0]?.imperial ?? '',
+          conductors: [],
+          unitSystem: std === 'IEC' ? 'metric' : 'imperial',
+          results: null,
+        })
+      },
+
       setConduitType: (type: ConduitTypeId) => {
-        // Reset trade size if current one is not valid for new type
         const sizes = getAvailableTradeSizes(type)
         const currentSize = get().tradeSize
         const validSize = sizes.find(s => s.imperial === currentSize)
@@ -65,15 +85,19 @@ export const useConduitFillStore = create<ConduitFillState & ConduitFillActions>
       addConductor: (entry) => {
         const id = `c-${Date.now()}-${nextId++}`
         let areaSqIn = 0
+        let areaMm2 = 0
         try {
           areaSqIn = getConductorArea(entry.wireSize, entry.insulationType, entry.isCompact)
+          areaMm2 = getConductorAreaMm2(entry.wireSize, entry.insulationType, entry.isCompact)
         } catch {
           areaSqIn = 0
+          areaMm2 = 0
         }
         const newConductor: ConductorEntry = {
           ...entry,
           id,
           areaSqIn,
+          areaMm2,
         }
         set((state) => ({
           conductors: [...state.conductors, newConductor],
@@ -86,7 +110,6 @@ export const useConduitFillStore = create<ConduitFillState & ConduitFillActions>
           const conductors = state.conductors.map((c) => {
             if (c.id !== id) return c
             const updated = { ...c, ...updates }
-            // Re-lookup area if wire size, insulation, or compact changed
             if (updates.wireSize !== undefined || updates.insulationType !== undefined || updates.isCompact !== undefined) {
               try {
                 updated.areaSqIn = getConductorArea(
@@ -94,8 +117,14 @@ export const useConduitFillStore = create<ConduitFillState & ConduitFillActions>
                   updated.insulationType,
                   updated.isCompact
                 )
+                updated.areaMm2 = getConductorAreaMm2(
+                  updated.wireSize,
+                  updated.insulationType,
+                  updated.isCompact
+                )
               } catch {
                 updated.areaSqIn = 0
+                updated.areaMm2 = 0
               }
             }
             return updated
@@ -149,6 +178,7 @@ export const useConduitFillStore = create<ConduitFillState & ConduitFillActions>
     {
       name: 'electromate-conduit-fill',
       partialize: (state) => ({
+        standard: state.standard,
         conduitType: state.conduitType,
         tradeSize: state.tradeSize,
         isNipple: state.isNipple,
