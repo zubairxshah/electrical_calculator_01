@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { History, AlertCircle } from 'lucide-react'
@@ -10,6 +10,7 @@ import { validateConduitFillInput } from '@/lib/validation/conduitFillValidation
 import ConduitFillInputForm from '@/components/conduit-fill/ConduitFillInputForm'
 import ConduitFillResults from '@/components/conduit-fill/ConduitFillResults'
 import ConduitFillHistorySidebar from '@/components/conduit-fill/ConduitFillHistorySidebar'
+import ConduitFillReferenceDialog from '@/components/conduit-fill/ConduitFillReferenceDialog'
 import { CONDUIT_TYPES } from '@/lib/calculations/conduit-fill/conduitFillData'
 import { downloadConduitFillPDF } from '@/lib/pdfGenerator.conduitFill'
 
@@ -20,18 +21,33 @@ export default function ConduitFillTool() {
   const [showHistory, setShowHistory] = useState(false)
   const [isExportingPDF, setIsExportingPDF] = useState(false)
 
-  const handleCalculate = useCallback(() => {
+  const handleCalculate = () => {
     setIsCalculating(true)
     setCalculationError(null)
 
+    // Read current values directly from the store to avoid stale closures
+    const {
+      standard,
+      conduitType,
+      tradeSize,
+      conductors,
+      isNipple,
+      unitSystem,
+      projectName,
+      projectRef,
+      setResults,
+      addToHistory,
+    } = useConduitFillStore.getState()
+
     const inputObj = {
-      conduitType: store.conduitType,
-      tradeSize: store.tradeSize,
-      conductors: store.conductors,
-      isNipple: store.isNipple,
-      unitSystem: store.unitSystem,
-      projectName: store.projectName,
-      projectRef: store.projectRef,
+      standard,
+      conduitType,
+      tradeSize,
+      conductors,
+      isNipple,
+      unitSystem,
+      projectName,
+      projectRef,
     }
 
     const validation = validateConduitFillInput(inputObj)
@@ -46,38 +62,41 @@ export default function ConduitFillTool() {
 
       // Also find minimum conduit size
       const minSize = findMinimumConduitSize(
-        store.conduitType,
-        store.conductors,
-        store.isNipple
+        conduitType,
+        conductors,
+        isNipple,
+        standard
       )
       result.minimumConduitSize = minSize
-      result.noConduitFits = minSize === null && store.conductors.length > 0
+      result.noConduitFits = minSize === null && conductors.length > 0
 
-      store.setResults(result)
+      setResults(result)
 
       // Add to history
-      const conduitLabel = CONDUIT_TYPES.find(t => t.id === store.conduitType)?.label?.split(' - ')[0] ?? store.conduitType
-      const totalConductors = store.conductors.reduce((sum, c) => sum + c.quantity, 0)
-      store.addToHistory({
+      const conduitLabel = CONDUIT_TYPES.find(t => t.id === conduitType)?.label?.split(' - ')[0] ?? conduitType
+      const totalConductors = conductors.reduce((sum, c) => sum + c.quantity, 0)
+      const sizeLabel = standard === 'IEC' ? `${tradeSize}mm` : `${tradeSize}"`
+      addToHistory({
         id: `h-${Date.now()}`,
         timestamp: new Date().toISOString(),
         input: inputObj,
         result,
-        label: `${conduitLabel} ${store.tradeSize}" — ${totalConductors} conductor${totalConductors !== 1 ? 's' : ''}`,
+        label: `${conduitLabel} ${sizeLabel} — ${totalConductors} conductor${totalConductors !== 1 ? 's' : ''}`,
       })
     } catch (err) {
       setCalculationError(err instanceof Error ? err.message : 'Calculation failed')
     } finally {
       setIsCalculating(false)
     }
-  }, [store])
+  }
 
-  const handleExportPDF = useCallback(async () => {
+  const handleExportPDF = async () => {
     if (!store.results) return
     setIsExportingPDF(true)
     try {
       await downloadConduitFillPDF({
         input: {
+          standard: store.standard,
           conduitType: store.conduitType,
           tradeSize: store.tradeSize,
           conductors: store.conductors,
@@ -93,20 +112,27 @@ export default function ConduitFillTool() {
     } finally {
       setIsExportingPDF(false)
     }
-  }, [store])
+  }
+
+  const isIEC = store.standard === 'IEC'
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
           <h1 className="text-2xl font-bold">Conduit Fill Calculator</h1>
           <p className="text-muted-foreground text-sm">
-            NEC 2020 Chapter 9 — Conduit/Raceway Fill Compliance
+            {isIEC
+              ? 'IEC 61386 / BS 7671 — Conduit Fill Compliance'
+              : 'NEC 2020 Chapter 9 — Conduit/Raceway Fill Compliance'}
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={() => setShowHistory(true)}>
-          <History className="h-4 w-4 mr-2" /> History
-        </Button>
+        <div className="flex gap-2">
+          <ConduitFillReferenceDialog />
+          <Button variant="outline" size="sm" onClick={() => setShowHistory(true)}>
+            <History className="h-4 w-4 mr-2" /> History
+          </Button>
+        </div>
       </div>
 
       <Card>
@@ -115,6 +141,7 @@ export default function ConduitFillTool() {
         </CardHeader>
         <CardContent>
           <ConduitFillInputForm
+            standard={store.standard}
             conduitType={store.conduitType}
             tradeSize={store.tradeSize}
             conductors={store.conductors}
@@ -122,6 +149,7 @@ export default function ConduitFillTool() {
             unitSystem={store.unitSystem}
             projectName={store.projectName}
             projectRef={store.projectRef}
+            onStandardChange={store.setStandard}
             onConduitTypeChange={store.setConduitType}
             onTradeSizeChange={store.setTradeSize}
             onAddConductor={store.addConductor}
@@ -151,6 +179,7 @@ export default function ConduitFillTool() {
       {store.results && (
         <ConduitFillResults
           results={store.results}
+          standard={store.standard}
           unitSystem={store.unitSystem}
           onExportPDF={handleExportPDF}
           isExportingPDF={isExportingPDF}

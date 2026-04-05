@@ -3,10 +3,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { CheckCircle2, XCircle, AlertTriangle, Info } from 'lucide-react'
-import type { ConduitFillResult, UnitSystem, TradeSize } from '@/types/conduit-fill'
+import type { ConduitFillResult, ConduitStandard, UnitSystem } from '@/types/conduit-fill'
 
 interface Props {
   results: ConduitFillResult
+  standard: ConduitStandard
   unitSystem: UnitSystem
   onExportPDF?: () => void
   isExportingPDF?: boolean
@@ -16,18 +17,22 @@ const SQ_IN_TO_MM2 = 645.16
 
 export default function ConduitFillResults({
   results,
+  standard,
   unitSystem,
   onExportPDF,
   isExportingPDF,
 }: Props) {
   const {
     conduitInternalArea,
+    conduitInternalAreaMm2,
     totalConductorArea,
+    totalConductorAreaMm2,
     fillPercentage,
     fillLimit,
     totalConductorCount,
     pass,
     remainingArea,
+    remainingAreaMm2,
     utilizationRatio,
     conductorDetails,
     necReferences,
@@ -35,9 +40,13 @@ export default function ConduitFillResults({
     noConduitFits,
   } = results
 
-  const formatArea = (sqIn: number) => {
-    if (unitSystem === 'metric') {
-      return `${(sqIn * SQ_IN_TO_MM2).toFixed(1)} mm²`
+  const isIEC = standard === 'IEC'
+  const useMetric = isIEC || unitSystem === 'metric'
+
+  const formatArea = (sqIn: number, mm2?: number) => {
+    if (useMetric) {
+      const val = mm2 ?? sqIn * SQ_IN_TO_MM2
+      return `${val.toFixed(1)} mm²`
     }
     return `${sqIn.toFixed(4)} in²`
   }
@@ -60,6 +69,8 @@ export default function ConduitFillResults({
     : isWarning
       ? 'bg-yellow-500'
       : 'bg-green-500'
+
+  const remainingVal = useMetric ? remainingAreaMm2 : remainingArea
 
   return (
     <div className="space-y-4">
@@ -101,11 +112,11 @@ export default function ConduitFillResults({
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
             <div>
               <span className="text-muted-foreground">Conduit Area</span>
-              <p className="font-semibold">{formatArea(conduitInternalArea)}</p>
+              <p className="font-semibold">{formatArea(conduitInternalArea, conduitInternalAreaMm2)}</p>
             </div>
             <div>
               <span className="text-muted-foreground">Conductor Area</span>
-              <p className="font-semibold">{formatArea(totalConductorArea)}</p>
+              <p className="font-semibold">{formatArea(totalConductorArea, totalConductorAreaMm2)}</p>
             </div>
             <div>
               <span className="text-muted-foreground">Fill Percentage</span>
@@ -121,8 +132,8 @@ export default function ConduitFillResults({
             </div>
             <div>
               <span className="text-muted-foreground">Remaining Area</span>
-              <p className={`font-semibold ${remainingArea < 0 ? 'text-destructive' : ''}`}>
-                {formatArea(Math.abs(remainingArea))} {remainingArea < 0 ? 'over' : 'available'}
+              <p className={`font-semibold ${remainingVal < 0 ? 'text-destructive' : ''}`}>
+                {formatArea(Math.abs(remainingArea), Math.abs(remainingAreaMm2))} {remainingVal < 0 ? 'over' : 'available'}
               </p>
             </div>
           </div>
@@ -139,10 +150,17 @@ export default function ConduitFillResults({
             </CardTitle>
           </CardHeader>
           <CardContent className="text-sm">
-            <p>
-              Minimum size: <strong>{minimumConduitSize.imperial}&quot;</strong>{' '}
-              (Metric {minimumConduitSize.metric}) — Internal area: {formatArea(minimumConduitSize.internalAreaSqIn)}
-            </p>
+            {isIEC ? (
+              <p>
+                Minimum size: <strong>{minimumConduitSize.metricLabel ?? minimumConduitSize.imperial + 'mm'}</strong>{' '}
+                — Internal area: {formatArea(minimumConduitSize.internalAreaSqIn, minimumConduitSize.internalAreaMm2)}
+              </p>
+            ) : (
+              <p>
+                Minimum size: <strong>{minimumConduitSize.imperial}&quot;</strong>{' '}
+                (Metric {minimumConduitSize.metric}) — Internal area: {formatArea(minimumConduitSize.internalAreaSqIn, minimumConduitSize.internalAreaMm2)}
+              </p>
+            )}
           </CardContent>
         </Card>
       )}
@@ -169,7 +187,7 @@ export default function ConduitFillResults({
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b text-left text-muted-foreground">
-                  <th className="pb-2">Wire Size</th>
+                  <th className="pb-2">{isIEC ? 'Size (mm²)' : 'Wire Size'}</th>
                   <th className="pb-2">Insulation</th>
                   <th className="pb-2 text-right">Qty</th>
                   <th className="pb-2 text-right">Area/ea</th>
@@ -181,11 +199,11 @@ export default function ConduitFillResults({
               <tbody>
                 {conductorDetails.map((d) => (
                   <tr key={d.entryId} className="border-b border-muted">
-                    <td className="py-1.5">{d.wireSize}</td>
+                    <td className="py-1.5">{d.wireSize}{isIEC ? ' mm²' : ''}</td>
                     <td className="py-1.5">{d.insulationType}</td>
                     <td className="py-1.5 text-right">{d.quantity}</td>
-                    <td className="py-1.5 text-right">{formatArea(d.areaPerConductor)}</td>
-                    <td className="py-1.5 text-right font-medium">{formatArea(d.totalArea)}</td>
+                    <td className="py-1.5 text-right">{formatArea(d.areaPerConductor, d.areaPerConductorMm2)}</td>
+                    <td className="py-1.5 text-right font-medium">{formatArea(d.totalArea, d.totalAreaMm2)}</td>
                     <td className="py-1.5 text-right">{d.percentOfFill.toFixed(1)}%</td>
                     <td className="py-1.5 text-xs text-muted-foreground">{d.necTableRef}</td>
                   </tr>
@@ -196,7 +214,7 @@ export default function ConduitFillResults({
                   <td className="pt-2" colSpan={2}>Total</td>
                   <td className="pt-2 text-right">{totalConductorCount}</td>
                   <td className="pt-2"></td>
-                  <td className="pt-2 text-right">{formatArea(totalConductorArea)}</td>
+                  <td className="pt-2 text-right">{formatArea(totalConductorArea, totalConductorAreaMm2)}</td>
                   <td className="pt-2 text-right">{fillPercentage.toFixed(1)}%</td>
                   <td></td>
                 </tr>
@@ -206,19 +224,21 @@ export default function ConduitFillResults({
         </CardContent>
       </Card>
 
-      {/* NEC References */}
+      {/* References */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">NEC References</CardTitle>
+          <CardTitle className="text-base">{isIEC ? 'IEC / BS EN References' : 'NEC References'}</CardTitle>
         </CardHeader>
         <CardContent>
           <ul className="text-sm space-y-1 text-muted-foreground">
             {necReferences.map((ref) => (
-              <li key={ref}>• {ref}</li>
+              <li key={ref}>&#8226; {ref}</li>
             ))}
           </ul>
           <p className="text-xs text-muted-foreground mt-3 italic">
-            Based on NEC 2020 Chapter 9. Calculations for informational purposes; PE stamp/certification is user&apos;s responsibility.
+            {isIEC
+              ? 'Based on BS 7671 18th Edition and IEC 61386. Calculations for informational purposes; verification by a qualified engineer is the user\u2019s responsibility.'
+              : 'Based on NEC 2020 Chapter 9. Calculations for informational purposes; PE stamp/certification is user\u2019s responsibility.'}
           </p>
         </CardContent>
       </Card>
