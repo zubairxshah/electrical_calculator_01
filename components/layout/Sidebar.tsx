@@ -141,6 +141,13 @@ const navigationItems = [
         description: 'Indoor lighting calculations (IESNA)',
         priority: 'P1',
       },
+      {
+        name: 'Conduit Fill',
+        href: '/conduit-fill',
+        icon: Cable,
+        description: 'NEC Chapter 9 conduit/raceway fill compliance',
+        priority: 'P1',
+      },
     ]
   },
   {

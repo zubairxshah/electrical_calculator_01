@@ -151,6 +151,18 @@ const calculatorCards: CalculatorCard[] = [
     tags: ['illumination', 'lux', 'IESNA'],
   },
   {
+    id: 'conduit-fill',
+    title: 'Conduit Fill',
+    description: 'NEC Chapter 9 conduit/raceway fill compliance with minimum size recommendation.',
+    icon: 'cable',
+    href: '/conduit-fill',
+    priority: 'P1',
+    status: 'active',
+    category: 'Design & Installation',
+    isNew: true,
+    tags: ['NEC', 'conduit', 'raceway', 'fill'],
+  },
+  {
     id: 'solar',
     title: 'Solar Array Sizer',
     description: 'Design solar panel arrays for off-grid and grid-tied systems.',
