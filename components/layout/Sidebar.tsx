@@ -180,6 +180,13 @@ const navigationItems = [
         priority: 'P1',
       },
       {
+        name: 'Motor Starting',
+        href: '/motor-starting',
+        icon: Activity,
+        description: 'DOL/Y-Δ/autotrans/soft-starter/VFD (IEEE 3002.7, IEEE 1668)',
+        priority: 'P1',
+      },
+      {
         name: 'Battery Comparison',
         href: '/battery-comparison',
         icon: Scale,

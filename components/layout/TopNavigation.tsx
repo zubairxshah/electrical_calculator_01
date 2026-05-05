@@ -177,6 +177,12 @@ const navigationItems: NavCategory[] = [
         priority: 'P1',
       },
       {
+        name: 'Motor Starting',
+        href: '/motor-starting',
+        description: 'DOL/Y-Δ/autotrans/soft-starter/VFD (IEEE 3002.7, IEEE 1668)',
+        priority: 'P1',
+      },
+      {
         name: 'Battery Comparison',
         href: '/battery-comparison',
         description: 'Compare battery technologies',
