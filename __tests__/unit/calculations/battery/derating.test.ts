@@ -11,6 +11,8 @@ import {
   efficiencyFactor,
   peukertDerate,
   resolveBaseFactors,
+  effectivePeukertExponent,
+  derivedTemperatureFactor,
   AGING_DEFAULT,
 } from '@/lib/calculations/battery/derating'
 import { getBatteryTypeById } from '@/lib/standards/batteryTypes'
@@ -89,6 +91,22 @@ describe('peukertDerate', () => {
   })
   it('is exactly 1.0 when exponent is 1.0', () => {
     expect(peukertDerate(0.5, 1.0)).toBeCloseTo(1.0, 6)
+  })
+})
+
+describe('manual overrides (factor table)', () => {
+  it('temperatureFactor uses a direct override over the derived value', () => {
+    const f = temperatureFactor(baseInputs({ temperature: 0, tempFactorOverride: 0.9 }), agm)
+    expect(f.value).toBe(0.9)
+    expect(f.source).toBe('user')
+    // derived (no override) would be 0.6 at 0°C
+    expect(derivedTemperatureFactor(0, agm)).toBeCloseTo(0.6, 6)
+  })
+  it('effectivePeukertExponent uses an override over the chemistry default', () => {
+    expect(effectivePeukertExponent(baseInputs(), agm).value).toBe(agm.peukertExponent)
+    const o = effectivePeukertExponent(baseInputs({ peukertExponentOverride: 1.35 }), agm)
+    expect(o.value).toBe(1.35)
+    expect(o.source).toBe('user')
   })
 })
 

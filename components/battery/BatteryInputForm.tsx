@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
 import { DatasheetPicker } from './DatasheetPicker'
+import { FactorTable } from './FactorTable'
 import { getBatteryTypeById } from '@/lib/standards/batteryTypes'
 import { CANONICAL_CHEMISTRY_ORDER, chemistryDisplayLabel, toCanonicalChemistry } from '@/lib/standards/batteryChemistryMap'
 import type { BatteryCalculatorInputs, FieldValidation } from '@/lib/types'
@@ -193,7 +194,7 @@ export function BatteryInputForm() {
         </div>
       </div>
 
-      {/* Advanced overrides */}
+      {/* Derating factors table + (sizing-only) bank fields */}
       <div>
         <Button
           type="button"
@@ -203,39 +204,13 @@ export function BatteryInputForm() {
           onClick={() => setShowAdvanced((s) => !s)}
         >
           <SlidersHorizontal className="h-4 w-4" />
-          {showAdvanced ? 'Hide' : 'Show'} advanced overrides
+          {showAdvanced ? 'Hide' : 'Show'} derating factors &amp; overrides
         </Button>
         {showAdvanced && (
-          <div className="mt-3 grid grid-cols-1 gap-4 md:grid-cols-2">
-            <InputField
-              label="Depth of Discharge override"
-              value={num(inputs.dodOverride)}
-              onChange={(v) => setInputs({ dodOverride: v === '' ? undefined : Number(v) })}
-              unit="0–1"
-              placeholder={profile ? (profile.depthOfDischarge.recommended / 100).toString() : '0.5'}
-              step="0.05"
-              validation={getFieldValidation('dodOverride')}
-            />
-            <InputField
-              label="Efficiency override"
-              value={num(inputs.efficiency)}
-              onChange={(v) => setInputs({ efficiency: v === '' ? undefined : Number(v) })}
-              unit="0–1"
-              placeholder={profile ? (profile.efficiency.roundTrip.typical / 100).toString() : '0.9'}
-              step="0.01"
-              validation={getFieldValidation('efficiency')}
-            />
-            <InputField
-              label="Aging factor (EOL)"
-              value={num(inputs.agingFactor)}
-              onChange={(v) => setInputs({ agingFactor: v === '' ? undefined : Number(v) })}
-              unit="0.5–1"
-              placeholder="0.8"
-              step="0.05"
-              validation={getFieldValidation('agingFactor')}
-            />
+          <div className="mt-3 space-y-4">
+            <FactorTable />
             {inputs.mode === 'sizing' && (
-              <>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <InputField
                   label="Cell/block voltage"
                   value={num(inputs.cellBlockVoltage)}
@@ -250,7 +225,7 @@ export function BatteryInputForm() {
                   unit="Ah"
                   placeholder="100"
                 />
-              </>
+              </div>
             )}
           </div>
         )}

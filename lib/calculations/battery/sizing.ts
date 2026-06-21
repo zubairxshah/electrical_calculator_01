@@ -11,6 +11,7 @@ import {
   peukertDerate,
   assembleAppliedFactors,
   defaultCellBlockVoltage,
+  effectivePeukertExponent,
 } from './derating'
 import { computeBankConfig, DEFAULT_UNIT_AH } from './bankConfig'
 import { buildDischargeCurve } from './dischargeCurve'
@@ -28,7 +29,7 @@ export function sizeForRuntime(inputs: BatteryCalculatorInputs): BatteryCalculat
   }
   const { voltage, loadWatts } = inputs
   const base = resolveBaseFactors(inputs, profile)
-  const exponent = profile.peukertExponent
+  const { value: exponent, source: peukertSource } = effectivePeukertExponent(inputs, profile)
 
   // Solve required nameplate Ah; Peukert depends on the result, so iterate.
   let requiredAh = (loadWatts * target) / (voltage * base.fraction) // start with Peukert = 1
@@ -56,7 +57,7 @@ export function sizeForRuntime(inputs: BatteryCalculatorInputs): BatteryCalculat
   const backupTimeHours = (effectiveCapacityAh * voltage) / loadWatts // delivered by the rounded bank
 
   const bankConfig = { ...provisional, deliveredCapacityAh: effectiveCapacityAh }
-  const appliedFactors = assembleAppliedFactors(base, peukert, exponent)
+  const appliedFactors = assembleAppliedFactors(base, peukert, exponent, peukertSource)
 
   const ctx = {
     inputs,

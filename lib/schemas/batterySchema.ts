@@ -85,6 +85,18 @@ export const BatteryInputSchema = z
       .max(1, 'Depth of discharge cannot exceed 1.0 (100%)')
       .optional(),
 
+    tempFactorOverride: z
+      .number()
+      .positive('Temperature correction must be greater than 0')
+      .max(1.2, 'Temperature correction cannot exceed 1.2')
+      .optional(),
+
+    peukertExponentOverride: z
+      .number()
+      .min(1, 'Peukert exponent must be at least 1.0')
+      .max(1.6, 'Peukert exponent must not exceed 1.6')
+      .optional(),
+
     cellBlockVoltage: z.number().positive('Cell/block voltage must be greater than 0').optional(),
 
     unitCapacityAh: z.number().positive('Unit capacity must be greater than 0').optional(),

@@ -140,6 +140,10 @@ export interface BatteryCalculatorInputs {
   temperature?: number
   /** Depth-of-discharge override (fraction 0-1). Default = chemistry recommended; clamped to max. */
   dodOverride?: number
+  /** Temperature-correction factor override (fraction 0-1). Default = derived from temperature. */
+  tempFactorOverride?: number
+  /** Peukert exponent override. Default = chemistry peukertExponent. */
+  peukertExponentOverride?: number
   /** Nominal per-cell/block voltage for series count (V). Default by chemistry. */
   cellBlockVoltage?: number
   /** Capacity of one battery unit/string (Ah) for parallel-string sizing. Default 100. */

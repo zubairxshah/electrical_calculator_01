@@ -30,20 +30,40 @@ export function dodFactor(inputs: BatteryCalculatorInputs, profile: BatteryTypeS
 }
 
 /**
- * Temperature-correction factor. 1.0 at/above the chemistry optimal band; below it,
- * reduce by tempCoefficient %/°C of deviation, floored at TEMP_FACTOR_FLOOR.
+ * Temperature-correction factor derived from the operating temperature.
+ * 1.0 at/above the chemistry optimal band; below it, reduce by tempCoefficient
+ * %/°C of deviation, floored at TEMP_FACTOR_FLOOR.
  */
-export function temperatureFactor(inputs: BatteryCalculatorInputs, profile: BatteryTypeSpec): FactorValue {
-  const temp = inputs.temperature ?? DEFAULT_TEMPERATURE_C
+export function derivedTemperatureFactor(temperature: number | undefined, profile: BatteryTypeSpec): number {
+  const temp = temperature ?? DEFAULT_TEMPERATURE_C
   const optMin = profile.temperature.optimal.min
   const coeff = profile.temperature.tempCoefficient / 100
-  let value = 1.0
   if (temp < optMin) {
-    value = Math.max(TEMP_FACTOR_FLOOR, 1 - coeff * (optMin - temp))
+    return Math.max(TEMP_FACTOR_FLOOR, 1 - coeff * (optMin - temp))
   }
+  return 1.0
+}
+
+/** Temperature-correction factor: a direct override, else derived from temperature. */
+export function temperatureFactor(inputs: BatteryCalculatorInputs, profile: BatteryTypeSpec): FactorValue {
+  if (inputs.tempFactorOverride != null) {
+    return { value: inputs.tempFactorOverride, source: 'user', standardReference: 'User-supplied' }
+  }
+  const value = derivedTemperatureFactor(inputs.temperature, profile)
   const source: FactorValue['source'] =
     inputs.temperature != null && inputs.temperature !== DEFAULT_TEMPERATURE_C ? 'user' : 'default'
   return { value, source, standardReference: 'IEEE 485-2020 §6 (temperature correction)' }
+}
+
+/** Effective Peukert exponent: a direct override, else the chemistry default. */
+export function effectivePeukertExponent(
+  inputs: BatteryCalculatorInputs,
+  profile: BatteryTypeSpec
+): { value: number; source: FactorValue['source'] } {
+  if (inputs.peukertExponentOverride != null) {
+    return { value: inputs.peukertExponentOverride, source: 'user' }
+  }
+  return { value: profile.peukertExponent, source: 'default' }
 }
 
 /** End-of-life aging design factor (default 0.8 = size for 80% remaining). */
@@ -105,7 +125,8 @@ export function resolveBaseFactors(inputs: BatteryCalculatorInputs, profile: Bat
 export function assembleAppliedFactors(
   base: BaseFactors,
   peukertValue: number,
-  exponent: number
+  exponent: number,
+  peukertSource: FactorValue['source'] = 'default'
 ): AppliedFactors {
   return {
     dod: base.dod,
@@ -114,7 +135,7 @@ export function assembleAppliedFactors(
     efficiency: base.efficiency,
     peukert: {
       value: peukertValue,
-      source: 'default',
+      source: peukertSource,
       standardReference: `Peukert n=${exponent} (rate derating)`,
     },
   }

@@ -10,6 +10,7 @@ import {
   peukertDerate,
   assembleAppliedFactors,
   defaultCellBlockVoltage,
+  effectivePeukertExponent,
 } from './derating'
 import { computeBankConfig } from './bankConfig'
 import { buildDischargeCurve } from './dischargeCurve'
@@ -28,15 +29,16 @@ export function calculateRuntime(inputs: BatteryCalculatorInputs): BatteryCalcul
   const { voltage, loadWatts } = inputs
 
   const base = resolveBaseFactors(inputs, profile)
+  const { value: exponent, source: peukertSource } = effectivePeukertExponent(inputs, profile)
   const cRate = loadWatts / (voltage * ampHours)
-  const peukert = peukertDerate(cRate, profile.peukertExponent)
+  const peukert = peukertDerate(cRate, exponent)
   const usableFraction = base.fraction * peukert
 
   const effectiveCapacityAh = ampHours * usableFraction
   const energyWh = ampHours * voltage * usableFraction
   const backupTimeHours = energyWh / loadWatts
 
-  const appliedFactors = assembleAppliedFactors(base, peukert, profile.peukertExponent)
+  const appliedFactors = assembleAppliedFactors(base, peukert, exponent, peukertSource)
   const cellBlockVoltage = inputs.cellBlockVoltage ?? defaultCellBlockVoltage(profile)
   // Runtime describes a single installed bank (one string).
   const bankConfig = computeBankConfig(ampHours, voltage, cellBlockVoltage, ampHours, effectiveCapacityAh)
