@@ -1,0 +1,26 @@
+<!-- @dsCard group="Components" name="WarningBanner" subtitle="Error + warning validation list" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>WarningBanner — ElectroMate</title>
+<style>
+  :root { --foreground: 222.2 84% 4.9%; --muted-foreground: 215.4 16.3% 46.9%; --destructive: 0 84.2% 60.2%; --radius: 0.5rem; --background: 0 0% 100%; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 32px; background: hsl(var(--background)); font-family: ui-sans-serif, system-ui, sans-serif; color: hsl(var(--foreground)); }
+  .banner { display: flex; gap: 12px; padding: 16px; border-radius: var(--radius); border: 1px solid; max-width: 560px; margin-bottom: 16px; font-size: 14px; }
+  .err { border-color: hsl(var(--destructive) / .4); background: hsl(var(--destructive) / .06); }
+  .warn { border-color: hsl(38 92% 50% / .5); background: hsl(38 92% 50% / .08); }
+  .icon { flex: none; width: 20px; height: 20px; border-radius: 9999px; color: #fff; font-weight: 700; font-size: 13px; display: flex; align-items: center; justify-content: center; }
+  .err .icon { background: hsl(var(--destructive)); }
+  .warn .icon { background: hsl(38 92% 45%); }
+  .title { font-weight: 600; margin-bottom: 2px; }
+  .item { color: hsl(var(--muted-foreground)); }
+</style>
+</head>
+<body>
+  <div class="banner err"><span class="icon">!</span><div><div class="title">Cannot calculate</div><div class="item">System efficiency must be between 0 and 1.</div></div></div>
+  <div class="banner warn"><span class="icon">!</span><div><div class="title">Check inputs</div><div class="item">Discharge rate exceeds C/5 — high-rate derating applies.</div></div></div>
+</body>
+</html>

@@ -1,0 +1,23 @@
+<!-- @dsCard group="Components" name="Standards Badge" subtitle="Outline pills for code references" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Standards Badge — ElectroMate</title>
+<style>
+  :root { --foreground: 222.2 84% 4.9%; --border: 214.3 31.8% 91.4%; --muted-foreground: 215.4 16.3% 46.9%; --background: 0 0% 100%; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 32px; background: hsl(var(--background)); font-family: ui-sans-serif, system-ui, sans-serif; color: hsl(var(--foreground)); }
+  .wrap { display: flex; flex-wrap: wrap; gap: 8px; max-width: 560px; }
+  .badge { font-size: 12px; padding: 3px 10px; border: 1px solid hsl(var(--border)); border-radius: 9999px; }
+  .muted { color: hsl(var(--muted-foreground)); }
+  h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: hsl(var(--muted-foreground)); margin: 0 0 12px; }
+  .group { margin-bottom: 24px; }
+</style>
+</head>
+<body>
+  <div class="group"><h2>Standards used (card header)</h2><div class="wrap"><span class="badge">IEEE 485-2020</span><span class="badge">IEC 60038</span><span class="badge">NEC 250</span></div></div>
+  <div class="group"><h2>Inline reference (result rows)</h2><div class="wrap"><span class="badge muted">After aging factor</span><span class="badge muted">IEEE 485 §5.3 — High Rate</span></div></div>
+</body>
+</html>

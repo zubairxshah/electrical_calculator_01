@@ -1,0 +1,28 @@
+<!-- @dsCard group="Components" name="Buttons" subtitle="Primary / outline / ghost + icon" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Buttons — ElectroMate</title>
+<style>
+  :root { --primary: 222.2 47.4% 11.2%; --primary-foreground: 210 40% 98%; --foreground: 222.2 84% 4.9%; --border: 214.3 31.8% 91.4%; --muted-foreground: 215.4 16.3% 46.9%; --radius: 0.5rem; --background: 0 0% 100%; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 32px; background: hsl(var(--background)); font-family: ui-sans-serif, system-ui, sans-serif; color: hsl(var(--foreground)); }
+  .row { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; margin-bottom: 20px; }
+  .btn { height: 44px; padding: 0 18px; font-size: 14px; font-weight: 500; border-radius: var(--radius); display: inline-flex; align-items: center; gap: 8px; cursor: pointer; border: 1px solid transparent; }
+  .primary { background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); }
+  .outline { background: #fff; border-color: hsl(var(--border)); color: hsl(var(--foreground)); }
+  .ghost { background: transparent; color: hsl(var(--foreground)); }
+  .disabled { opacity: .5; }
+  svg { width: 16px; height: 16px; }
+  .lbl { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: hsl(var(--muted-foreground)); width: 90px; }
+</style>
+</head>
+<body>
+  <div class="row"><span class="lbl">primary</span><button class="btn primary">Calculate</button></div>
+  <div class="row"><span class="lbl">outline+icon</span><button class="btn outline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>Reset to Defaults</button></div>
+  <div class="row"><span class="lbl">ghost</span><button class="btn ghost">Cancel</button></div>
+  <div class="row"><span class="lbl">disabled</span><button class="btn primary disabled">Calculate</button></div>
+</body>
+</html>

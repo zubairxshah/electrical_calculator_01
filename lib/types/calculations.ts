@@ -31,15 +31,15 @@ export type StandardsFramework = 'IEC' | 'NEC'
 export type VoltageSystem = 'LV-AC' | 'LV-DC' | 'MV-AC' | 'MV-DC' | 'HV'
 
 /**
- * Battery chemistry types (IEEE 485-2020, IEC 61056)
+ * Battery chemistry types (IEEE 485-2020, IEC 60896/62619).
+ *
+ * Single source of truth: re-exported from lib/standards/batteryTypes.ts
+ * (canonical 9-value union incl. the new FLA profile). Legacy IDs
+ * (VRLA-Gel/LiFePO4/Li-ion) are mapped to canonical via
+ * lib/standards/batteryChemistryMap.ts. See ADR-006.
  */
-export type BatteryChemistry =
-  | 'VRLA-AGM' // Valve-Regulated Lead-Acid Absorbed Glass Mat
-  | 'VRLA-Gel' // Valve-Regulated Lead-Acid Gel
-  | 'FLA' // Flooded Lead-Acid
-  | 'LiFePO4' // Lithium Iron Phosphate
-  | 'Li-ion' // Lithium-Ion (NMC/NCA)
-  | 'NiCd' // Nickel-Cadmium
+export type { BatteryChemistry } from '../standards/batteryTypes'
+import type { BatteryChemistry } from '../standards/batteryTypes'
 
 /**
  * UPS topology types (IEEE 1100-2020)
@@ -122,23 +122,79 @@ export interface ValidationResult {
 export interface BatteryCalculatorInputs {
   /** System voltage (1-2000V DC) */
   voltage: number
-  /** Battery amp-hour capacity at C/20 rate (1-10000 Ah) */
-  ampHours: number
+  /** Calculation direction: forward runtime estimate or reverse capacity sizing */
+  mode: BatteryCalcMode
+  /** Battery amp-hour capacity at C/20 rate (1-10000 Ah). Required when mode='runtime'. */
+  ampHours?: number
+  /** Target backup time in hours (>0). Required when mode='sizing'. */
+  targetBackupHours?: number
   /** Total load in watts (1-1000000W) */
   loadWatts: number
-  /** Inverter/system efficiency (0.1-1.0, typically 0.85-0.95) */
-  efficiency: number
-  /** Battery aging factor (0.5-1.0, typically 0.8 for end-of-life) */
-  agingFactor: number
-  /** Battery chemistry type */
+  /** System/round-trip efficiency (0.1-1.0). Optional override; default = chemistry round-trip typical. */
+  efficiency?: number
+  /** Battery aging factor (0.5-1.0). Optional; default 0.8 (end-of-life design basis). */
+  agingFactor?: number
+  /** Battery chemistry type (canonical) */
   chemistry: BatteryChemistry
-  /** Ambient temperature (°C, -20 to 60) */
+  /** Ambient/operating temperature (°C). Default 25. */
   temperature?: number
+  /** Depth-of-discharge override (fraction 0-1). Default = chemistry recommended; clamped to max. */
+  dodOverride?: number
+  /** Nominal per-cell/block voltage for series count (V). Default by chemistry. */
+  cellBlockVoltage?: number
+  /** Capacity of one battery unit/string (Ah) for parallel-string sizing. Default 100. */
+  unitCapacityAh?: number
+  /** Selected manufacturer datasheet id (or null). */
+  datasheetId?: string | null
   /** Minimum voltage cutoff (V, typically 0.85 * nominal for lead-acid) */
   minVoltage?: number
   /** Index signature for compatibility */
   [key: string]: unknown
 }
+
+/** Battery calculation direction */
+export type BatteryCalcMode = 'runtime' | 'sizing'
+
+/** Provenance of an applied derating factor */
+export type FactorSource = 'default' | 'user' | 'datasheet'
+
+/** A single applied derating factor with its value, source, and citation */
+export interface FactorValue {
+  /** Numeric factor value (fraction or multiplier) */
+  value: number
+  /** Where the value came from */
+  source: FactorSource
+  /** Standard reference, if any */
+  standardReference?: string
+}
+
+/** The full set of derating factors applied to a sizing/runtime result */
+export interface AppliedFactors {
+  dod: FactorValue
+  temperature: FactorValue
+  aging: FactorValue
+  efficiency: FactorValue
+  peukert: FactorValue
+}
+
+/** Recommended physical battery bank configuration */
+export interface BankConfig {
+  /** Cells/blocks in series to meet system voltage */
+  cellsInSeries: number
+  /** Parallel strings to meet required capacity */
+  stringsInParallel: number
+  /** Nominal bank voltage (V) */
+  nominalBankVoltage: number
+  /** Nameplate bank capacity (Ah) */
+  nameplateBankAh: number
+  /** Usable/delivered capacity after factors (Ah) */
+  deliveredCapacityAh: number
+  /** Over-capacity from rounding up to whole strings (%) */
+  overCapacityPct: number
+}
+
+/** Sizing verdict */
+export type SizingVerdict = 'pass' | 'marginal' | 'fail'
 
 /**
  * US1: Battery Backup Calculator - Results
@@ -146,12 +202,26 @@ export interface BatteryCalculatorInputs {
 export interface BatteryCalculatorResult extends CalculationResult {
   type: 'battery'
   inputs: BatteryCalculatorInputs
-  /** Total backup time in hours (BigNumber for precision) */
+  /** Calculation direction this result was produced in */
+  mode: BatteryCalcMode
+  /** Total backup time in hours (headline when mode='runtime') */
   backupTimeHours: math.BigNumber
-  /** Effective capacity after efficiency and aging (Ah) */
+  /** Required nameplate capacity in Ah (headline when mode='sizing') */
+  requiredCapacityAh?: math.BigNumber
+  /** Effective/usable capacity after all factors (Ah) */
   effectiveCapacityAh: math.BigNumber
-  /** Discharge rate (C-rate, e.g., C/5 = 0.2) */
+  /** Discharge rate (C-rate as fraction, e.g., C/5 = 0.2) */
   dischargeRate: math.BigNumber
+  /** All derating factors applied, with source + citation */
+  appliedFactors: AppliedFactors
+  /** Recommended physical bank configuration */
+  bankConfig: BankConfig
+  /** Plain-language pass/marginal/fail verdict */
+  verdict: SizingVerdict
+  /** Actionable recommendations */
+  recommendations: string[]
+  /** Standards actually applied for this result */
+  standardsApplied: string[]
   /** Discharge curve data points for Recharts */
   dischargeCurve: DischargeCurvePoint[]
   /** Warnings for dangerous conditions */
@@ -183,6 +253,10 @@ export type BatteryWarningType =
   | 'deep-discharge' // minVoltage too low for chemistry
   | 'overload' // load exceeds battery C-rating
   | 'unrealistic-efficiency' // efficiency <0.7 or >0.98
+  | 'over-c-rate' // discharge above chemistry safe continuous rate
+  | 'temperature-out-of-range' // outside chemistry operating range
+  | 'dod-exceeds-max' // DoD override above chemistry maximum
+  | 'datasheet-chemistry-mismatch' // selected datasheet conflicts with chemistry
 
 export interface BatteryWarning extends ValidationResult {
   type: BatteryWarningType
