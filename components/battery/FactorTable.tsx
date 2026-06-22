@@ -31,16 +31,23 @@ function fmt(value: number, kind: 'fraction' | 'number') {
   return kind === 'fraction' ? `${(value * 100).toFixed(0)}%` : value.toFixed(2)
 }
 
+/** Strip floating-point noise (e.g. 0.55 * 100 = 55.00000001) for display. */
+function clean(n: number) {
+  return parseFloat(n.toFixed(6)).toString()
+}
+
 /** One editable override cell with local string state (decimal-friendly). */
 function OverrideCell({
   value,
   placeholder,
   step,
+  suffix,
   onCommit,
 }: {
   value: number | undefined
   placeholder: string
   step: string
+  suffix?: string
   onCommit: (v: number | undefined) => void
 }) {
   const [local, setLocal] = useState(value == null ? '' : String(value))
@@ -61,19 +68,27 @@ function OverrideCell({
   }
 
   return (
-    <input
-      type="text"
-      inputMode="decimal"
-      value={local}
-      placeholder={placeholder}
-      step={step}
-      onChange={(e) => commit(e.target.value)}
-      className={cn(
-        'h-9 w-full rounded-md border bg-background px-2 text-right font-mono text-sm',
-        'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1',
-        value != null ? 'border-primary/60' : 'border-input'
+    <div className="relative">
+      <input
+        type="text"
+        inputMode="decimal"
+        value={local}
+        placeholder={placeholder}
+        step={step}
+        onChange={(e) => commit(e.target.value)}
+        className={cn(
+          'h-9 w-full rounded-md border bg-background px-2 text-right font-mono text-sm',
+          suffix ? 'pr-6' : '',
+          'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1',
+          value != null ? 'border-primary/60' : 'border-input'
+        )}
+      />
+      {suffix && (
+        <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+          {suffix}
+        </span>
       )}
-    />
+    </div>
   )
 }
 
@@ -149,6 +164,10 @@ export function FactorTable() {
         <tbody>
           {rows.map((r) => {
             const applied = r.override ?? r.def
+            const isFraction = r.kind === 'fraction'
+            // Edit fraction factors as whole percentages (50, not 0.5); the
+            // store still holds 0–1 fractions, so we scale at this boundary.
+            const scale = isFraction ? 100 : 1
             return (
               <tr key={r.key} className="border-b last:border-0">
                 <td className="px-3 py-2">
@@ -160,10 +179,11 @@ export function FactorTable() {
                 </td>
                 <td className="px-3 py-2">
                   <OverrideCell
-                    value={r.override}
-                    placeholder={r.kind === 'fraction' ? r.def.toFixed(2) : r.def.toFixed(2)}
+                    value={r.override == null ? undefined : parseFloat((r.override * scale).toFixed(6))}
+                    placeholder={isFraction ? clean(r.def * 100) : r.def.toFixed(2)}
                     step={r.step}
-                    onCommit={(v) => setOverride(r.key, v)}
+                    suffix={isFraction ? '%' : undefined}
+                    onCommit={(v) => setOverride(r.key, v == null ? undefined : v / scale)}
                   />
                 </td>
                 <td className="px-3 py-2 text-right">
@@ -182,7 +202,7 @@ export function FactorTable() {
         </tbody>
       </table>
       <div className="flex items-center justify-between gap-2 border-t bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
-        <span>Leave a cell blank to use the datasheet default. Fractions 0–1 (e.g. 0.5 = 50%).</span>
+        <span>Leave a cell blank to use the datasheet default. Enter whole percentages (e.g. 50 = 50%); Peukert is a bare exponent.</span>
         {anyOverride && (
           <button
             type="button"
