@@ -12,7 +12,6 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
 import { DatasheetPicker } from './DatasheetPicker'
-import { FactorTable } from './FactorTable'
 import { getBatteryTypeById } from '@/lib/standards/batteryTypes'
 import { CANONICAL_CHEMISTRY_ORDER, chemistryDisplayLabel, toCanonicalChemistry } from '@/lib/standards/batteryChemistryMap'
 import type { BatteryCalculatorInputs, FieldValidation } from '@/lib/types'
@@ -194,42 +193,40 @@ export function BatteryInputForm() {
         </div>
       </div>
 
-      {/* Derating factors table + (sizing-only) bank fields */}
-      <div>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          className="gap-2 px-0 text-muted-foreground"
-          onClick={() => setShowAdvanced((s) => !s)}
-        >
-          <SlidersHorizontal className="h-4 w-4" />
-          {showAdvanced ? 'Hide' : 'Show'} derating factors &amp; overrides
-        </Button>
-        {showAdvanced && (
-          <div className="mt-3 space-y-4">
-            <FactorTable />
-            {inputs.mode === 'sizing' && (
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <InputField
-                  label="Cell/block voltage"
-                  value={num(inputs.cellBlockVoltage)}
-                  onChange={(v) => setInputs({ cellBlockVoltage: v === '' ? undefined : Number(v) })}
-                  unit="V"
-                  placeholder="12"
-                />
-                <InputField
-                  label="Unit capacity (per string)"
-                  value={num(inputs.unitCapacityAh)}
-                  onChange={(v) => setInputs({ unitCapacityAh: v === '' ? undefined : Number(v) })}
-                  unit="Ah"
-                  placeholder="100"
-                />
-              </div>
-            )}
-          </div>
-        )}
-      </div>
+      {/* Sizing-only bank configuration (derating factors are edited in the
+          Applied Factors results card). */}
+      {inputs.mode === 'sizing' && (
+        <div>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="gap-2 px-0 text-muted-foreground"
+            onClick={() => setShowAdvanced((s) => !s)}
+          >
+            <SlidersHorizontal className="h-4 w-4" />
+            {showAdvanced ? 'Hide' : 'Show'} bank configuration
+          </Button>
+          {showAdvanced && (
+            <div className="mt-3 grid grid-cols-1 gap-4 md:grid-cols-2">
+              <InputField
+                label="Cell/block voltage"
+                value={num(inputs.cellBlockVoltage)}
+                onChange={(v) => setInputs({ cellBlockVoltage: v === '' ? undefined : Number(v) })}
+                unit="V"
+                placeholder="12"
+              />
+              <InputField
+                label="Unit capacity (per string)"
+                value={num(inputs.unitCapacityAh)}
+                onChange={(v) => setInputs({ unitCapacityAh: v === '' ? undefined : Number(v) })}
+                unit="Ah"
+                placeholder="100"
+              />
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }

@@ -6,11 +6,14 @@
 'use client'
 
 import { toNumber } from '@/lib/mathConfig'
+import { useBatteryStore } from '@/stores/useBatteryStore'
 import { CalculationCard } from '@/components/shared/CalculationCard'
 import { Badge } from '@/components/ui/badge'
 import { DischargeChart } from './DischargeChart'
+import { OverrideCell } from './OverrideCell'
 import { chemistryDisplayLabel, toCanonicalChemistry } from '@/lib/standards/batteryChemistryMap'
-import type { BatteryCalculatorResult, FactorValue } from '@/lib/types'
+import { getBatteryTypeById } from '@/lib/standards/batteryTypes'
+import type { BatteryCalculatorInputs, BatteryCalculatorResult, FactorValue } from '@/lib/types'
 import { formatTimeDisplay } from '@/lib/utils/formatTime'
 import { CheckCircle2, AlertTriangle, XCircle } from 'lucide-react'
 
@@ -20,30 +23,85 @@ const VERDICT = {
   fail: { label: 'Not acceptable as specified', cls: 'text-destructive', Icon: XCircle, badge: 'bg-red-50 text-red-700 border-red-200' },
 }
 
-function FactorRow({ label, factor, render }: { label: string; factor: FactorValue; render: (v: number) => string }) {
+/**
+ * One editable derating-factor row in the Applied Factors card. The factor is
+ * shown with its source + reference, and an inline input lets the user override
+ * it. `scale` maps the stored value to the displayed unit (×100 for fractions
+ * edited as percentages, ×1 for bare numbers like the Peukert exponent).
+ */
+function EditableFactorRow({
+  label,
+  source,
+  reference,
+  caption,
+  override,
+  placeholder,
+  scale,
+  suffix,
+  step,
+  onCommit,
+}: {
+  label: string
+  source: FactorValue['source']
+  reference?: string
+  caption?: string
+  override: number | undefined
+  placeholder: string
+  scale: number
+  suffix?: string
+  step: string
+  onCommit: (v: number | undefined) => void
+}) {
   return (
-    <div className="flex items-center justify-between border-b py-2 last:border-0">
-      <div className="flex items-center gap-2">
-        <span className="text-sm font-medium">{label}</span>
-        <Badge variant="outline" className="text-[10px] uppercase tracking-wide">
-          {factor.source}
-        </Badge>
+    <div className="flex items-center justify-between gap-3 border-b py-2.5 last:border-0">
+      <div className="min-w-0">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium">{label}</span>
+          <Badge variant="outline" className="text-[10px] uppercase tracking-wide">
+            {source}
+          </Badge>
+        </div>
+        {reference && <div className="text-[11px] text-muted-foreground">{reference}</div>}
+        {caption && <div className="text-[11px] text-muted-foreground">{caption}</div>}
       </div>
-      <div className="text-right">
-        <span className="font-mono text-sm">{render(factor.value)}</span>
-        {factor.standardReference && (
-          <div className="text-[11px] text-muted-foreground">{factor.standardReference}</div>
-        )}
-      </div>
+      <OverrideCell
+        className="w-24 shrink-0"
+        value={override == null ? undefined : parseFloat((override * scale).toFixed(6))}
+        placeholder={placeholder}
+        step={step}
+        suffix={suffix}
+        onCommit={(v) => onCommit(v == null ? undefined : v / scale)}
+      />
     </div>
   )
 }
 
 export function BatteryResults({ result }: { result: BatteryCalculatorResult }) {
+  const { inputs, setInputs } = useBatteryStore()
   const v = VERDICT[result.verdict]
   const isSizing = result.mode === 'sizing'
   const f = result.appliedFactors
   const chem = chemistryDisplayLabel[toCanonicalChemistry(String(result.inputs.chemistry))]
+  const profile = getBatteryTypeById(toCanonicalChemistry(String(result.inputs.chemistry)))
+
+  const setOverride = (key: keyof BatteryCalculatorInputs, val: number | undefined) =>
+    setInputs({ [key]: val } as Partial<BatteryCalculatorInputs>)
+
+  const anyOverride =
+    inputs.dodOverride != null ||
+    inputs.tempFactorOverride != null ||
+    inputs.efficiency != null ||
+    inputs.agingFactor != null ||
+    inputs.peukertExponentOverride != null
+
+  const resetOverrides = () =>
+    setInputs({
+      dodOverride: undefined,
+      tempFactorOverride: undefined,
+      efficiency: undefined,
+      agingFactor: undefined,
+      peukertExponentOverride: undefined,
+    })
 
   const headlineValue = isSizing
     ? (result.requiredCapacityAh ? toNumber(result.requiredCapacityAh) : toNumber(result.effectiveCapacityAh)).toFixed(0)
@@ -53,8 +111,6 @@ export function BatteryResults({ result }: { result: BatteryCalculatorResult }) 
   const subline = isSizing
     ? `${result.bankConfig.cellsInSeries}S × ${result.bankConfig.stringsInParallel}P · ${result.bankConfig.nameplateBankAh} Ah nameplate`
     : formatTimeDisplay(toNumber(result.backupTimeHours)).formatted
-
-  const pct = (x: number) => `${(x * 100).toFixed(0)}%`
 
   return (
     <div className="space-y-4">
@@ -95,14 +151,75 @@ export function BatteryResults({ result }: { result: BatteryCalculatorResult }) 
         <DischargeChart data={result.dischargeCurve} />
       </CalculationCard>
 
-      {/* Applied factors */}
-      <CalculationCard title="Applied Factors" description="Every derating factor and its source" className="p-4 md:p-6">
+      {/* Applied factors — editable; leave a field blank to use the default */}
+      <CalculationCard
+        title="Applied Factors"
+        description="Each derating factor and its source — edit any field to override"
+        className="p-4 md:p-6"
+      >
         <div>
-          <FactorRow label="Depth of discharge" factor={f.dod} render={pct} />
-          <FactorRow label="Temperature correction" factor={f.temperature} render={pct} />
-          <FactorRow label="System efficiency" factor={f.efficiency} render={pct} />
-          <FactorRow label="Aging (end-of-life)" factor={f.aging} render={pct} />
-          <FactorRow label="Peukert rate derate" factor={f.peukert} render={(x) => `${(x * 100).toFixed(1)}%`} />
+          <EditableFactorRow
+            label="Depth of discharge"
+            source={f.dod.source}
+            reference={f.dod.standardReference}
+            override={inputs.dodOverride}
+            placeholder={(f.dod.value * 100).toFixed(0)}
+            scale={100}
+            suffix="%"
+            step="1"
+            onCommit={(val) => setOverride('dodOverride', val)}
+          />
+          <EditableFactorRow
+            label="Temperature correction"
+            source={f.temperature.source}
+            reference={f.temperature.standardReference}
+            override={inputs.tempFactorOverride}
+            placeholder={(f.temperature.value * 100).toFixed(0)}
+            scale={100}
+            suffix="%"
+            step="1"
+            onCommit={(val) => setOverride('tempFactorOverride', val)}
+          />
+          <EditableFactorRow
+            label="System efficiency"
+            source={f.efficiency.source}
+            reference={f.efficiency.standardReference}
+            override={inputs.efficiency}
+            placeholder={(f.efficiency.value * 100).toFixed(0)}
+            scale={100}
+            suffix="%"
+            step="1"
+            onCommit={(val) => setOverride('efficiency', val)}
+          />
+          <EditableFactorRow
+            label="Aging (end-of-life)"
+            source={f.aging.source}
+            reference={f.aging.standardReference}
+            override={inputs.agingFactor}
+            placeholder={(f.aging.value * 100).toFixed(0)}
+            scale={100}
+            suffix="%"
+            step="1"
+            onCommit={(val) => setOverride('agingFactor', val)}
+          />
+          <EditableFactorRow
+            label="Peukert exponent"
+            source={f.peukert.source}
+            caption={`→ ${(f.peukert.value * 100).toFixed(1)}% rate derate applied`}
+            override={inputs.peukertExponentOverride}
+            placeholder={(profile?.peukertExponent ?? 1.1).toFixed(2)}
+            scale={1}
+            step="0.01"
+            onCommit={(val) => setOverride('peukertExponentOverride', val)}
+          />
+        </div>
+        <div className="mt-3 flex items-center justify-between gap-2 text-xs text-muted-foreground">
+          <span>Blank = datasheet/standard default. Percentages are whole numbers (e.g. 50 = 50%).</span>
+          {anyOverride && (
+            <button type="button" className="font-medium text-primary hover:underline" onClick={resetOverrides}>
+              Reset to defaults
+            </button>
+          )}
         </div>
       </CalculationCard>
 
