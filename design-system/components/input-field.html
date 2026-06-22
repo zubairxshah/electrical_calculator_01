@@ -1,0 +1,36 @@
+<!-- @dsCard group="Components" name="InputField" subtitle="Default / unit / error / warning" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>InputField — ElectroMate</title>
+<style>
+  :root { --foreground: 222.2 84% 4.9%; --muted-foreground: 215.4 16.3% 46.9%; --border: 214.3 31.8% 91.4%; --ring: 222.2 84% 4.9%; --destructive: 0 84.2% 60.2%; --radius: 0.5rem; --background: 0 0% 100%; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 32px; background: hsl(var(--background)); font-family: ui-sans-serif, system-ui, sans-serif; color: hsl(var(--foreground)); }
+  .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; max-width: 620px; }
+  .field { display: flex; flex-direction: column; gap: 8px; }
+  label { font-size: 14px; font-weight: 500; }
+  .req { color: hsl(var(--destructive)); margin-left: 2px; }
+  .wrap { position: relative; }
+  input { width: 100%; height: 48px; padding: 0 40px 0 12px; font-size: 14px; border: 1px solid hsl(var(--border)); border-radius: var(--radius); outline: none; background: #fff; color: inherit; }
+  input.focus { box-shadow: 0 0 0 2px #fff, 0 0 0 4px hsl(var(--ring)); }
+  input.err { border-color: hsl(var(--destructive)); box-shadow: 0 0 0 2px #fff, 0 0 0 4px hsl(var(--destructive)); }
+  input.warn { border-color: hsl(38 92% 50%); }
+  .unit { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 13px; color: hsl(var(--muted-foreground)); }
+  .msg { font-size: 13px; }
+  .msg.err { color: hsl(var(--destructive)); }
+  .msg.warn { color: hsl(38 80% 38%); }
+  .state { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: hsl(var(--muted-foreground)); margin-bottom: 4px; }
+</style>
+</head>
+<body>
+  <div class="grid">
+    <div class="field"><div class="state">default + unit</div><label>System Voltage<span class="req">*</span></label><div class="wrap"><input value="48" /><span class="unit">V</span></div></div>
+    <div class="field"><div class="state">focused</div><label>Battery Capacity<span class="req">*</span></label><div class="wrap"><input class="focus" value="200" /><span class="unit">Ah</span></div></div>
+    <div class="field"><div class="state">error</div><label>System Efficiency<span class="req">*</span></label><div class="wrap"><input class="err" value="1.4" /></div><div class="msg err">Efficiency must be between 0 and 1.</div></div>
+    <div class="field"><div class="state">warning</div><label>Aging Factor<span class="req">*</span></label><div class="wrap"><input class="warn" value="0.55" /></div><div class="msg warn">Low aging factor — verify battery age.</div></div>
+  </div>
+</body>
+</html>

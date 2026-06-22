@@ -1,0 +1,35 @@
+<!-- @dsCard group="Components" name="ResultDisplay" subtitle="Primary metric + secondary rows" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ResultDisplay — ElectroMate</title>
+<style>
+  :root { --card: 0 0% 100%; --foreground: 222.2 84% 4.9%; --muted-foreground: 215.4 16.3% 46.9%; --border: 214.3 31.8% 91.4%; --primary: 222.2 47.4% 11.2%; --radius: 0.5rem; --background: 210 40% 98%; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 32px; background: hsl(var(--background)); font-family: ui-sans-serif, system-ui, sans-serif; color: hsl(var(--foreground)); }
+  .card { background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: var(--radius); box-shadow: 0 1px 2px 0 rgb(0 0 0 / .05); padding: 24px; max-width: 560px; }
+  .row { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid hsl(var(--border)); padding-bottom: 12px; margin-bottom: 12px; }
+  .row:last-child { border-bottom: 0; padding-bottom: 0; margin-bottom: 0; }
+  .primary { background: hsl(var(--primary) / .05); border: 1px solid hsl(var(--primary)); border-radius: var(--radius); padding: 16px; margin-bottom: 16px; }
+  .label { font-weight: 500; font-size: 14px; }
+  .primary .label { font-size: 17px; font-weight: 600; }
+  .badge { display: inline-block; margin-top: 6px; font-size: 11px; padding: 2px 8px; border: 1px solid hsl(var(--border)); border-radius: 9999px; color: hsl(var(--muted-foreground)); }
+  .val { text-align: right; font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 17px; }
+  .primary .val { font-size: 34px; font-weight: 700; color: hsl(var(--primary)); }
+  .unit { font-size: 13px; color: hsl(var(--muted-foreground)); margin-left: 6px; font-family: ui-sans-serif, system-ui, sans-serif; }
+  .sub { font-size: 13px; color: hsl(var(--muted-foreground)); margin-top: 2px; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="primary row">
+      <div><div class="label">Backup Time</div><span class="badge">IEEE 485-2020</span></div>
+      <div><div class="val">4.32<span class="unit">hours</span></div><div class="sub">(4 h 19 min)</div></div>
+    </div>
+    <div class="row"><div><div class="label">Effective Capacity</div><span class="badge">After aging factor</span></div><div class="val">160.0<span class="unit">Ah</span></div></div>
+    <div class="row"><div><div class="label">Discharge Rate</div><span class="badge">IEEE 485 §5.3</span></div><div class="val">C/8.0</div></div>
+  </div>
+</body>
+</html>

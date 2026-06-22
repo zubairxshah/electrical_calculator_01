@@ -1,10 +1,10 @@
 /**
  * Battery Calculator Zustand Store
  *
- * State management for battery calculator with:
- * - Persistent storage (localStorage)
- * - Real-time calculations
- * - Validation state
+ * State management for the battery calculator with:
+ * - Persistent storage (localStorage) + chemistry-ID migration (ADR-006, C4)
+ * - Dual-mode calculation (runtime / sizing)
+ * - Real-time validation state
  */
 
 'use client'
@@ -12,108 +12,96 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { BatteryCalculatorInputs, BatteryCalculatorResult } from '@/lib/types'
-import { calculateBackupTime } from '@/lib/calculations/battery'
+import { calculateBattery } from '@/lib/calculations/battery'
 import { validateBatteryInputs } from '@/lib/validation/batteryValidation'
+import { toCanonicalChemistry } from '@/lib/standards/batteryChemistryMap'
 
 interface BatteryStore {
-  // Input state
   inputs: BatteryCalculatorInputs
   setInputs: (inputs: Partial<BatteryCalculatorInputs>) => void
+  setMode: (mode: BatteryCalculatorInputs['mode']) => void
   resetInputs: () => void
 
-  // Results state
   result: BatteryCalculatorResult | null
   isCalculating: boolean
 
-  // Validation state
   validation: ReturnType<typeof validateBatteryInputs> | null
 
-  // Actions
   calculate: () => void
   validateInputs: () => void
 }
 
-/**
- * Default input values
- */
+/** Default input values (canonical chemistry; efficiency left to chemistry default). */
 const defaultInputs: BatteryCalculatorInputs = {
   voltage: 48,
+  mode: 'runtime',
   ampHours: 200,
+  targetBackupHours: 4,
   loadWatts: 2000,
-  efficiency: 0.9,
   agingFactor: 0.8,
+  temperature: 25,
   chemistry: 'VRLA-AGM',
+  datasheetId: null,
 }
 
-/**
- * Battery calculator store
- */
 export const useBatteryStore = create<BatteryStore>()(
   persist(
     (set, get) => ({
-      // Initial state
       inputs: defaultInputs,
       result: null,
       isCalculating: false,
       validation: null,
 
-      // Set inputs (partial update)
       setInputs: (partialInputs) => {
         const newInputs = { ...get().inputs, ...partialInputs }
         set({ inputs: newInputs })
-
-        // Auto-validate
         get().validateInputs()
-
-        // Auto-calculate if valid
-        const validation = get().validation
-        if (validation?.isValid) {
-          get().calculate()
-        }
+        if (get().validation?.isValid) get().calculate()
       },
 
-      // Reset to defaults
+      setMode: (mode) => {
+        get().setInputs({ mode })
+      },
+
       resetInputs: () => {
-        set({
-          inputs: defaultInputs,
-          result: null,
-          validation: null,
-        })
+        set({ inputs: defaultInputs, result: null, validation: null })
       },
 
-      // Validate inputs
       validateInputs: () => {
-        const { inputs } = get()
-        const validation = validateBatteryInputs(inputs)
-        set({ validation })
+        set({ validation: validateBatteryInputs(get().inputs) })
       },
 
-      // Calculate backup time
       calculate: () => {
         const { inputs, validation } = get()
-
-        // Only calculate if validation passed
-        if (!validation?.isValid) {
-          return
-        }
-
+        if (!validation?.isValid) return
         set({ isCalculating: true })
-
         try {
-          const result = calculateBackupTime(inputs)
-          set({ result, isCalculating: false })
+          set({ result: calculateBattery(inputs), isCalculating: false })
         } catch (error) {
-          console.error('Calculation error:', error)
+          console.error('Battery calculation error:', error)
           set({ isCalculating: false })
         }
       },
     }),
     {
       name: 'electromate-battery',
-      partialize: (state) => ({
-        inputs: state.inputs,
-        result: state.result,
-      }),
+      version: 1,
+      // Migrate legacy persisted state (chemistry IDs + missing mode/temperature).
+      migrate: (persistedState, fromVersion) => {
+        const state = persistedState as { inputs?: Partial<BatteryCalculatorInputs> } | undefined
+        const oldInputs = state?.inputs ?? {}
+        const migratedInputs: BatteryCalculatorInputs = {
+          ...defaultInputs,
+          ...oldInputs,
+          mode: (oldInputs.mode as BatteryCalculatorInputs['mode']) ?? 'runtime',
+          temperature: oldInputs.temperature ?? 25,
+          chemistry: toCanonicalChemistry(String(oldInputs.chemistry ?? 'VRLA-AGM')),
+        }
+        // Drop any persisted result (BigNumber fields don't round-trip through JSON).
+        void fromVersion
+        return { inputs: migratedInputs, result: null }
+      },
+      partialize: (state) => ({ inputs: state.inputs }),
     }
   )
 )

@@ -1,0 +1,68 @@
+<!-- @dsCard group="Foundations" name="Color Tokens" subtitle="Light + dark, slate palette" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Color Tokens — ElectroMate</title>
+<style>
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --destructive: 0 84.2% 60.2%;
+    --border: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+    --radius: 0.5rem;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 32px;
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: hsl(var(--background)); color: hsl(var(--foreground));
+  }
+  h1 { font-size: 18px; margin: 0 0 4px; }
+  p.sub { margin: 0 0 24px; color: hsl(var(--muted-foreground)); font-size: 13px; }
+  h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: hsl(var(--muted-foreground)); margin: 24px 0 12px; }
+  .swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+  .swatch { border: 1px solid hsl(var(--border)); border-radius: var(--radius); overflow: hidden; }
+  .chip { height: 56px; }
+  .meta { padding: 8px 10px; font-size: 12px; }
+  .meta .name { font-weight: 600; }
+  .meta .val { color: hsl(var(--muted-foreground)); font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 11px; }
+  .dark-row { background: hsl(222.2 84% 4.9%); border-radius: var(--radius); padding: 16px; }
+  .dark-row .swatch { border-color: hsl(217.2 32.6% 17.5%); }
+  .dark-row .meta { color: hsl(210 40% 98%); }
+</style>
+</head>
+<body>
+  <h1>Color Tokens</h1>
+  <p class="sub">shadcn slate palette · referenced as <code>hsl(var(--token))</code></p>
+
+  <h2>Light</h2>
+  <div class="swatches">
+    <div class="swatch"><div class="chip" style="background:hsl(222.2 47.4% 11.2%)"></div><div class="meta"><div class="name">primary</div><div class="val">222.2 47.4% 11.2%</div></div></div>
+    <div class="swatch"><div class="chip" style="background:hsl(210 40% 98%)"></div><div class="meta"><div class="name">primary-foreground</div><div class="val">210 40% 98%</div></div></div>
+    <div class="swatch"><div class="chip" style="background:hsl(210 40% 96.1%)"></div><div class="meta"><div class="name">secondary / muted</div><div class="val">210 40% 96.1%</div></div></div>
+    <div class="swatch"><div class="chip" style="background:hsl(215.4 16.3% 46.9%)"></div><div class="meta"><div class="name">muted-foreground</div><div class="val">215.4 16.3% 46.9%</div></div></div>
+    <div class="swatch"><div class="chip" style="background:hsl(0 84.2% 60.2%)"></div><div class="meta"><div class="name">destructive</div><div class="val">0 84.2% 60.2%</div></div></div>
+    <div class="swatch"><div class="chip" style="background:hsl(214.3 31.8% 91.4%)"></div><div class="meta"><div class="name">border / input</div><div class="val">214.3 31.8% 91.4%</div></div></div>
+  </div>
+
+  <h2>Dark</h2>
+  <div class="dark-row">
+    <div class="swatches">
+      <div class="swatch"><div class="chip" style="background:hsl(210 40% 98%)"></div><div class="meta"><div class="name">primary</div><div class="val">210 40% 98%</div></div></div>
+      <div class="swatch"><div class="chip" style="background:hsl(217.2 32.6% 17.5%)"></div><div class="meta"><div class="name">secondary / muted</div><div class="val">217.2 32.6% 17.5%</div></div></div>
+      <div class="swatch"><div class="chip" style="background:hsl(215 20.2% 65.1%)"></div><div class="meta"><div class="name">muted-foreground</div><div class="val">215 20.2% 65.1%</div></div></div>
+      <div class="swatch"><div class="chip" style="background:hsl(0 62.8% 30.6%)"></div><div class="meta"><div class="name">destructive</div><div class="val">0 62.8% 30.6%</div></div></div>
+    </div>
+  </div>
+</body>
+</html>

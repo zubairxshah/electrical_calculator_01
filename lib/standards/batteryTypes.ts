@@ -23,6 +23,7 @@
 export type BatteryChemistry =
   | 'VRLA-AGM'
   | 'VRLA-GEL'
+  | 'FLA'
   | 'Li-Ion-LFP'
   | 'Li-Ion-NMC'
   | 'Li-Ion-LTO'
@@ -56,6 +57,13 @@ export interface BatteryTypeSpec {
   fullName: string
   /** Technology category */
   category: 'Lead-Acid' | 'Lithium-Ion' | 'Nickel-Based' | 'Flow'
+
+  /**
+   * Peukert exponent for discharge-rate capacity derating (ADR-006, research.md D3).
+   * Lead-acid AGM/GEL ~1.2, flooded lead-acid ~1.25, NiCd/NiFe ~1.1,
+   * lithium/flow ~1.02 (near-flat). Used by lib/calculations/battery/derating.ts.
+   */
+  peukertExponent: number
 
   /** Lifespan characteristics */
   lifespan: {
@@ -207,6 +215,7 @@ export const VRLA_AGM: BatteryTypeSpec = {
   name: 'VRLA (AGM)',
   fullName: 'Valve Regulated Lead-Acid - Absorbed Glass Mat',
   category: 'Lead-Acid',
+  peukertExponent: 1.2,
 
   lifespan: {
     designLifeYears: { min: 3, max: 12, typical: 5 },
@@ -274,6 +283,7 @@ export const VRLA_GEL: BatteryTypeSpec = {
   name: 'VRLA (GEL)',
   fullName: 'Valve Regulated Lead-Acid - Gelled Electrolyte',
   category: 'Lead-Acid',
+  peukertExponent: 1.2,
 
   lifespan: {
     designLifeYears: { min: 5, max: 15, typical: 8 },
@@ -334,6 +344,79 @@ export const VRLA_GEL: BatteryTypeSpec = {
 }
 
 /**
+ * Flooded Lead-Acid (FLA) Battery Specification
+ *
+ * Added 2026-06-21 (feature 011-battery-revamp, task T004 — user-approved).
+ * Values per common stationary flooded lead-acid practice; slightly lower
+ * round-trip efficiency than AGM, higher Peukert exponent.
+ */
+export const FLA: BatteryTypeSpec = {
+  id: 'FLA',
+  name: 'Flooded Lead-Acid',
+  fullName: 'Flooded (Vented) Lead-Acid',
+  category: 'Lead-Acid',
+  peukertExponent: 1.25,
+
+  lifespan: {
+    designLifeYears: { min: 5, max: 20, typical: 12 },
+    cycleLife: { min: 500, max: 1800, typical: 1200 },
+    cycleLifeDoD: 50,
+  },
+
+  temperature: {
+    optimal: { min: 20, max: 25 },
+    operating: { min: -20, max: 50 },
+    storage: { min: -40, max: 60 },
+    tempCoefficient: 2,
+  },
+
+  depthOfDischarge: {
+    recommended: 50,
+    maximum: 80,
+    cycleImpact: 50,
+  },
+
+  efficiency: {
+    roundTrip: { min: 75, max: 85, typical: 80 },
+    selfDischarge: 5,
+    chargeEfficiency: 85,
+  },
+
+  maintenance: {
+    level: 'High',
+    description: 'Regular electrolyte level checks and watering, specific-gravity readings, equalization charges',
+    intervalMonths: 1,
+    requiresVentilation: true,
+    requiresTempControl: true,
+  },
+
+  cost: {
+    initialCostIndex: 1,
+    lifecycleCostIndex: 2.5,
+    trend: 'Stable',
+  },
+
+  safety: {
+    thermalRunawayRisk: 'Low',
+    fireRisk: 'Low',
+    hydrogenGeneration: true,
+    transportClass: 'Class 8',
+  },
+
+  bestApplications: ['solar-off-grid', 'industrial', 'telecom'],
+
+  standardReferences: ['IEEE 485-2020', 'IEEE 450-2020', 'IEC 60896-11'],
+
+  notes: [
+    'Lowest initial cost; robust and well understood',
+    'Requires ventilated battery room (hydrogen off-gassing during charge)',
+    'Highest maintenance (watering, equalization, specific-gravity checks)',
+    'Tolerates deep cycling better than VRLA when properly maintained',
+    'Temperature significantly affects lifespan and available capacity',
+  ],
+}
+
+/**
  * Lithium Iron Phosphate (LFP) Battery Specification
  */
 export const LI_ION_LFP: BatteryTypeSpec = {
@@ -341,6 +424,7 @@ export const LI_ION_LFP: BatteryTypeSpec = {
   name: 'LiFePO4 (LFP)',
   fullName: 'Lithium Iron Phosphate',
   category: 'Lithium-Ion',
+  peukertExponent: 1.02,
 
   lifespan: {
     designLifeYears: { min: 10, max: 20, typical: 15 },
@@ -409,6 +493,7 @@ export const LI_ION_NMC: BatteryTypeSpec = {
   name: 'Li-Ion (NMC)',
   fullName: 'Lithium Nickel Manganese Cobalt Oxide',
   category: 'Lithium-Ion',
+  peukertExponent: 1.02,
 
   lifespan: {
     designLifeYears: { min: 8, max: 15, typical: 10 },
@@ -476,6 +561,7 @@ export const LI_ION_LTO: BatteryTypeSpec = {
   name: 'Li-Ion (LTO)',
   fullName: 'Lithium Titanate Oxide',
   category: 'Lithium-Ion',
+  peukertExponent: 1.02,
 
   lifespan: {
     designLifeYears: { min: 15, max: 30, typical: 20 },
@@ -544,6 +630,7 @@ export const NICD: BatteryTypeSpec = {
   name: 'NiCd',
   fullName: 'Nickel-Cadmium',
   category: 'Nickel-Based',
+  peukertExponent: 1.1,
 
   lifespan: {
     designLifeYears: { min: 15, max: 25, typical: 20 },
@@ -612,6 +699,7 @@ export const NIFE: BatteryTypeSpec = {
   name: 'NiFe (Edison)',
   fullName: 'Nickel-Iron (Edison Battery)',
   category: 'Nickel-Based',
+  peukertExponent: 1.1,
 
   lifespan: {
     designLifeYears: { min: 20, max: 50, typical: 30 },
@@ -681,6 +769,7 @@ export const FLOW_VANADIUM: BatteryTypeSpec = {
   name: 'Vanadium Flow',
   fullName: 'Vanadium Redox Flow Battery (VRFB)',
   category: 'Flow',
+  peukertExponent: 1.02,
 
   lifespan: {
     designLifeYears: { min: 20, max: 30, typical: 25 },
@@ -748,6 +837,7 @@ export const FLOW_VANADIUM: BatteryTypeSpec = {
 export const ALL_BATTERY_TYPES: BatteryTypeSpec[] = [
   VRLA_AGM,
   VRLA_GEL,
+  FLA,
   LI_ION_LFP,
   LI_ION_NMC,
   LI_ION_LTO,
