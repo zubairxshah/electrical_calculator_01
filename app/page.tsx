@@ -115,6 +115,18 @@ const calculatorCards: CalculatorCard[] = [
     tags: ['motor', 'HVAC', 'NEC 430', 'NEC 440', 'IEC 60947', 'DC breaker'],
   },
   {
+    id: 'arc-flash',
+    title: 'Arc Flash Calculator',
+    description: 'Incident energy, arc flash boundary and PPE category per IEEE 1584-2018 and NFPA 70E-2024.',
+    icon: 'flame',
+    href: '/arc-flash',
+    priority: 'P1',
+    status: 'active',
+    category: 'Protection & Safety',
+    isNew: true,
+    tags: ['arc flash', 'IEEE 1584', 'NFPA 70E', 'PPE', 'incident energy'],
+  },
+  {
     id: 'earthing',
     title: 'Earthing Conductor Calculator',
     description: 'Calculate earthing conductor sizing per IEC 60364-5-54 and NEC 250.',

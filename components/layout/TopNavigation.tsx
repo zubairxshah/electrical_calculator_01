@@ -108,6 +108,12 @@ const navigationItems: NavCategory[] = [
         priority: 'P1',
       },
       {
+        name: 'Arc Flash',
+        href: '/arc-flash',
+        description: 'Incident energy & PPE per IEEE 1584-2018',
+        priority: 'P1',
+      },
+      {
         name: 'Earthing Conductor',
         href: '/earthing',
         description: 'Earthing conductor sizing (IEC/NEC)',
