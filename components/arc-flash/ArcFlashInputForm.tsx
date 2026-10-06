@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
@@ -9,10 +9,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Calculator, RotateCcw } from 'lucide-react'
 import type {
   ArcFlashInput,
+  ArcFlashStandard,
   ElectrodeConfig,
   EnclosureDimensions,
   FieldError,
+  PpeMethod,
 } from '@/types/arc-flash'
+import { TABLE_130_7_C_15_A } from '@/lib/standards/nfpa70e'
+
+const PPE_METHODS: { id: PpeMethod; label: string; clause: string }[] = [
+  { id: 'incident-energy', label: 'Incident energy analysis', clause: 'NFPA 70E 130.5(G)' },
+  { id: 'table', label: 'PPE category table', clause: 'NFPA 70E Table 130.7(C)(15)(a)' },
+]
 
 export const ELECTRODE_CONFIGS: { id: ElectrodeConfig; label: string; description: string }[] = [
   { id: 'VCB', label: 'VCB', description: 'Vertical conductors in a metal box (most switchgear, MCCs, panels)' },
@@ -31,11 +39,15 @@ interface NumberFieldProps {
   error?: FieldError
   hint?: string
   step?: number
+  /** Stored units per displayed unit (25.4 to show a mm value in inches); default 1 */
+  scale?: number
 }
 
 /** Numeric input with focus/blur local string state, so partial typing never fights the store. */
-function NumberField({ id, label, unit, value, onChange, error, hint, step }: NumberFieldProps) {
+function NumberField({ id, label, unit, value, onChange, error, hint, step, scale = 1 }: NumberFieldProps) {
   const [local, setLocal] = useState<string | null>(null)
+  const initial = useRef<string>('')
+  const display = Number.isFinite(value) ? String(Number((value / scale).toFixed(scale === 1 ? 6 : 3))) : ''
   return (
     <div className="space-y-1">
       <Label htmlFor={id}>
@@ -46,15 +58,21 @@ function NumberField({ id, label, unit, value, onChange, error, hint, step }: Nu
         type="number"
         inputMode="decimal"
         step={step ?? 'any'}
-        value={local !== null ? local : Number.isFinite(value) ? value : ''}
+        value={local !== null ? local : display}
         aria-invalid={!!error}
         aria-describedby={error ? `${id}-error` : hint ? `${id}-hint` : undefined}
         className={error ? 'border-destructive' : undefined}
-        onFocus={() => setLocal(Number.isFinite(value) ? String(value) : '')}
+        onFocus={() => {
+          initial.current = display
+          setLocal(display)
+        }}
         onChange={(e) => setLocal(e.target.value)}
         onBlur={() => {
-          const parsed = parseFloat(local ?? '')
-          onChange(Number.isNaN(parsed) ? Number.NaN : parsed)
+          // Unedited fields keep their stored value exactly (no mm → in → mm rounding drift)
+          if (local !== null && local !== initial.current) {
+            const parsed = parseFloat(local)
+            onChange(Number.isNaN(parsed) ? Number.NaN : parsed * scale)
+          }
           setLocal(null)
         }}
       />
@@ -73,6 +91,8 @@ function NumberField({ id, label, unit, value, onChange, error, hint, step }: Nu
 
 export interface ArcFlashInputFormProps {
   values: ArcFlashInput
+  /** NEC shows distances in inches, IEC in mm; values are always stored in mm */
+  standard: ArcFlashStandard
   /** Enclosure kept in the store even for open-air configurations, so switching back restores it */
   enclosure: EnclosureDimensions
   errors: FieldError[]
@@ -89,6 +109,7 @@ export interface ArcFlashInputFormProps {
 
 export default function ArcFlashInputForm({
   values,
+  standard,
   enclosure,
   errors,
   onFieldChange,
@@ -105,6 +126,9 @@ export default function ArcFlashInputForm({
   const lv = values.voltageV <= 600
   const longTime = values.arcingTimeNominalMs > 2000 || values.arcingTimeReducedMs > 2000
   const configInfo = ELECTRODE_CONFIGS.find((c) => c.id === values.electrodeConfig)
+  const imperial = standard === 'NEC'
+  const lenUnit = imperial ? 'in' : 'mm'
+  const lenScale = imperial ? 25.4 : 1
 
   return (
     <form
@@ -196,20 +220,26 @@ export default function ArcFlashInputForm({
         <NumberField
           id="af-gap"
           label="Gap between conductors"
-          unit="mm"
+          unit={lenUnit}
+          scale={lenScale}
           value={values.gapMm}
           onChange={(v) => onFieldChange('gapMm', v)}
           error={err('gapMm')}
-          hint={lv ? '6.35 – 76.2 mm for ≤ 600 V' : '19.05 – 254 mm above 600 V'}
+          hint={
+            imperial
+              ? lv ? '0.25 – 3 in for ≤ 600 V' : '0.75 – 10 in above 600 V'
+              : lv ? '6.35 – 76.2 mm for ≤ 600 V' : '19.05 – 254 mm above 600 V'
+          }
         />
         <NumberField
           id="af-wd"
           label="Working distance"
-          unit="mm"
+          unit={lenUnit}
+          scale={lenScale}
           value={values.workingDistanceMm}
           onChange={(v) => onFieldChange('workingDistanceMm', v)}
           error={err('workingDistanceMm')}
-          hint="≥ 305 mm (12 in)"
+          hint={imperial ? '≥ 12 in (305 mm)' : '≥ 305 mm (12 in)'}
         />
       </fieldset>
 
@@ -219,7 +249,8 @@ export default function ArcFlashInputForm({
           <NumberField
             id="af-enc-h"
             label="Height"
-            unit="mm"
+            unit={lenUnit}
+            scale={lenScale}
             value={enclosure.heightMm}
             onChange={(v) => onEnclosureChange('heightMm', v)}
             error={err('enclosure.heightMm') ?? err('enclosure')}
@@ -227,7 +258,8 @@ export default function ArcFlashInputForm({
           <NumberField
             id="af-enc-w"
             label="Width"
-            unit="mm"
+            unit={lenUnit}
+            scale={lenScale}
             value={enclosure.widthMm}
             onChange={(v) => onEnclosureChange('widthMm', v)}
             error={err('enclosure.widthMm')}
@@ -235,11 +267,12 @@ export default function ArcFlashInputForm({
           <NumberField
             id="af-enc-d"
             label="Depth"
-            unit="mm"
+            unit={lenUnit}
+            scale={lenScale}
             value={enclosure.depthMm}
             onChange={(v) => onEnclosureChange('depthMm', v)}
             error={err('enclosure.depthMm')}
-            hint="≤ 203.2 mm (8 in) counts as shallow below 600 V"
+            hint={imperial ? '≤ 8 in counts as shallow below 600 V' : '≤ 203.2 mm (8 in) counts as shallow below 600 V'}
           />
         </fieldset>
       )}
@@ -262,7 +295,7 @@ export default function ArcFlashInputForm({
           />
           {values.sameTimeForBoth ? (
             <div className="space-y-1">
-              <Label>Arcing time at reduced arcing current (ms)</Label>
+              <p className="text-sm font-medium leading-none">Arcing time at reduced arcing current (ms)</p>
               <p className="h-9 flex items-center text-sm text-muted-foreground">
                 Same as nominal ({values.arcingTimeNominalMs} ms)
               </p>
@@ -296,6 +329,64 @@ export default function ArcFlashInputForm({
             </label>
           )}
         </div>
+      </fieldset>
+
+      <fieldset className="space-y-3">
+        <legend className="text-sm font-semibold mb-2">PPE selection method</legend>
+        <div role="radiogroup" aria-label="PPE selection method" className="inline-flex flex-wrap rounded-md border p-1 gap-1">
+          {PPE_METHODS.map((m) => {
+            const selected = values.ppeMethod === m.id
+            return (
+              <button
+                key={m.id}
+                type="button"
+                role="radio"
+                aria-checked={selected}
+                onClick={() => onFieldChange('ppeMethod', m.id)}
+                className={`rounded px-3 py-1.5 text-sm text-left transition-colors ${
+                  selected ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
+                }`}
+              >
+                <span className="font-medium">{m.label}</span>
+                <span className="block text-xs opacity-80">{m.clause}</span>
+              </button>
+            )
+          })}
+        </div>
+        {values.ppeMethod === 'table' && (
+          <div className="space-y-1 max-w-xl">
+            <Label htmlFor="af-table-row">Equipment type (Table 130.7(C)(15)(a))</Label>
+            <Select
+              value={values.tableRowId ?? undefined}
+              onValueChange={(v) => onFieldChange('tableRowId', v)}
+            >
+              <SelectTrigger
+                id="af-table-row"
+                aria-invalid={!!err('tableRowId')}
+                className={err('tableRowId') ? 'border-destructive' : undefined}
+              >
+                <SelectValue placeholder="Select equipment type" />
+              </SelectTrigger>
+              <SelectContent>
+                {TABLE_130_7_C_15_A.map((r) => (
+                  <SelectItem key={r.id} value={r.id}>
+                    {r.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {err('tableRowId') ? (
+              <p className="text-xs text-destructive">
+                {err('tableRowId')!.message} <span className="opacity-75">— {err('tableRowId')!.clause}</span>
+              </p>
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                Checked against the bolted fault current, the nominal-case clearing time and the working distance. If any
+                limit is exceeded, the incident energy analysis result is used.
+              </p>
+            )}
+          </div>
+        )}
       </fieldset>
 
       <div className="flex gap-2">

@@ -147,7 +147,7 @@ These are **non-blocking warnings** (the calculation still runs; the standard de
    - Boundaries are **inclusive upper bounds** (E = 4.0 → Cat 1). Tests cover exact edges and ±0.01.
    - Clothing and equipment items are **paraphrased** item names (e.g., "Arc-rated long-sleeve shirt and pants, or coverall"), with a clause citation. Notes and footnotes are not reproduced verbatim (NFPA copyright).
 
-2. **Table method** — spec FR-012. *Correction*: the AC equipment table is **NFPA 70E-2024 Table 130.7(C)(15)(a)**, not (C)(15)(c). Encode 11 AC rows:
+2. **Table method** — spec FR-012. *Correction*: the AC equipment table is **NFPA 70E-2024 Table 130.7(C)(15)(a)**, not (C)(15)(c). Encode 10 AC rows:
    - Cat 1: panelboards ≤ 240 V (≤ 25 kA, ≤ 0.03 s, D ≥ 455 mm, AFB 485 mm)
    - Cat 2: panelboards > 240–600 V (25 kA, 0.03 s, 455 mm, AFB 900 mm); 600 V MCCs (65 kA, 0.03 s, AFB 1.5 m); other 600 V class equipment (65 kA, 0.03 s, AFB 1.5 m)
    - Cat 4: 600 V MCCs (42 kA, 0.33 s, AFB 4.3 m); 600 V switchgear/switchboards (35 kA, 0.5 s, AFB 6 m); NEMA E2 starters 2.3–7.2 kV (35 kA, 0.24 s, D ≥ 910 mm, AFB 12 m); metal-clad switchgear 1–15 kV (35 kA, 0.24 s, 910 mm, 12 m); metal-enclosed interrupter switchgear 1–15 kV (same); other 1–15 kV equipment (same)

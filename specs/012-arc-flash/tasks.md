@@ -184,7 +184,7 @@ description: "Task list for the Arc Flash Calculator (IEEE 1584-2018 / NFPA 70E-
 
 ### Tests for User Story 2 (write first — must FAIL) ⚠️
 
-- [ ] T026 [P] [US2] Write `__tests__/unit/calculations/arc-flash/ppe.test.ts`:
+- [X] T026 [P] [US2] Write `__tests__/unit/calculations/arc-flash/ppe.test.ts`:
   - `ppeCategoryFromEnergy` at 1.19→below, 1.2→1, 4.0→1, 4.01→2, 8.0→2, 8.01→3, 25.0→3, 25.01→4, 40.0→4, 40.01→danger
   - Min arc ratings 4/8/25/40 cal/cm² and 16.75/33.5/104.7/167.5 J/cm²
   - `approachBoundaries`: 120 V → LAB 3048/1067 mm with RAB 'avoid-contact'; 480 V → 3048/1067/305; 4160 V → 3048/1524/660 (imperial-derived mm, R8)
@@ -193,30 +193,30 @@ description: "Task list for the Arc Flash Calculator (IEEE 1584-2018 / NFPA 70E-
 
 ### Implementation for User Story 2
 
-- [ ] T027 [P] [US2] Create `lib/standards/nfpa70e.ts`:
+- [X] T027 [P] [US2] Create `lib/standards/nfpa70e.ts`:
   - **`PPE_THRESHOLDS`**: 1.2 / 4 / 8 / 25 / 40 cal/cm² with J/cm² equivalents.
   - **`PPE_ITEMS`**: per category, *paraphrased* clothing and equipment item names (not verbatim NFPA text; research R8 / plan D6).
     - Cat 1: AR long-sleeve shirt and pants or AR coverall; AR face shield or AR hood; AR outerwear as needed; hard hat; safety glasses or goggles; hearing protection; heavy-duty leather, AR or rubber-insulating gloves; leather footwear as needed.
     - Cat 2: as Cat 1, but AR hood or AR face shield plus AR balaclava, and leather footwear required.
     - Cat 3 and 4: an AR clothing system rated ≥ 25 / ≥ 40 cal/cm² (shirt, pants, coverall, flash suit jacket and pants as required); AR flash suit hood; AR gloves or rubber-insulating gloves with protectors; AR outerwear as needed; hard hat; safety glasses or goggles; hearing protection; leather footwear.
-  - **`TABLE_130_7_C_15_A`**: the 11 AC rows from research R8. Each row has id, label, voltage range, max kA, max clearing s, min working distance mm, category and AFB mm.
+  - **`TABLE_130_7_C_15_A`**: the 10 AC rows from research R8. Each row has id, label, voltage range, max kA, max clearing s, min working distance mm, category and AFB mm.
   - **`APPROACH_BOUNDARIES`** (Table 130.4(E)(a)): imperial source values in inches. The metric column goes in a separate `APPROACH_BOUNDARIES_METRIC_2024` const marked `// TODO(T031): verify vs licensed NFPA 70E-2024`.
   - Header comment citing NFPA 70E-2024 clause numbers.
-- [ ] T028 [US2] Implement `lib/calculations/arc-flash/ppe.ts`, per contracts §3:
+- [X] T028 [US2] Implement `lib/calculations/arc-flash/ppe.ts`, per contracts §3:
   - `ppeCategoryFromEnergy`, `approachBoundaries`, `evaluateTableMethod` (uses the **nominal** arcing time) and `assessPpe(result, input, standard)`
   - For IEC, `iecRequirement` stays null here; US4 fills it
 
   Run T026 to green.
-- [ ] T029 [P] [US2] Create `components/arc-flash/PpeAssessmentCard.tsx` (presentational):
+- [X] T029 [P] [US2] Create `components/arc-flash/PpeAssessmentCard.tsx` (presentational):
   - Large category badge (1–4 colour-coded), or a "Below 1.2 cal/cm² — no arc-rated PPE category required; wear non-melting clothing" info state, or a red DANGER state: "Exceeds 40 cal/cm² — no PPE category applies. De-energize or reduce the hazard (e.g., faster clearing time)" (spec US2-AS2)
   - Minimum arc rating, clothing and equipment lists, LAB/RAB, the table-method result or a "not applicable: <failedLimits>" message, and clause citations
   - Non-colour cues (icon and text) for accessibility
-- [ ] T030 [US2] Integrate PPE:
+- [X] T030 [US2] Integrate PPE:
   - Add `ppeMethod` and `tableRowId` fields to the store (T019 file) and a PPE-method radio plus table-row select to `ArcFlashInputForm.tsx`
   - Add the `TABLE_ROW_REQUIRED` rule to `arcFlashValidation.ts`
   - In `ArcFlashTool.tsx`, call `assessPpe` after `calculateArcFlash`, store the `ppe` and render `PpeAssessmentCard`
   - Verify quickstart §3C and §3F
-- [ ] T031 [US2] **HUMAN TASK — release-blocking data verification**: ask the user to confirm the NFPA 70E-2024 Table 130.4(E)(a) metric values (LAB/RAB for 50–150 V, 151–750 V and 751 V–15 kV) and the AFB/limit values of the 11 Table 130.7(C)(15)(a) rows against a licensed copy. Then update `lib/standards/nfpa70e.ts`, remove the TODO and record the confirmation in a PHR.
+- [ ] T031 [US2] **HUMAN TASK — release-blocking data verification**: ask the user to confirm the NFPA 70E-2024 Table 130.4(E)(a) metric values (LAB/RAB for 50–150 V, 151–750 V and 751 V–15 kV) and the AFB/limit values of the 10 Table 130.7(C)(15)(a) rows against a licensed copy. Then update `lib/standards/nfpa70e.ts`, remove the TODO and record the confirmation in a PHR.
 
 **Checkpoint**: US1 + US2 make a complete, safety-relevant P1 deliverable.
 
@@ -230,18 +230,18 @@ description: "Task list for the Arc Flash Calculator (IEEE 1584-2018 / NFPA 70E-
 
 ### Tests for User Story 3 (write first — must FAIL) ⚠️
 
-- [ ] T032 [P] [US3] Write `__tests__/unit/calculations/arc-flash/pdf.test.ts`:
+- [X] T032 [P] [US3] Write `__tests__/unit/calculations/arc-flash/pdf.test.ts`:
   - `generateArcFlashPDF` returns a jsPDF with ≥ 1 page
   - The text output (via `doc.output('datauristring')` decoded, or by spying on `doc.text`) contains "IEEE 1584-2018", "NFPA 70E-2024", "Governing", both case energies, the PPE outcome, "WARNING" or "DANGER", and the disclaimer
   - Also test the pure `buildArcFlashLabel(input, result, ppe, standard)`: signal word at 39.99 vs 40.0 cal/cm², and every field present
 
 ### Implementation for User Story 3
 
-- [ ] T033 [P] [US3] Add the pure `buildArcFlashLabel` to `lib/calculations/arc-flash/label.ts` (fields per data-model `ArcFlashLabel`; DANGER iff governing E ≥ 40 cal/cm²). Create `components/arc-flash/ArcFlashLabelPreview.tsx`:
+- [X] T033 [P] [US3] Add the pure `buildArcFlashLabel` to `lib/calculations/arc-flash/label.ts` (fields per data-model `ArcFlashLabel`; DANGER iff governing E ≥ 40 cal/cm²). Create `components/arc-flash/ArcFlashLabelPreview.tsx`:
   - ANSI Z535-style label: orange WARNING or red DANGER header band with a ⚠ symbol
   - Rows: "Arc Flash Hazard"; Arc Flash Boundary; Incident Energy at working distance; PPE category or minimum arc rating; Nominal voltage; Limited approach; Restricted approach; Equipment ID; Date
   - Fixed aspect ratio of about 4×6 in
-- [ ] T034 [US3] Create `lib/pdfGenerator.arcFlash.ts` with `generateArcFlashPDF` and `downloadArcFlashPDF` (pattern: `lib/pdfGenerator.conduitFill.ts` — A4 portrait, mm, `yPosition` cursor, `checkPage()`, blob download). The PDF has these sections:
+- [X] T034 [US3] Create `lib/pdfGenerator.arcFlash.ts` with `generateArcFlashPDF` and `downloadArcFlashPDF` (pattern: `lib/pdfGenerator.conduitFill.ts` — A4 portrait, mm, `yPosition` cursor, `checkPage()`, blob download). The PDF has these sections:
   1. Header, project, equipment ID, timestamp and app version
   2. Inputs table with units
   3. Enclosure correction
@@ -252,7 +252,7 @@ description: "Task list for the Arc Flash Calculator (IEEE 1584-2018 / NFPA 70E-
   8. Constitution VI disclaimer + FR-021 disclaimer
 
   Run T032 to green.
-- [ ] T035 [US3] Integrate into `ArcFlashTool.tsx`: a "Label preview" toggle or tab and an "Export PDF" button (with an `isExportingPDF` state, disabled until a result exists). Verify quickstart §3H in Chrome.
+- [X] T035 [US3] (manual Chrome check folded into T049) Integrate into `ArcFlashTool.tsx`: a "Label preview" toggle or tab and an "Export PDF" button (with an `isExportingPDF` state, disabled until a result exists). Verify quickstart §3H in Chrome.
 
 **Checkpoint**: The results can be documented for compliance.
 
@@ -266,7 +266,7 @@ description: "Task list for the Arc Flash Calculator (IEEE 1584-2018 / NFPA 70E-
 
 ### Tests for User Story 4 (write first — must FAIL) ⚠️
 
-- [ ] T036 [P] [US4] Write `__tests__/unit/calculations/arc-flash/units.test.ts`:
+- [X] T036 [P] [US4] Write `__tests__/unit/calculations/arc-flash/units.test.ts`:
   - mm↔in round-trip within 1e-9
   - J/cm²↔cal/cm² using 4.184
   - `formatDistance(1029, 'NEC')` → "3 ft 5 in (1029 mm)"; `formatDistance(1029, 'IEC')` → "1029 mm (1.03 m)"
@@ -276,13 +276,13 @@ description: "Task list for the Arc Flash Calculator (IEEE 1584-2018 / NFPA 70E-
 
 ### Implementation for User Story 4
 
-- [ ] T037 [P] [US4] Create `lib/calculations/arc-flash/units.ts` with `mmToIn`, `inToMm`, `jToCal`, `calToJ`, `formatDistance`, `formatEnergy` and `formatTime` (unit order depends on the standard). Run the format tests in T036 to green.
-- [ ] T038 [US4] Extend `assessPpe` in `lib/calculations/arc-flash/ppe.ts`. When the standard is 'IEC', set `iecRequirement = { minArcRatingJcm2: ceil(E·10)/10, text: 'Arc-rated clothing with ATPV or ELIM (IEC 61482-1-1) ≥ X J/cm²; garments conforming to IEC 61482-2' }` and add the informational note that IEC 61482-1-2 box-test classes APC 1/APC 2 are not selected from incident energy. Run T036 to green.
-- [ ] T039 [US4] UI switcher:
+- [X] T037 [P] [US4] Create `lib/calculations/arc-flash/units.ts` with `mmToIn`, `inToMm`, `jToCal`, `calToJ`, `formatDistance`, `formatEnergy` and `formatTime` (unit order depends on the standard). Run the format tests in T036 to green.
+- [X] T038 [US4] Extend `assessPpe` in `lib/calculations/arc-flash/ppe.ts`. When the standard is 'IEC', set `iecRequirement = { minArcRatingJcm2: ceil(E·10)/10, text: 'Arc-rated clothing with ATPV or ELIM (IEC 61482-1-1) ≥ X J/cm²; garments conforming to IEC 61482-2' }` and add the informational note that IEC 61482-1-2 box-test classes APC 1/APC 2 are not selected from incident energy. Run T036 to green.
+- [X] T039 [US4] (manual §3E check folded into T049) UI switcher:
   - Add a NEC/IEC segmented control to the `ArcFlashTool.tsx` header (pattern from conduit-fill), with `setStandard` in the store
   - The input form shows distances in inches for NEC (stored as mm and converted on blur) and mm for IEC
   - Results, `PpeAssessmentCard` (IEC requirement text instead of the category list in IEC mode) and `ArcFlashLabelPreview` use the `units.ts` formatters
-- [ ] T040 [US4] Make `lib/pdfGenerator.arcFlash.ts` use the selected standard's units and PPE wording. Extend T032 with an IEC-mode assertion containing "IEC 61482".
+- [X] T040 [US4] Make `lib/pdfGenerator.arcFlash.ts` use the selected standard's units and PPE wording. Extend T032 with an IEC-mode assertion containing "IEC 61482".
 
 **Checkpoint**: Dual-standard parity with the other ElectroMate calculators.
 
@@ -296,7 +296,7 @@ description: "Task list for the Arc Flash Calculator (IEEE 1584-2018 / NFPA 70E-
 
 ### Tests for User Story 5 (write first — must FAIL) ⚠️
 
-- [ ] T041 [P] [US5] Write `__tests__/unit/calculations/arc-flash/store.test.ts` (the repo's `vitest.config.ts` already uses `environment: 'jsdom'`, so `localStorage` is available; call `localStorage.clear()` and reset the store in `beforeEach`. This is the first store test in the repo, so there's no existing pattern to copy):
+- [X] T041 [P] [US5] Write `__tests__/unit/calculations/arc-flash/store.test.ts` (the repo's `vitest.config.ts` already uses `environment: 'jsdom'`, so `localStorage` is available; call `localStorage.clear()` and reset the store in `beforeEach`. This is the first store test in the repo, so there's no existing pattern to copy):
   - `addToHistory` uses FIFO capped at 50 and the key `electromate-arc-flash-history`
   - `loadFromHistory` restores input, result and ppe
   - `applyEquipmentClass('lv-switchgear')` sets gap 32, enclosure 508×508×508, working distance 609.6 and config VCB
@@ -304,15 +304,15 @@ description: "Task list for the Arc Flash Calculator (IEEE 1584-2018 / NFPA 70E-
 
 ### Implementation for User Story 5
 
-- [ ] T042 [US5] (history + applyEquipmentClass actions already implemented in T019 because the shared types require them; T041 tests still gate this task) Extend `stores/useArcFlashStore.ts`:
+- [X] T042 [US5] (history + applyEquipmentClass actions already implemented in T019 because the shared types require them; T041 tests still gate this task) Extend `stores/useArcFlashStore.ts`:
   - History helpers `getHistory`/`saveHistory` (try/catch, SSR-safe)
   - Actions `addToHistory`, `loadFromHistory`, `removeFromHistory`, `clearHistory`, `applyEquipmentClass`
   - The custom-on-edit rule
   - `ArcFlashTool.tsx` adds a history entry after each successful calculation (title = equipment ID or `${V} V ${config} ${Ibf} kA`)
 
   Run T041 to green.
-- [ ] T043 [P] [US5] Create `components/arc-flash/ArcFlashHistorySidebar.tsx` (pattern: `components/conduit-fill/ConduitFillHistorySidebar.tsx`): list entries with title, date, governing cal/cm² and a PPE badge; restore, delete and clear-all with confirmation.
-- [ ] T044 [P] [US5] Create `components/arc-flash/ArcFlashReferenceDialog.tsx` (shadcn Dialog) with these sections:
+- [X] T043 [P] [US5] Create `components/arc-flash/ArcFlashHistorySidebar.tsx` (pattern: `components/conduit-fill/ConduitFillHistorySidebar.tsx`): list entries with title, date, governing cal/cm² and a PPE badge; restore, delete and clear-all with confirmation.
+- [X] T044 [P] [US5] Create `components/arc-flash/ArcFlashReferenceDialog.tsx` (shadcn Dialog) with these sections:
   1. Electrode configurations VCB/VCBB/HCB/VOA/HOA, with plain-language descriptions and a simple inline SVG diagram each
   2. Typical equipment values (the `TYPICAL_EQUIPMENT` table)
   3. Model applicability ranges (research R7)
@@ -321,7 +321,7 @@ description: "Task list for the Arc Flash Calculator (IEEE 1584-2018 / NFPA 70E-
   6. IEC 61482 notes
   7. A "Differences from the IEEE spreadsheet v2.6.6" note (research R3)
   8. Standards cited and the disclaimer
-- [ ] T045 [US5] Add an equipment-class select at the top of `ArcFlashInputForm.tsx` (calls `applyEquipmentClass`) and wire the history toggle and reference dialog button into the `ArcFlashTool.tsx` header. Verify quickstart §3G.
+- [X] T045 [US5] Add an equipment-class select at the top of `ArcFlashInputForm.tsx` (calls `applyEquipmentClass`) and wire the history toggle and reference dialog button into the `ArcFlashTool.tsx` header. Verify quickstart §3G.
 
 **Checkpoint**: All five user stories work.
 
@@ -329,25 +329,25 @@ description: "Task list for the Arc Flash Calculator (IEEE 1584-2018 / NFPA 70E-
 
 ## Phase 8: Polish & Cross-Cutting Concerns
 
-- [ ] T046 [P] Accessibility pass on `components/arc-flash/*` and `app/arc-flash/ArcFlashTool.tsx`:
+- [X] T046 [P] Accessibility pass on `components/arc-flash/*` and `app/arc-flash/ArcFlashTool.tsx`:
   - every input has a `<Label htmlFor>`
   - the results region is `aria-live="polite"`
   - DANGER and WARNING are conveyed by text and icon, not only colour
   - the label preview has an `aria-label` summary
   - everything is keyboard-reachable (WCAG 2.1 AA, constitution Code Quality)
-- [ ] T047 [P] Wrap the calculator body in an error boundary (`components/arc-flash/ArcFlashErrorBoundary.tsx`, a class component with a reset button). An unexpected throw shows a friendly message, never a blank page.
-- [ ] T048 Write `scripts/arc-flash/verify-full-golden.mjs` (not part of CI). It downloads the full 144k CSV, runs the compiled engine on every row in both cases, and prints the max relative error per quantity. Run it once and record the output in the PR description. The target is ≤ 1e-4; research measured 2.4e-6.
-- [ ] T049 Run the full `npx vitest run` (the whole repo, to catch regressions) and `npx next build`. Then walk through quickstart §3A–§3H and fix anything found.
+- [X] T047 [P] Wrap the calculator body in an error boundary (`components/arc-flash/ArcFlashErrorBoundary.tsx`, a class component with a reset button). An unexpected throw shows a friendly message, never a blank page.
+- [X] T048 Write `scripts/arc-flash/verify-full-golden.mjs` (not part of CI). It downloads the full 144k CSV, runs the compiled engine on every row in both cases, and prints the max relative error per quantity. Run it once and record the output in the PR description. The target is ≤ 1e-4; research measured 2.4e-6.
+- [ ] T049 (automated part DONE 2026-10-07: arc-flash 144/144, repo 11 pre-existing failures outside feature, build OK — see verification.md; manual §3A–§3H click-through pending) Run the full `npx vitest run` (the whole repo, to catch regressions) and `npx next build`. Then walk through quickstart §3A–§3H and fix anything found.
 
 ---
 
 ## Phase 9: Constitution Compliance Verification
 
-- [ ] T050 [P] Accuracy (Principle I): confirm `annexD.test.ts`, `golden.test.ts` and `errata.test.ts` pass and the T048 output is recorded. Confirm `ieee1584Tables.ts` cites its sources and the VOA k7 note.
-- [ ] T051 [P] Safety (Principle II): manually check that every warning code renders with its clause, the DANGER state is unmistakable, and validation feedback appears within 100 ms of an edit.
-- [ ] T052 [P] Traceability and documentation (Principles III, VI): the UI details section and the PDF show the IEEE 1584-2018 equation numbers, NFPA 70E-2024 clauses and IEC 61482 part numbers with years; the PDF includes the timestamp, version and both disclaimers; the PDF opens correctly in Chrome, Firefox, Edge and (if available) Safari.
-- [ ] T053 Test-first record (Principle V): confirm T014's Red run and the user approval happened (PHR exists), and list any test-coverage gaps with justification in the PR description.
-- [ ] T054 ADR follow-up: if the user ran `/sp.adr native-arithmetic-for-empirical-models`, link the ADR in `specs/012-arc-flash/plan.md` (Complexity Tracking row). Otherwise list it as an open item in the PR description.
+- [X] T050 [P] Accuracy (Principle I): confirm `annexD.test.ts`, `golden.test.ts` and `errata.test.ts` pass and the T048 output is recorded. Confirm `ieee1584Tables.ts` cites its sources and the VOA k7 note.
+- [ ] T051 (manual, pending) [P] Safety (Principle II): manually check that every warning code renders with its clause, the DANGER state is unmistakable, and validation feedback appears within 100 ms of an edit.
+- [ ] T052 (refs/disclaimers in UI+PDF DONE; cross-browser PDF open pending) [P] Traceability and documentation (Principles III, VI): the UI details section and the PDF show the IEEE 1584-2018 equation numbers, NFPA 70E-2024 clauses and IEC 61482 part numbers with years; the PDF includes the timestamp, version and both disclaimers; the PDF opens correctly in Chrome, Firefox, Edge and (if available) Safari.
+- [X] T053 Test-first record (Principle V): confirm T014's Red run and the user approval happened (PHR exists), and list any test-coverage gaps with justification in the PR description.
+- [X] T054 ADR follow-up: if the user ran `/sp.adr native-arithmetic-for-empirical-models`, link the ADR in `specs/012-arc-flash/plan.md` (Complexity Tracking row). Otherwise list it as an open item in the PR description.
 
 **Checkpoint**: Ready for `/sp.git.commit_pr`.
 

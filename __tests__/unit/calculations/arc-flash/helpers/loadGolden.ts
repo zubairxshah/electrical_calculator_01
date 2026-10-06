@@ -25,9 +25,12 @@ export interface GoldenRow {
 
 const FIXTURE = path.resolve(__dirname, '../../../../fixtures/arc-flash/ieee1584-golden-subset.csv')
 
-/** Loads the IEEE 1584-2018 golden subset (see __tests__/fixtures/arc-flash/README.md). */
-export function loadGolden(): GoldenRow[] {
-  const [, ...lines] = fs.readFileSync(FIXTURE, 'utf8').replace(/\r/g, '').trim().split('\n')
+/**
+ * Loads the IEEE 1584-2018 golden subset (see __tests__/fixtures/arc-flash/README.md), or another CSV
+ * with the same columns (e.g. the full 144k-row file used by scripts/arc-flash/verify-full-golden.mjs).
+ */
+export function loadGolden(file: string = FIXTURE): GoldenRow[] {
+  const [, ...lines] = fs.readFileSync(file, 'utf8').replace(/\r/g, '').trim().split('\n')
   return lines.map((l, i) => {
     const c = l.split(',')
     const n = (k: number) => Number(c[k])
