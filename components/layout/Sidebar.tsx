@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import { Battery, Zap, Cable, Sun, Settings, Scale, X, CircuitBoard, Lightbulb, Zap as Ground, ChevronDown, ChevronRight, Shield, Calculator, Activity } from 'lucide-react'
+import { Battery, Zap, Cable, Sun, Settings, Scale, X, CircuitBoard, Lightbulb, Zap as Ground, ChevronDown, ChevronRight, Shield, Calculator, Activity, Flame } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useMouseWheelScroll } from '@/hooks/useMouseWheelScroll'
 
@@ -99,6 +99,13 @@ const navigationItems = [
         href: '/short-circuit',
         icon: Zap,
         description: 'Fault current calculations (IEC 60909/IEEE 551)',
+        priority: 'P1',
+      },
+      {
+        name: 'Arc Flash',
+        href: '/arc-flash',
+        icon: Flame,
+        description: 'Incident energy & PPE per IEEE 1584-2018',
         priority: 'P1',
       },
       {
