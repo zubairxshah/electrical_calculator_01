@@ -10,13 +10,13 @@ You are an expert AI assistant specializing in Spec-Driven Development (SDD). Yo
 
 **Your Success is Measured By:**
 - All outputs strictly follow the user intent.
-- Prompt History Records (PHRs) are created automatically and accurately for every user prompt.
+- One session-summary Prompt History Record (PHR) is created at the end of each working session (not per message).
 - Architectural Decision Record (ADR) suggestions are made intelligently for significant decisions.
 - All changes are small, testable, and reference code precisely.
 
 ## Core Guarantees (Product Promise)
 
-- Record every user input verbatim in a Prompt History Record (PHR) after every user message. Do not truncate; preserve full multiline input.
+- Record ONE session-summary PHR at the end of the session (when the user says the session is ending, asks for a wrap-up/commit, or a feature milestone is completed). It lists every user prompt of the session verbatim plus a concise summary of what was done.
 - PHR routing (all under `history/prompts/`):
   - Constitution → `history/prompts/constitution/`
   - Feature-specific → `history/prompts/<feature-name>/`
@@ -31,15 +31,15 @@ Agents MUST prioritize and use MCP tools and CLI commands for all information ga
 ### 2. Execution Flow:
 Treat MCP servers as first-class tools for discovery, verification, execution, and state capture. PREFER CLI interactions (running commands and capturing outputs) over manual file creation or reliance on internal knowledge.
 
-### 3. Knowledge capture (PHR) for Every User Input.
-After completing requests, you **MUST** create a PHR (Prompt History Record).
-
-**When to create PHRs:**
-- Implementation work (code changes, new features)
-- Planning/architecture discussions
-- Debugging sessions
-- Spec/task/plan creation
-- Multi-step workflows
+### 3. Knowledge capture (PHR) — one per session.
+**Session PHR policy (overrides the per-command PHR steps inside every `.claude/commands/sp.*.md` file):**
+- Do NOT create a PHR after each message or after each `/sp.*` command.
+- Create exactly ONE PHR per session, at the end: when the user signals wrap-up ("done", "wrap up", "commit", "end session"), or after a full `/sp.auto` run or feature milestone completes. If unsure whether the session is ending, ask once before writing it.
+- Stage: the feature's dominant stage (e.g. `green` for implementation) or `general`; route as below.
+- PROMPT_TEXT: every user prompt from the session, verbatim, numbered in order.
+- RESPONSE_TEXT: short session summary — commands run, artifacts produced, decisions, tests and results.
+- FILES_YAML / TESTS_YAML: aggregate of the whole session.
+- `/sp.phr` can still be invoked manually at any time.
 
 **PHR Creation Process:**
 
@@ -101,6 +101,12 @@ After completing requests, you **MUST** create a PHR (Prompt History Record).
    - On any failure: warn but do not block the main command.
    - Skip PHR only for `/sp.phr` itself.
 
+### 3a. Automated SDD pipeline (`/sp.auto`)
+- The full SDD process is kept; the steps are chained automatically instead of waiting for the user between them.
+- `/sp.auto <feature description>` runs: specify → clarify → plan → tasks → analyze → implement, in one go.
+- Pause ONLY for: genuine clarification questions (batched into one AskUserQuestion call), ADR consent, CRITICAL issues from analyze, or failing tests that cannot be fixed autonomously.
+- Individual `/sp.*` commands remain available; when one finishes, proceed to the next step automatically unless the user said to stop.
+
 ### 4. Explicit ADR suggestions
 - When significant architectural decisions are made (typically during `/sp.plan` and sometimes `/sp.tasks`), run the three‑part test and suggest documenting with:
   "📋 Architectural decision detected: <brief> — Document reasoning and tradeoffs? Run `/sp.adr <decision-title>`"
@@ -128,7 +134,7 @@ You are not expected to solve every problem autonomously. You MUST invoke the us
 2) List constraints, invariants, non‑goals.
 3) Produce the artifact with acceptance checks inlined (checkboxes or tests where applicable).
 4) Add follow‑ups and risks (max 3 bullets).
-5) Create PHR in appropriate subdirectory under `history/prompts/` (constitution, feature-name, or general).
+5) Do not create a per-request PHR; contribute to the end-of-session PHR (see section 3).
 6) If plan/tasks identified decisions that meet significance, surface ADR suggestion text as described above.
 
 ### Minimum acceptance criteria
