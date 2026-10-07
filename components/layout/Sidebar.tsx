@@ -55,6 +55,13 @@ const navigationItems = [
         priority: 'P1',
       },
       {
+        name: 'Panel Schedule',
+        href: '/panel-schedule',
+        icon: Scale,
+        description: 'Panelboard schedule & phase balancing',
+        priority: 'P1',
+      },
+      {
         name: 'Power Calculator (P,Q,S)',
         href: '/power-calculator',
         icon: Activity,
