@@ -2,7 +2,7 @@
 
 > **Scope**: Document decision clusters, not individual technology choices. Group related decisions that work together (e.g., "Frontend Stack" not separate ADRs for framework, styling, deployment).
 
-- **Status:** Accepted
+- **Status:** Accepted — amended by [ADR-007](007-arithmetic-policy-native-vs-bignumber.md) (2026-10-08): BigNumber is no longer mandatory for all calculations; native doubles are the default, guarded by reference-case accuracy tests
 - **Date:** 2025-12-24
 - **Feature:** ElectroMate Engineering Web Application
 - **Context:** ElectroMate is a professional electrical engineering calculation platform where calculation accuracy directly impacts human safety, code compliance, and professional liability. Constitution Principle I (Calculation Accuracy) is marked NON-NEGOTIABLE: all calculations must match published standards within specified tolerances (±2% for battery backup per SC-005, ±0.1% for voltage drop per SC-004, 100% NEC/IEC ampacity compliance per SC-009). Native JavaScript uses IEEE 754 floating-point arithmetic, which introduces precision errors unacceptable for engineering calculations (e.g., `0.1 + 0.2 = 0.30000000000000004`). Engineers submit calculation outputs to approval authorities and clients, requiring verifiable accuracy with traceability to IEEE/IEC/NEC standards.
