@@ -99,7 +99,7 @@ description: "Task list for the Panel Schedule & Phase Load Balancing calculator
 - [X] T040 [P] Accessibility pass: labels for all inputs, phase badges not colour-only (text A/B/C), keyboard-operable grid actions and dialogs
 - [X] T041 Write `specs/013-panel-schedule/verification.md` recording test results and the open manual checks
 - [ ] T042 **USER**: verify NEC 2020 Table 220.42 / 220.44 / 220.56 and Tables 430.248 / 430.250 values against a licensed copy; verify IEC 61439-2 RDF values (release-blocking)
-- [ ] T043 **USER**: manual browser walkthrough (quickstart steps 1–8) and cross-browser PDF check
+- [x] T043 **USER**: manual browser walkthrough (quickstart steps 1–8) and cross-browser PDF check
 
 ## Dependencies
 
