@@ -13,7 +13,7 @@ labels: ["panel-schedule","walkthrough","T043","pr-6"]
 links:
   spec: specs/013-panel-schedule/spec.md
   ticket: null
-  adr: history/adr/ADR-007
+  adr: history/adr/007-arithmetic-policy-native-vs-bignumber.md
   pr: https://github.com/zubairxshah/electrical_calculator_01/pull/6
 files:
  - specs/013-panel-schedule/tasks.md
