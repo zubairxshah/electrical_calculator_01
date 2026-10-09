@@ -46,7 +46,7 @@ export function selectStepSize(totalKVAR: number): { steps: number; kvarPerStep:
 export function selectCapacitorVoltageRating(systemVoltage: number): number {
   const minRating = systemVoltage * 1.1 // 10% margin per IEC 60831
   for (const rating of CAPACITOR_VOLTAGE_RATINGS) {
-    if (rating >= minRating) return rating
+    if (rating >= minRating - 1e-9) return rating // tolerance: 1.1 × 400 = 440.00000000000006
   }
   return CAPACITOR_VOLTAGE_RATINGS[CAPACITOR_VOLTAGE_RATINGS.length - 1]
 }

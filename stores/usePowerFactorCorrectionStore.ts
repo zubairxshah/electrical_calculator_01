@@ -10,10 +10,22 @@ import type {
   PFCCorrectionType,
   PFCLoadProfile,
   PFCCalculationResults,
+  PFCDesignInput,
+  PFCDesignStage,
+  PFCStepOverride,
 } from '@/types/power-factor-correction'
+import { DEFAULT_DESIGN } from '@/lib/calculations/power-factor-correction/panelDesign'
 
 const HISTORY_KEY = 'electromate-pfc-history'
 const MAX_HISTORY = 50
+const PERSIST_VERSION = 1
+
+/** Persisted-state migration: v0 had no APFC panel design; later versions may miss new fields */
+export function migratePFCState(persisted: unknown, _version: number): unknown {
+  const state = (persisted ?? {}) as Record<string, unknown>
+  const design = (state.design ?? {}) as Partial<PFCDesignInput>
+  return { ...state, design: { ...DEFAULT_DESIGN, ...design } }
+}
 
 const initialState: PFCState = {
   standard: 'IEC',
@@ -35,6 +47,8 @@ const initialState: PFCState = {
   results: null,
   showHistorySidebar: false,
   showEnvironmental: false,
+  design: DEFAULT_DESIGN,
+  activeStage: 1,
 }
 
 export const usePowerFactorCorrectionStore = create<PFCState & PFCActions>()(
@@ -66,6 +80,16 @@ export const usePowerFactorCorrectionStore = create<PFCState & PFCActions>()(
       setShowHistorySidebar: (v: boolean) => set({ showHistorySidebar: v }),
       setShowEnvironmental: (v: boolean) => set({ showEnvironmental: v }),
 
+      // APFC panel design — derived from stage 1 results, so these do not clear them
+      setDesign: (patch: Partial<PFCDesignInput>) => set(s => ({ design: { ...s.design, ...patch } })),
+      setStepOverride: (index: number, patch: PFCStepOverride | null) => set(s => {
+        const overrides = { ...s.design.overrides }
+        if (patch === null) delete overrides[index]
+        else overrides[index] = { ...overrides[index], ...patch }
+        return { design: { ...s.design, overrides } }
+      }),
+      setActiveStage: (stage: PFCDesignStage) => set({ activeStage: stage }),
+
       saveToHistory: () => {
         const state = get()
         if (!state.results) return
@@ -96,6 +120,7 @@ export const usePowerFactorCorrectionStore = create<PFCState & PFCActions>()(
             engineerName: state.engineerName,
           },
           results: state.results,
+          design: state.design,
         }
 
         try {
@@ -119,6 +144,7 @@ export const usePowerFactorCorrectionStore = create<PFCState & PFCActions>()(
             ...entry.environment,
             ...entry.project,
             results: entry.results,
+            design: { ...DEFAULT_DESIGN, ...entry.design },
           })
         } catch { /* ignore */ }
       },
@@ -145,9 +171,11 @@ export const usePowerFactorCorrectionStore = create<PFCState & PFCActions>()(
     }),
     {
       name: 'electromate-pfc',
+      version: PERSIST_VERSION,
+      migrate: (persisted, version) => migratePFCState(persisted, version) as PFCState & PFCActions,
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { results, showHistorySidebar, showEnvironmental, ...rest } = state
+        const { results, showHistorySidebar, showEnvironmental, activeStage, ...rest } = state
         return rest
       },
     }

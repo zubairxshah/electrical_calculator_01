@@ -85,3 +85,33 @@ export function validateWithWarnings(input: unknown) {
 
   return { ...result, warnings }
 }
+
+// ── APFC panel design inputs (stages 2–4) ────────────────────────────────────
+
+const stepOverrideSchema = z.object({
+  contactorA: z.number().positive('Contactor rating must be positive').optional(),
+  protectionA: z.number().positive('Protection rating must be positive').optional(),
+  cableSize: z.string().min(1).optional(),
+})
+
+export const pfcDesignInputSchema = z.object({
+  sequenceMode: z.enum(['auto', '1:1:1', '1:2:2', '1:2:4', '1:1:2:2', 'custom']),
+  customStepsKVAR: z.array(
+    z.number().positive('Step kVAR must be positive').max(1000, 'Step kVAR must be 1000 or less')
+  ).max(12, 'At most 12 steps'),
+  maxOutputs: z.union([z.literal(6), z.literal(8), z.literal(12)]),
+  ctPrimaryA: z.number(),
+  ctSecondaryA: z.union([z.literal(1), z.literal(5)]),
+  minLoadVariationKVAR: z.number().positive('Minimum load variation must be positive').nullable(),
+  detuning: z.union([z.literal('auto'), z.literal('none'), z.literal(5.67), z.literal(7), z.literal(14)]),
+  thirdHarmonic: z.boolean(),
+  protectionType: z.enum(['fuse', 'mccb']).nullable(),
+  overrides: z.record(z.string(), stepOverrideSchema),
+}).refine(
+  d => d.sequenceMode !== 'custom' || d.customStepsKVAR.length >= 1,
+  { message: 'Enter at least one custom step', path: ['customStepsKVAR'] }
+)
+
+export function validatePFCDesignInput(input: unknown) {
+  return pfcDesignInputSchema.safeParse(input)
+}

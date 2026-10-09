@@ -1,0 +1,224 @@
+{
+  "A": {
+    "loadAnalysis": {
+      "activePowerKW": 100,
+      "currentReactivePowerKVAR": 88.19,
+      "currentApparentPowerKVA": 133.33,
+      "currentPowerFactor": 0.75,
+      "currentPhaseAngleDeg": 41.41,
+      "currentLineCurrent": 185.49
+    },
+    "correctionSizing": {
+      "requiredKVAR": 55.32,
+      "correctedReactivePowerKVAR": 32.87,
+      "correctedApparentPowerKVA": 105.26,
+      "correctedPowerFactor": 0.95,
+      "correctedPhaseAngleDeg": 18.19,
+      "correctedLineCurrent": 146.44,
+      "currentReduction": 39.05,
+      "currentReductionPercent": 21.1,
+      "formula": "Qc = P × (tan θ₁ - tan θ₂) = 100 × (tan 41.4° - tan 18.2°) = 55.32 kVAR"
+    },
+    "capacitorBank": {
+      "totalKVAR": 60,
+      "numberOfSteps": 12,
+      "kvarPerStep": 5,
+      "capacitorType": "standard",
+      "ratedVoltage": 480,
+      "ratedCurrent": 83.47,
+      "capacitancePerPhase": 369.64,
+      "connectionType": "delta",
+      "dischargeResistors": true,
+      "fusedProtection": true,
+      "codeReference": "IEC 60831-1 (Self-healing capacitors), IEC 61921 (PFC equipment)"
+    },
+    "deratingFactors": null,
+    "savings": {
+      "kvaReduction": 28.07,
+      "currentReductionAmps": 39.05,
+      "estimatedLossReductionPercent": 37.7,
+      "demandChargeSavingPercent": 21.1,
+      "penaltyAvoidance": true
+    },
+    "alerts": [
+      {
+        "type": "info",
+        "message": "Current reduction of 21.1% achieved — consider downsizing cables/transformer."
+      },
+      {
+        "type": "info",
+        "message": "Discharge resistors required to reduce voltage to ≤50V within 3 minutes (IEC 60831)."
+      }
+    ],
+    "version": "1.0.0"
+  },
+  "NEC1ph": {
+    "loadAnalysis": {
+      "activePowerKW": 40,
+      "currentReactivePowerKVAR": 40.81,
+      "currentApparentPowerKVA": 57.14,
+      "currentPowerFactor": 0.7,
+      "currentPhaseAngleDeg": 45.57,
+      "currentLineCurrent": 119.05
+    },
+    "correctionSizing": {
+      "requiredKVAR": 23.77,
+      "correctedReactivePowerKVAR": 17.04,
+      "correctedApparentPowerKVA": 43.48,
+      "correctedPowerFactor": 0.92,
+      "correctedPhaseAngleDeg": 23.08,
+      "correctedLineCurrent": 90.58,
+      "currentReduction": 28.47,
+      "currentReductionPercent": 23.9,
+      "formula": "Qc = P × (tan θ₁ - tan θ₂) = 40 × (tan 45.6° - tan 23.1°) = 23.77 kVAR"
+    },
+    "capacitorBank": {
+      "totalKVAR": 25,
+      "numberOfSteps": 1,
+      "kvarPerStep": 25,
+      "capacitorType": "standard",
+      "ratedVoltage": 600,
+      "ratedCurrent": 52.08,
+      "capacitancePerPhase": 287.82,
+      "connectionType": "delta",
+      "dischargeResistors": true,
+      "fusedProtection": true,
+      "codeReference": "NEC 460.8 (Capacitor discharge), NEC 460.9 (Rating)"
+    },
+    "deratingFactors": null,
+    "savings": {
+      "kvaReduction": 13.66,
+      "currentReductionAmps": 28.47,
+      "estimatedLossReductionPercent": 42.1,
+      "demandChargeSavingPercent": 23.9,
+      "penaltyAvoidance": true
+    },
+    "alerts": [
+      {
+        "type": "info",
+        "message": "Current reduction of 23.9% achieved — consider downsizing cables/transformer."
+      },
+      {
+        "type": "info",
+        "message": "Discharge resistors required to reduce voltage to ≤50V within 1 minute (NEC 460.6)."
+      }
+    ],
+    "version": "1.0.0"
+  },
+  "IECderated": {
+    "loadAnalysis": {
+      "activePowerKW": 250,
+      "currentReactivePowerKVAR": 187.5,
+      "currentApparentPowerKVA": 312.5,
+      "currentPowerFactor": 0.8,
+      "currentPhaseAngleDeg": 36.87,
+      "currentLineCurrent": 451.05
+    },
+    "correctionSizing": {
+      "requiredKVAR": 136.74,
+      "correctedReactivePowerKVAR": 50.76,
+      "correctedApparentPowerKVA": 255.1,
+      "correctedPowerFactor": 0.98,
+      "correctedPhaseAngleDeg": 11.48,
+      "correctedLineCurrent": 368.21,
+      "currentReduction": 82.84,
+      "currentReductionPercent": 18.4,
+      "formula": "Qc = P × (tan θ₁ - tan θ₂) = 250 × (tan 36.9° - tan 11.5°) = 136.74 kVAR"
+    },
+    "capacitorBank": {
+      "totalKVAR": 175,
+      "numberOfSteps": 12,
+      "kvarPerStep": 15,
+      "capacitorType": "detuned",
+      "ratedVoltage": 440,
+      "ratedCurrent": 252.59,
+      "capacitancePerPhase": 1160.5,
+      "connectionType": "delta",
+      "dischargeResistors": true,
+      "fusedProtection": true,
+      "codeReference": "IEC 60831-1 (Self-healing capacitors), IEC 61921 (PFC equipment)"
+    },
+    "deratingFactors": {
+      "temperatureDerating": 0.95,
+      "altitudeDerating": 0.95,
+      "harmonicDerating": 0.9,
+      "combinedDerating": 0.812,
+      "adjustedKVAR": 168.35
+    },
+    "savings": {
+      "kvaReduction": 57.4,
+      "currentReductionAmps": 82.84,
+      "estimatedLossReductionPercent": 33.4,
+      "demandChargeSavingPercent": 18.4,
+      "penaltyAvoidance": true
+    },
+    "alerts": [
+      {
+        "type": "info",
+        "message": "Detuned capacitors with series reactors recommended for THD of 15%."
+      },
+      {
+        "type": "info",
+        "message": "Discharge resistors required to reduce voltage to ≤50V within 3 minutes (IEC 60831)."
+      },
+      {
+        "type": "warning",
+        "message": "Check for harmonic resonance. Perform resonance analysis before installation."
+      }
+    ],
+    "version": "1.0.0"
+  },
+  "MV": {
+    "loadAnalysis": {
+      "activePowerKW": 2000,
+      "currentReactivePowerKVAR": 1396.01,
+      "currentApparentPowerKVA": 2439.02,
+      "currentPowerFactor": 0.82,
+      "currentPhaseAngleDeg": 34.92,
+      "currentLineCurrent": 128.02
+    },
+    "correctionSizing": {
+      "requiredKVAR": 738.64,
+      "correctedReactivePowerKVAR": 657.37,
+      "correctedApparentPowerKVA": 2105.26,
+      "correctedPowerFactor": 0.95,
+      "correctedPhaseAngleDeg": 18.19,
+      "correctedLineCurrent": 110.5,
+      "currentReduction": 17.52,
+      "currentReductionPercent": 13.7,
+      "formula": "Qc = P × (tan θ₁ - tan θ₂) = 2000 × (tan 34.9° - tan 18.2°) = 738.64 kVAR"
+    },
+    "capacitorBank": {
+      "totalKVAR": 750,
+      "numberOfSteps": 10,
+      "kvarPerStep": 75,
+      "capacitorType": "standard",
+      "ratedVoltage": 13800,
+      "ratedCurrent": 39.36,
+      "capacitancePerPhase": 19.73,
+      "connectionType": "star",
+      "dischargeResistors": true,
+      "fusedProtection": true,
+      "codeReference": "IEC 60831-1 (Self-healing capacitors), IEC 61921 (PFC equipment)"
+    },
+    "deratingFactors": null,
+    "savings": {
+      "kvaReduction": 333.76,
+      "currentReductionAmps": 17.52,
+      "estimatedLossReductionPercent": 25.5,
+      "demandChargeSavingPercent": 13.7,
+      "penaltyAvoidance": true
+    },
+    "alerts": [
+      {
+        "type": "info",
+        "message": "Large capacitor bank (750 kVAR). Automatic switching with PF controller recommended."
+      },
+      {
+        "type": "info",
+        "message": "Discharge resistors required to reduce voltage to ≤50V within 3 minutes (IEC 60831)."
+      }
+    ],
+    "version": "1.0.0"
+  }
+}

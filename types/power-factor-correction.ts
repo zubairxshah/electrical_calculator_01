@@ -104,6 +104,137 @@ export interface PFCCalculationResults {
   version: string
 }
 
+// ── APFC panel design (stages 2–4) ───────────────────────────────────────────
+
+export type PFCSequencePreset = '1:1:1' | '1:2:2' | '1:2:4' | '1:1:2:2'
+export type PFCSequenceMode = 'auto' | PFCSequencePreset | 'custom'
+export type PFCControllerOutputs = 6 | 8 | 12
+export type PFCDetuningFactor = 5.67 | 7 | 14 // percent
+export type PFCDetuningChoice = 'auto' | 'none' | PFCDetuningFactor
+export type PFCProtectionType = 'fuse' | 'mccb'
+export type PFCDesignStage = 1 | 2 | 3 | 4
+
+export interface PFCStepOverride {
+  contactorA?: number
+  protectionA?: number
+  cableSize?: string // sizeMetric (IEC) or sizeAWG (NEC), as in lib/standards/cableTables.ts
+}
+
+export interface PFCDesignInput {
+  sequenceMode: PFCSequenceMode
+  customStepsKVAR: number[]
+  maxOutputs: PFCControllerOutputs
+  ctPrimaryA: number
+  ctSecondaryA: 1 | 5
+  minLoadVariationKVAR: number | null // null → 10 % of bank total
+  detuning: PFCDetuningChoice
+  thirdHarmonic: boolean
+  protectionType: PFCProtectionType | null // null → standard default (IEC fuse, NEC MCCB)
+  overrides: Record<number, PFCStepOverride> // keyed by 1-based step index
+}
+
+export type PFCDesignWarningCode =
+  | 'STEP_TOO_COARSE'
+  | 'OVERSHOOT'
+  | 'NO_STANDARD_STEP_FITS'
+  | 'INVALID_CUSTOM_STEPS'
+  | 'CK_NEEDS_CT'
+  | 'STEP_ABOVE_MAX_CONTACTOR'
+  | 'ABOVE_MAX_RATING'
+  | 'OVERRIDE_UNDERSIZED'
+  | 'MV_NOT_SUPPORTED'
+  | 'DETUNING_RECOMMENDED'
+  | 'UNDERSIZED_BANK'
+
+export interface PFCDesignWarning {
+  code: PFCDesignWarningCode
+  severity: 'error' | 'warning' | 'info'
+  message: string
+  reference?: string
+  stepIndex?: number
+}
+
+export interface PFCStep {
+  index: number // 1-based
+  ratio: number | null // null for custom/fixed
+  effectiveKVAR: number // at system voltage
+  cumulativeKVAR: number
+}
+
+export interface PFCController {
+  outputs: PFCControllerOutputs
+  ck: number | null // A (CT secondary); null when the CT ratio is invalid
+  ctRatio: number
+}
+
+export interface PFCStepBankDesign {
+  mode: PFCSequenceMode
+  preset: PFCSequencePreset | null
+  targetKVAR: number
+  steps: PFCStep[]
+  totalKVAR: number
+  overshootKVAR: number
+  resolutionKVAR: number
+  switchingLevels: number
+  outputsUsed: number
+  controller: PFCController | null // null for fixed correction
+  warnings: PFCDesignWarning[]
+}
+
+export interface PFCDetuningStep {
+  index: number
+  effectiveKVAR: number
+  ratedKVAR: number // nameplate kVAR at the capacitor rated voltage
+  capacitorReactanceOhm: number // star-equivalent
+  reactorInductanceMH: number | null // null when not detuned
+  currentA: number // fundamental step current at system voltage
+}
+
+export interface PFCDetuningDesign {
+  recommended: PFCDetuningFactor | null
+  applied: PFCDetuningFactor | null
+  tuningFrequencyHz: number | null
+  capacitorVoltageV: number
+  capacitorRatedVoltageV: number
+  steps: PFCDetuningStep[]
+  totalRatedKVAR: number
+  notes: string[]
+}
+
+export interface PFCSwitchgearItem<T> {
+  value: T | null
+  overridden: boolean
+  ok: boolean
+}
+
+export interface PFCSwitchgearStep {
+  index: number
+  ratedCurrentA: number
+  designCurrentA: number
+  contactor: PFCSwitchgearItem<number> & { type: string }
+  protection: PFCSwitchgearItem<number> & { type: PFCProtectionType }
+  cable: PFCSwitchgearItem<string> & { ampacityA: number | null; label: string | null }
+}
+
+export interface PFCSwitchgearDesign {
+  factor: number // 1.43 IEC | 1.35 NEC
+  protectionType: PFCProtectionType
+  steps: PFCSwitchgearStep[]
+  totalRatedCurrentA: number
+  totalDesignCurrentA: number
+  incomerA: number | null
+  busbarA: number | null
+  warnings: PFCDesignWarning[]
+}
+
+export interface PFCPanelDesign {
+  available: boolean
+  stepBank: PFCStepBankDesign | null
+  detuning: PFCDetuningDesign | null
+  switchgear: PFCSwitchgearDesign | null
+  warnings: PFCDesignWarning[]
+}
+
 export interface PFCHistoryEntry {
   id: string
   timestamp: string
@@ -111,6 +242,7 @@ export interface PFCHistoryEntry {
   environment: PFCEnvironment
   project: PFCProjectInfo
   results: PFCCalculationResults
+  design?: PFCDesignInput // absent on entries saved before the APFC panel upgrade
 }
 
 // Store types
@@ -119,6 +251,8 @@ export interface PFCState extends PFCInput, PFCEnvironment, PFCProjectInfo {
   results: PFCCalculationResults | null
   showHistorySidebar: boolean
   showEnvironmental: boolean
+  design: PFCDesignInput
+  activeStage: PFCDesignStage
 }
 
 export interface PFCActions {
@@ -145,6 +279,10 @@ export interface PFCActions {
   setResults: (r: PFCCalculationResults | null) => void
   setShowHistorySidebar: (v: boolean) => void
   setShowEnvironmental: (v: boolean) => void
+  // APFC panel design
+  setDesign: (patch: Partial<PFCDesignInput>) => void
+  setStepOverride: (index: number, patch: PFCStepOverride | null) => void
+  setActiveStage: (stage: PFCDesignStage) => void
   // History
   saveToHistory: () => void
   loadFromHistory: (id: string) => void
