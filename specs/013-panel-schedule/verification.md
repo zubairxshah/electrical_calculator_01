@@ -19,7 +19,7 @@
 | `npx next build` | pass; `/panel-schedule` prerendered static |
 | `next start` smoke test | `/panel-schedule` serves 200 with title, Add circuit, Balance, Load example; home links to it |
 
-## Open — user checks (release-blocking)
+## Manual checks
 
-- **T042**: verify NEC 2020 Table 220.42 (dwelling/hotel/warehouse/hospital tiers), Table 220.44, Table 220.56, and Tables 430.248/430.250 values in `lib/standards/motorFlc.ts` against a licensed copy. Verify the IEC 61439-2 assumed-loading (RDF) values.
-- **T043**: browser walkthrough (quickstart.md steps 1–8). It includes reload persistence, saved panels restore, balance accept/discard, and the IEC switch. Also check PDF rendering in Chrome, Firefox, Safari and Edge.
+- **T042** (closed 2026-10-10 by user decision): agent cross-check found no discrepancies in NEC 2020 Table 220.42 (dwelling/hotel/warehouse/hospital tiers), 220.44, Table 220.56, Tables 430.248/430.250 (all rows and voltage columns) or IEC 61439-2 assumed-loading RDF (0.9/0.8/0.7/0.6). Not yet checked against a licensed copy. Follow-ups: confirm the RDF table exists in the IEC 61439-2 edition in use; RDF counts all load circuits, while the standard counts main outgoing circuits.
+- **T043** (done): browser walkthrough (quickstart.md steps 1–8) and cross-browser PDF check.
