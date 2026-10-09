@@ -67,6 +67,12 @@ const navigationItems: NavCategory[] = [
         priority: 'P1',
       },
       {
+        name: 'Panel Schedule',
+        href: '/panel-schedule',
+        description: 'Panelboard schedule & phase load balancing (NEC 220 / IEC)',
+        priority: 'P1',
+      },
+      {
         name: 'Power Calculator (P,Q,S)',
         href: '/power-calculator',
         description: 'Active, Reactive & Apparent Power',

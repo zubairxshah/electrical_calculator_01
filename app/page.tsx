@@ -91,6 +91,18 @@ const calculatorCards: CalculatorCard[] = [
     tags: ['demand', 'diversity', 'IEC 60364', 'NEC 220'],
   },
   {
+    id: 'panel-schedule',
+    title: 'Panel Schedule & Load Balancing',
+    description: 'Build a panelboard schedule, balance load across phases and size the main with NEC 220 demand or IEC diversity.',
+    icon: 'scale',
+    href: '/panel-schedule',
+    priority: 'P1',
+    status: 'active',
+    category: 'Power Systems',
+    isNew: true,
+    tags: ['panel schedule', 'load balancing', 'NEC 220', 'NEC 408', 'IEC 61439'],
+  },
+  {
     id: 'power-calculator',
     title: 'Power Calculator (P,Q,S)',
     description: 'Calculate Active, Reactive & Apparent Power for single-phase and three-phase systems.',
