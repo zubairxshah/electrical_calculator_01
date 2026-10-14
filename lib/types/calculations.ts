@@ -130,8 +130,28 @@ export interface BatteryCalculatorInputs {
   targetBackupHours?: number
   /** Total load in watts (1-1000000W) */
   loadWatts: number
-  /** System/round-trip efficiency (0.1-1.0). Optional override; default = chemistry round-trip typical. */
+  /** Load-side conversion efficiency (0.5-1.0; ADR-008). Default by loadType: ac 0.95, dc 1.00. */
   efficiency?: number
+  /** Application: standby/float (IEEE 485, no DoD cap) or cycling (chemistry DoD). Default 'standby'. */
+  application?: BatteryApplication
+  /** Load fed via inverter ('ac') or directly ('dc'). Default 'ac'. */
+  loadType?: BatteryLoadType
+  /** Design margin multiplier (1.0-1.5). Default 1.10 (IEEE 485 practice). */
+  designMargin?: number
+  /** Minimum allowed load voltage (V) — sets cells in series with end voltage. */
+  minLoadVoltage?: number
+  /** Maximum allowed load voltage (V) — checked against float voltage. */
+  maxLoadVoltage?: number
+  /** End-of-discharge voltage per cell (V). Default by chemistry. */
+  endVoltagePerCell?: number
+  /** Recharge time (h). Default 8. */
+  rechargeHours?: number
+  /** Continuous standing DC load carried by the charger (A). Default 0. */
+  standingLoadAmps?: number
+  /** Recharge (Ah-return) factor (1.0-1.5). Default by chemistry. */
+  rechargeFactor?: number
+  /** Battery room volume (m³) for air changes per hour. Optional. */
+  roomVolumeM3?: number
   /** Battery aging factor (0.5-1.0). Optional; default 0.8 (end-of-life design basis). */
   agingFactor?: number
   /** Battery chemistry type (canonical) */
@@ -150,7 +170,7 @@ export interface BatteryCalculatorInputs {
   unitCapacityAh?: number
   /** Selected manufacturer datasheet id (or null). */
   datasheetId?: string | null
-  /** Minimum voltage cutoff (V, typically 0.85 * nominal for lead-acid) */
+  /** @deprecated v1 field, migrated to minLoadVoltage (015). */
   minVoltage?: number
   /** Index signature for compatibility */
   [key: string]: unknown
@@ -158,6 +178,12 @@ export interface BatteryCalculatorInputs {
 
 /** Battery calculation direction */
 export type BatteryCalcMode = 'runtime' | 'sizing'
+
+/** Battery service type (ADR-008) */
+export type BatteryApplication = 'standby' | 'cycling'
+
+/** How the load is fed from the battery */
+export type BatteryLoadType = 'ac' | 'dc'
 
 /** Provenance of an applied derating factor */
 export type FactorSource = 'default' | 'user' | 'datasheet'
@@ -170,6 +196,8 @@ export interface FactorValue {
   source: FactorSource
   /** Standard reference, if any */
   standardReference?: string
+  /** IEEE 485 cell-size temperature correction factor (lead-acid only) */
+  tcf?: number
 }
 
 /** The full set of derating factors applied to a sizing/runtime result */
@@ -178,7 +206,52 @@ export interface AppliedFactors {
   temperature: FactorValue
   aging: FactorValue
   efficiency: FactorValue
+  designMargin: FactorValue
   peukert: FactorValue
+}
+
+/** Series cell count and bank voltages (015 US2) */
+export interface VoltageWindowResult {
+  /** 'window' = from min load voltage / end voltage; 'block' = fallback block count */
+  source: 'window' | 'block'
+  cellsInSeries: number
+  endVoltagePerCell: number
+  nominalBankV: number
+  floatBankV: number
+  endBankV: number
+}
+
+/** Charger sizing (IEEE 946 approach, 015 US4) */
+export interface ChargerResult {
+  ahRemoved: number
+  rechargeFactor: FactorValue
+  rechargeHours: number
+  standingLoadAmps: number
+  requiredAmps: number
+  recommendedRatingA: number
+  /** Recharge current / bank Ah */
+  chargeCRate: number
+}
+
+/** Battery-room ventilation (EN 50272-2 / IEC 62485-2, 015 US5) */
+export interface VentilationResult {
+  applicable: boolean
+  cells: number
+  ratedAh: number
+  igasFloat?: number
+  igasBoost?: number
+  qFloatM3h?: number
+  qBoostM3h?: number
+  airChangesPerHour?: number
+  note: string
+}
+
+/** Installation/code check — informative only, never changes sizing (015 US6) */
+export interface InstallationCheck {
+  code: 'NEC 480.7' | 'NEC 480.10' | 'NEC 706' | 'NFPA 855'
+  severity: 'info' | 'warning'
+  message: string
+  standardReference: string
 }
 
 /** Recommended physical battery bank configuration */
@@ -230,6 +303,18 @@ export interface BatteryCalculatorResult extends CalculationResult {
   dischargeCurve: DischargeCurvePoint[]
   /** Warnings for dangerous conditions */
   warnings: BatteryWarning[]
+  /** Service type the result was computed for */
+  application: BatteryApplication
+  /** Cell count + bank voltages */
+  voltageWindow: VoltageWindowResult
+  /** Charger sizing; null when recharge inputs are invalid */
+  charger: ChargerResult | null
+  /** Ventilation requirement */
+  ventilation: VentilationResult
+  /** Code checks (informative) */
+  installationChecks: InstallationCheck[]
+  /** Nameplate stored energy (kWh) */
+  bankEnergyKWh: number
 }
 
 /**
@@ -261,6 +346,9 @@ export type BatteryWarningType =
   | 'temperature-out-of-range' // outside chemistry operating range
   | 'dod-exceeds-max' // DoD override above chemistry maximum
   | 'datasheet-chemistry-mismatch' // selected datasheet conflicts with chemistry
+  | 'voltage-window' // float voltage exceeds max load voltage
+  | 'temperature-table-clamped' // outside the IEEE 485 temperature table
+  | 'charge-rate' // recharge current above chemistry max charge rate
 
 export interface BatteryWarning extends ValidationResult {
   type: BatteryWarningType

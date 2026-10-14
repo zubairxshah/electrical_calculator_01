@@ -29,8 +29,9 @@ describe('calculateRuntime — approved IEEE 485 accuracy fixtures (±2%)', () =
   }
 })
 
+// G1 is scoped to cycling mode (015 contract): in standby at C/20 and 25°C chemistries can converge.
 describe('G1 — chemistry sensitivity (the core defect fix)', () => {
-  const base = { voltage: 48, ampHours: 200, loadWatts: 480, mode: 'runtime' as const }
+  const base = { voltage: 48, ampHours: 200, loadWatts: 480, mode: 'runtime' as const, application: 'cycling' as const }
   it('different chemistries produce different effective capacity / runtime', () => {
     const agm = calculateRuntime({ ...base, chemistry: 'VRLA-AGM' })
     const lfp = calculateRuntime({ ...base, chemistry: 'Li-Ion-LFP' })

@@ -117,7 +117,7 @@ description: "Task list for Battery Calculator Revamp (011-battery-revamp)"
 
 ### Tests for User Story 3 (write first, must fail) ⚠️
 
-- [ ] T030 [P] [US3] Write FAILING test `__tests__/defaults.test.ts`: unspecified factors resolve to chemistry defaults with `source:'default'`; an override flips `source:'user'` and changes the result.
+- [X] T030 [P] [US3] Write FAILING test `__tests__/defaults.test.ts`: unspecified factors resolve to chemistry defaults with `source:'default'`; an override flips `source:'user'` and changes the result. → done in 015 (`__tests__/unit/calculations/battery/defaults.test.ts`)
 
 ### Implementation for User Story 3
 
@@ -190,8 +190,8 @@ description: "Task list for Battery Calculator Revamp (011-battery-revamp)"
 ## Phase 9: Polish & Cross-Cutting Concerns
 
 - [x] T047 [P] Remove memoization-cache staleness risk in the new engine (carry forward the existing cache only if keyed on ALL new inputs incl. mode/temperature/overrides) in `lib/calculations/battery/index.ts`.
-- [ ] T048 [P] Update `components/battery/` for accessibility (labels, focus states, WCAG 2.1 AA) consistent with the shared kit.
-- [ ] T049 [P] Add/adjust a reference-guide dialog (standards + method summary) consistent with conduit-fill/motor-starting.
+- [X] T048 [P] Update `components/battery/` for accessibility (labels, focus states, WCAG 2.1 AA) consistent with the shared kit. → done in 015 (T039)
+- [X] T049 [P] Add/adjust a reference-guide dialog (standards + method summary) consistent with conduit-fill/motor-starting. → done in 015 (`BatteryReferenceDialog.tsx`)
 - [ ] T050 Run `npm run lint` and resolve issues confined to battery files; ensure smallest-viable-diff (no unrelated calculators touched).
 - [ ] T051 Run `specs/011-battery-revamp/quickstart.md` manual walkthrough (steps 1–8 incl. localStorage migration check).
 - [ ] T052 [P] Sync updated Battery patterns to the ElectroMate Design System project (`design-system/patterns/battery-*.html`) via `/design-sync` once the redesign is final.

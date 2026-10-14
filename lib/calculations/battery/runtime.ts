@@ -1,6 +1,6 @@
 /**
  * Forward sizing: backup time from installed nameplate capacity, chemistry-aware
- * (DoD × temperature × efficiency × aging × Peukert). (ADR-006; G1, G3, G4.)
+ * (DoD × temperature × efficiency × aging / design margin × Peukert). (ADR-006, ADR-008.)
  */
 
 import { getBatteryTypeById } from '@/lib/standards/batteryTypes'
@@ -16,6 +16,7 @@ import { computeBankConfig } from './bankConfig'
 import { buildDischargeCurve } from './dischargeCurve'
 import { buildWarnings, computeVerdict, buildRecommendations } from './assess'
 import { buildBatteryResult, BatterySizingError } from './result'
+import { applyVoltageWindow, buildStandardsOutputs, computeVoltageWindow } from './standardsOutputs'
 import type { BatteryCalculatorInputs, BatteryCalculatorResult } from '@/lib/types'
 
 export function calculateRuntime(inputs: BatteryCalculatorInputs): BatteryCalculatorResult {
@@ -41,9 +42,23 @@ export function calculateRuntime(inputs: BatteryCalculatorInputs): BatteryCalcul
   const appliedFactors = assembleAppliedFactors(base, peukert, exponent, peukertSource)
   const cellBlockVoltage = inputs.cellBlockVoltage ?? defaultCellBlockVoltage(profile)
   // Runtime describes a single installed bank (one string).
-  const bankConfig = computeBankConfig(ampHours, voltage, cellBlockVoltage, ampHours, effectiveCapacityAh)
+  const voltageWindow = computeVoltageWindow(inputs)
+  const bankConfig = applyVoltageWindow(
+    computeBankConfig(ampHours, voltage, cellBlockVoltage, ampHours, effectiveCapacityAh),
+    voltageWindow
+  )
+  const outputs = buildStandardsOutputs(
+    inputs, profile, bankConfig, voltageWindow, backupTimeHours, base.efficiency.value, ampHours
+  )
 
-  const ctx = { inputs, profile, cRate, tempFactorValue: base.temperature.value }
+  const ctx = {
+    inputs,
+    profile,
+    cRate,
+    tempFactorValue: base.temperature.value,
+    voltageWindow,
+    charger: outputs.charger,
+  }
   const warnings = buildWarnings(ctx)
   const verdict = computeVerdict(warnings)
   const recommendations = buildRecommendations(ctx, warnings, verdict)
@@ -61,5 +76,7 @@ export function calculateRuntime(inputs: BatteryCalculatorInputs): BatteryCalcul
     recommendations,
     warnings,
     dischargeCurve,
+    voltageWindow,
+    ...outputs,
   })
 }

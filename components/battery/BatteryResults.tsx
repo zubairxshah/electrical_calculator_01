@@ -1,6 +1,8 @@
 /**
  * Battery Results — hero headline metric, verdict, applied factors, bank
- * configuration, recommendations, and discharge chart (US1, US2, US3, US5).
+ * configuration, recommendations, and discharge chart (011 US1–US5).
+ * 015: application-aware DoD row, design margin, TCF, voltage window,
+ * charger, ventilation and installation checks.
  */
 
 'use client'
@@ -15,7 +17,7 @@ import { chemistryDisplayLabel, toCanonicalChemistry } from '@/lib/standards/bat
 import { getBatteryTypeById } from '@/lib/standards/batteryTypes'
 import type { BatteryCalculatorInputs, BatteryCalculatorResult, FactorValue } from '@/lib/types'
 import { formatTimeDisplay } from '@/lib/utils/formatTime'
-import { CheckCircle2, AlertTriangle, XCircle } from 'lucide-react'
+import { CheckCircle2, AlertTriangle, XCircle, Info } from 'lucide-react'
 
 const VERDICT = {
   pass: { label: 'Design sound', cls: 'text-green-600', Icon: CheckCircle2, badge: 'bg-green-50 text-green-700 border-green-200' },
@@ -66,6 +68,7 @@ function EditableFactorRow({
       </div>
       <OverrideCell
         className="w-24 shrink-0"
+        ariaLabel={`${label} override${suffix ? ` (${suffix})` : ''}`}
         value={override == null ? undefined : parseFloat((override * scale).toFixed(6))}
         placeholder={placeholder}
         step={step}
@@ -92,6 +95,7 @@ export function BatteryResults({ result }: { result: BatteryCalculatorResult }) 
     inputs.tempFactorOverride != null ||
     inputs.efficiency != null ||
     inputs.agingFactor != null ||
+    inputs.designMargin != null ||
     inputs.peukertExponentOverride != null
 
   const resetOverrides = () =>
@@ -100,8 +104,11 @@ export function BatteryResults({ result }: { result: BatteryCalculatorResult }) 
       tempFactorOverride: undefined,
       efficiency: undefined,
       agingFactor: undefined,
+      designMargin: undefined,
       peukertExponentOverride: undefined,
     })
+  const isStandby = result.application === 'standby'
+  const vw = result.voltageWindow
 
   const headlineValue = isSizing
     ? (result.requiredCapacityAh ? toNumber(result.requiredCapacityAh) : toNumber(result.effectiveCapacityAh)).toFixed(0)
@@ -116,7 +123,7 @@ export function BatteryResults({ result }: { result: BatteryCalculatorResult }) 
     <div className="space-y-4">
       {/* Hero */}
       <CalculationCard title="Result" standardsUsed={result.standardsApplied.slice(0, 2)} className="p-4 md:p-6">
-        <div className="rounded-lg border border-primary bg-primary/5 p-5">
+        <div className="rounded-lg border border-primary bg-primary/5 p-5" role="status" aria-live="polite" aria-atomic="true">
           <div className="flex items-start justify-between gap-4">
             <div>
               <div className="text-sm font-medium text-muted-foreground">{headlineLabel}</div>
@@ -127,12 +134,12 @@ export function BatteryResults({ result }: { result: BatteryCalculatorResult }) 
               <div className="mt-1 text-sm text-muted-foreground">{subline}</div>
             </div>
             <Badge variant="outline" className={`gap-1 ${v.badge}`}>
-              <v.Icon className="h-3.5 w-3.5" />
+              <v.Icon className="h-3.5 w-3.5" aria-hidden="true" />
               {result.verdict.toUpperCase()}
             </Badge>
           </div>
           <div className={`mt-3 flex items-center gap-2 text-sm ${v.cls}`}>
-            <v.Icon className="h-4 w-4" />
+            <v.Icon className="h-4 w-4" aria-hidden="true" />
             {v.label}
           </div>
         </div>
@@ -158,21 +165,37 @@ export function BatteryResults({ result }: { result: BatteryCalculatorResult }) 
         className="p-4 md:p-6"
       >
         <div>
-          <EditableFactorRow
-            label="Depth of discharge"
-            source={f.dod.source}
-            reference={f.dod.standardReference}
-            override={inputs.dodOverride}
-            placeholder={(f.dod.value * 100).toFixed(0)}
-            scale={100}
-            suffix="%"
-            step="1"
-            onCommit={(val) => setOverride('dodOverride', val)}
-          />
+          {isStandby ? (
+            <div className="flex items-center justify-between gap-3 border-b py-2.5">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium">Depth of discharge</span>
+                  <Badge variant="outline" className="text-[10px] uppercase tracking-wide">
+                    standby
+                  </Badge>
+                </div>
+                <div className="text-[11px] text-muted-foreground">{f.dod.standardReference}</div>
+              </div>
+              <span className="w-24 shrink-0 text-right font-mono text-sm">100%</span>
+            </div>
+          ) : (
+            <EditableFactorRow
+              label="Depth of discharge"
+              source={f.dod.source}
+              reference={f.dod.standardReference}
+              override={inputs.dodOverride}
+              placeholder={(f.dod.value * 100).toFixed(0)}
+              scale={100}
+              suffix="%"
+              step="1"
+              onCommit={(val) => setOverride('dodOverride', val)}
+            />
+          )}
           <EditableFactorRow
             label="Temperature correction"
             source={f.temperature.source}
             reference={f.temperature.standardReference}
+            caption={f.temperature.tcf != null ? `Cell-size factor TCF ${f.temperature.tcf.toFixed(3)} at ${result.inputs.temperature ?? 25} °C` : undefined}
             override={inputs.tempFactorOverride}
             placeholder={(f.temperature.value * 100).toFixed(0)}
             scale={100}
@@ -181,7 +204,7 @@ export function BatteryResults({ result }: { result: BatteryCalculatorResult }) 
             onCommit={(val) => setOverride('tempFactorOverride', val)}
           />
           <EditableFactorRow
-            label="System efficiency"
+            label="Conversion efficiency"
             source={f.efficiency.source}
             reference={f.efficiency.standardReference}
             override={inputs.efficiency}
@@ -203,6 +226,17 @@ export function BatteryResults({ result }: { result: BatteryCalculatorResult }) 
             onCommit={(val) => setOverride('agingFactor', val)}
           />
           <EditableFactorRow
+            label="Design margin"
+            source={f.designMargin.source}
+            reference={f.designMargin.standardReference}
+            override={inputs.designMargin}
+            placeholder={f.designMargin.value.toFixed(2)}
+            scale={1}
+            suffix="×"
+            step="0.01"
+            onCommit={(val) => setOverride('designMargin', val)}
+          />
+          <EditableFactorRow
             label="Peukert exponent"
             source={f.peukert.source}
             caption={`→ ${(f.peukert.value * 100).toFixed(1)}% rate derate applied`}
@@ -214,7 +248,7 @@ export function BatteryResults({ result }: { result: BatteryCalculatorResult }) 
           />
         </div>
         <div className="mt-3 flex items-center justify-between gap-2 text-xs text-muted-foreground">
-          <span>Blank = datasheet/standard default. Percentages are whole numbers (e.g. 50 = 50%).</span>
+          <span>Blank = datasheet/standard default. Percentages are whole numbers (e.g. 50 = 50%); design margin is a multiplier.</span>
           {anyOverride && (
             <button type="button" className="font-medium text-primary hover:underline" onClick={resetOverrides}>
               Reset to defaults
@@ -223,15 +257,83 @@ export function BatteryResults({ result }: { result: BatteryCalculatorResult }) 
         </div>
       </CalculationCard>
 
-      {/* Bank configuration (sizing) */}
-      {isSizing && (
-        <CalculationCard title="Recommended Bank Configuration" className="p-4 md:p-6">
+      {/* Bank configuration + voltage window (015 US2) */}
+      <CalculationCard
+        title={isSizing ? 'Recommended Bank Configuration' : 'Bank Voltages'}
+        description={
+          vw.source === 'window'
+            ? `Cells from min load voltage ÷ ${vw.endVoltagePerCell} V/cell end voltage (IEEE 485)`
+            : 'Block-based count — enter a load voltage window to size cells from the end voltage'
+        }
+        className="p-4 md:p-6"
+      >
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <Metric label={vw.source === 'window' ? 'Cells in series' : 'Blocks in series'} value={`${result.bankConfig.cellsInSeries}`} />
+          {isSizing && <Metric label="Strings in parallel" value={`${result.bankConfig.stringsInParallel}`} />}
+          {isSizing && <Metric label="Nameplate" value={`${result.bankConfig.nameplateBankAh} Ah`} />}
+          <Metric label="Nominal" value={`${fmt(vw.nominalBankV, 1)} V`} />
+          <Metric label="Float" value={`${fmt(vw.floatBankV, 1)} V`} />
+          <Metric label="End of discharge" value={`${fmt(vw.endBankV, 1)} V`} />
+          <Metric label="Stored energy" value={`${fmt(result.bankEnergyKWh, 1)} kWh`} />
+        </div>
+      </CalculationCard>
+
+      {/* Charger (015 US4) */}
+      {result.charger && (
+        <CalculationCard
+          title="Charger Sizing"
+          description={`IEEE 946: Ah removed × ${result.charger.rechargeFactor.value.toFixed(2)} ÷ ${result.charger.rechargeHours} h + standing load`}
+          className="p-4 md:p-6"
+        >
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <Metric label="Cells/blocks in series" value={`${result.bankConfig.cellsInSeries}`} />
-            <Metric label="Strings in parallel" value={`${result.bankConfig.stringsInParallel}`} />
-            <Metric label="Nameplate" value={`${result.bankConfig.nameplateBankAh} Ah`} />
-            <Metric label="Bank voltage" value={`${result.bankConfig.nominalBankVoltage} V`} />
+            <Metric label="Ah removed" value={`${fmt(result.charger.ahRemoved, 1)} Ah`} />
+            <Metric label="Standing load" value={`${fmt(result.charger.standingLoadAmps, 1)} A`} />
+            <Metric label="Required output" value={`${fmt(result.charger.requiredAmps, 1)} A`} />
+            <Metric label="Recommended rating" value={`${result.charger.recommendedRatingA} A`} />
           </div>
+        </CalculationCard>
+      )}
+
+      {/* Ventilation (015 US5) */}
+      <CalculationCard title="Battery Room Ventilation" description="Hydrogen dilution below 4% (EN 50272-2 / IEC 62485-2)" className="p-4 md:p-6">
+        {result.ventilation.applicable ? (
+          <>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <Metric label="Cells × Ah" value={`${result.ventilation.cells} × ${fmt(result.ventilation.ratedAh, 0)}`} />
+              <Metric label="Airflow, float" value={`${fmt(result.ventilation.qFloatM3h ?? 0, 2)} m³/h`} />
+              <Metric label="Airflow, boost" value={`${fmt(result.ventilation.qBoostM3h ?? 0, 2)} m³/h`} />
+              {result.ventilation.airChangesPerHour != null && (
+                <Metric label="Air changes" value={`${fmt(result.ventilation.airChangesPerHour, 2)} /h`} />
+              )}
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground">
+              I_gas {result.ventilation.igasFloat} / {result.ventilation.igasBoost} mA/Ah (float / boost). {result.ventilation.note}
+            </p>
+          </>
+        ) : (
+          <p className="text-sm text-muted-foreground">{result.ventilation.note}</p>
+        )}
+      </CalculationCard>
+
+      {/* Installation checks (015 US6) — informative, never change sizing */}
+      {result.installationChecks.length > 0 && (
+        <CalculationCard title="Installation Checks" description="Code flags for the installation — they do not change the sizing" className="p-4 md:p-6">
+          <ul className="space-y-2 text-sm">
+            {result.installationChecks.map((c) => (
+              <li key={c.code} className="flex gap-2">
+                {c.severity === 'warning' ? (
+                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-yellow-600" aria-hidden="true" />
+                ) : (
+                  <Info className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                )}
+                <span>
+                  <span className="font-medium">{c.code}</span>
+                  <span className="sr-only"> ({c.severity})</span> — {c.message}{' '}
+                  <span className="text-xs text-muted-foreground">[{c.standardReference}]</span>
+                </span>
+              </li>
+            ))}
+          </ul>
         </CalculationCard>
       )}
 
@@ -252,6 +354,8 @@ export function BatteryResults({ result }: { result: BatteryCalculatorResult }) 
       {/* System info */}
       <CalculationCard title="System Information" className="p-4 md:p-6">
         <div className="space-y-2 text-sm">
+          <InfoRow k="Application" v={isStandby ? 'Standby / float (IEEE 485)' : 'Cycling (IEEE 1013 / 1561)'} />
+          <InfoRow k="Load type" v={(result.inputs.loadType ?? 'ac') === 'ac' ? 'AC via inverter' : 'DC'} />
           <InfoRow k="Battery chemistry" v={chem} />
           <InfoRow k="System voltage" v={`${result.inputs.voltage} V DC`} />
           <InfoRow k="Load power" v={`${result.inputs.loadWatts} W`} />
@@ -260,6 +364,10 @@ export function BatteryResults({ result }: { result: BatteryCalculatorResult }) 
       </CalculationCard>
     </div>
   )
+}
+
+function fmt(n: number, digits: number) {
+  return n.toFixed(digits)
 }
 
 function Metric({ label, value }: { label: string; value: string }) {

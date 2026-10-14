@@ -10,7 +10,7 @@
 
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useId } from 'react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
@@ -43,6 +43,8 @@ export function InputField({
   disabled,
   className,
 }: InputFieldProps) {
+  const inputId = useId()
+  const messageId = `${inputId}-message`
   const hasError = validation && validation.severity === 'error'
   const hasWarning = validation && validation.severity === 'warning'
 
@@ -97,12 +99,16 @@ export function InputField({
 
   return (
     <div className={cn('space-y-2', className)}>
-      <Label>
+      <Label htmlFor={inputId}>
         {label}
         {required && <span className="text-destructive ml-1">*</span>}
       </Label>
       <div className="relative">
         <Input
+          id={inputId}
+          aria-invalid={hasError || undefined}
+          aria-describedby={validation ? messageId : undefined}
+          aria-required={required || undefined}
           type="text"
           inputMode={type === 'number' ? 'decimal' : 'text'}
           value={localValue}
@@ -125,6 +131,7 @@ export function InputField({
       </div>
       {validation && (
         <div
+          id={messageId}
           className={cn(
             'text-sm',
             hasError && 'text-destructive',

@@ -9,12 +9,26 @@
 import { validateVoltage, validatePower, validateEfficiency, ValidationError } from './inputValidation'
 import { getBatteryTypeById } from '@/lib/standards/batteryTypes'
 import { toCanonicalChemistry } from '@/lib/standards/batteryChemistryMap'
+import { getElectricalProfile } from '@/lib/standards/batteryReference'
 import type { BatteryCalculatorInputs, ValidationResult } from '@/lib/types'
 
 export interface BatteryValidationResult {
   isValid: boolean
   errors: ValidationResult[]
   warnings: ValidationResult[]
+}
+
+function rangeCheck(
+  errors: ValidationResult[],
+  field: string,
+  value: number | undefined,
+  min: number,
+  max: number,
+  message: string
+) {
+  if (value != null && !(value >= min && value <= max)) {
+    errors.push({ severity: 'error', field, message: `${message} Got: ${value}` })
+  }
 }
 
 export function validateBatteryInputs(inputs: BatteryCalculatorInputs): BatteryValidationResult {
@@ -57,18 +71,54 @@ export function validateBatteryInputs(inputs: BatteryCalculatorInputs): BatteryV
     }
   }
 
-  // Efficiency (optional override)
+  // Conversion efficiency (optional override; ADR-008 — load-side, not round-trip)
   if (inputs.efficiency != null) {
     try {
       const efficiency = validateEfficiency(inputs.efficiency)
-      if (efficiency < 0.1) {
-        errors.push({ severity: 'error', field: 'efficiency', message: `Efficiency must be at least 0.1 (10%). Got: ${efficiency}` })
-      } else if (efficiency < 0.6 || efficiency > 0.99) {
-        warnings.push({ severity: 'warning', field: 'efficiency', message: `Efficiency ${efficiency} is outside the typical range (0.6–0.99).`, recommendation: 'Verify the system/round-trip efficiency.' })
+      if (efficiency < 0.5 || efficiency > 1) {
+        errors.push({ severity: 'error', field: 'efficiency', message: `Conversion efficiency must be between 0.50 and 1.00. Got: ${efficiency}` })
       }
     } catch (error) {
       if (error instanceof ValidationError) errors.push({ severity: 'error', field: error.field, message: error.message })
     }
+  }
+
+  // 015 inputs — application, margin, voltage window, charger, room
+  if (inputs.application != null && inputs.application !== 'standby' && inputs.application !== 'cycling') {
+    errors.push({ severity: 'error', field: 'application', message: 'Application must be standby or cycling.' })
+  }
+  if (inputs.loadType != null && inputs.loadType !== 'ac' && inputs.loadType !== 'dc') {
+    errors.push({ severity: 'error', field: 'loadType', message: 'Load type must be AC or DC.' })
+  }
+  rangeCheck(errors, 'designMargin', inputs.designMargin, 1, 1.5, 'Design margin must be between 1.00 and 1.50.')
+  rangeCheck(errors, 'rechargeFactor', inputs.rechargeFactor, 1, 1.5, 'Recharge factor must be between 1.00 and 1.50.')
+  if (inputs.minLoadVoltage != null && !(inputs.minLoadVoltage > 0)) {
+    errors.push({ severity: 'error', field: 'minLoadVoltage', message: 'Minimum load voltage must be greater than 0 V.' })
+  }
+  if (inputs.maxLoadVoltage != null && !(inputs.maxLoadVoltage > 0)) {
+    errors.push({ severity: 'error', field: 'maxLoadVoltage', message: 'Maximum load voltage must be greater than 0 V.' })
+  }
+  if (inputs.minLoadVoltage != null && inputs.maxLoadVoltage != null && inputs.minLoadVoltage >= inputs.maxLoadVoltage) {
+    errors.push({ severity: 'error', field: 'maxLoadVoltage', message: 'Maximum load voltage must be above the minimum.' })
+  }
+  if (inputs.endVoltagePerCell != null) {
+    const nominal = getElectricalProfile(toCanonicalChemistry(inputs.chemistry))?.nominalCellVoltage
+    if (!(inputs.endVoltagePerCell > 0) || (nominal != null && inputs.endVoltagePerCell >= nominal)) {
+      errors.push({
+        severity: 'error',
+        field: 'endVoltagePerCell',
+        message: `End voltage per cell must be above 0 V and below the nominal cell voltage${nominal != null ? ` (${nominal} V)` : ''}.`,
+      })
+    }
+  }
+  if (inputs.rechargeHours != null && (!(inputs.rechargeHours > 0) || inputs.rechargeHours > 168)) {
+    errors.push({ severity: 'error', field: 'rechargeHours', message: 'Recharge time must be between 0 and 168 h.' })
+  }
+  if (inputs.standingLoadAmps != null && !(inputs.standingLoadAmps >= 0)) {
+    errors.push({ severity: 'error', field: 'standingLoadAmps', message: 'Standing load must be 0 A or more.' })
+  }
+  if (inputs.roomVolumeM3 != null && !(inputs.roomVolumeM3 > 0)) {
+    errors.push({ severity: 'error', field: 'roomVolumeM3', message: 'Room volume must be greater than 0 m³.' })
   }
 
   // Chemistry-aware warnings (only when no blocking errors)
@@ -85,7 +135,7 @@ export function validateBatteryInputs(inputs: BatteryCalculatorInputs): BatteryV
         })
       }
 
-      if (inputs.dodOverride != null && inputs.dodOverride > profile.depthOfDischarge.maximum / 100) {
+      if ((inputs.application ?? 'standby') === 'cycling' && inputs.dodOverride != null && inputs.dodOverride > profile.depthOfDischarge.maximum / 100) {
         warnings.push({
           severity: 'warning',
           field: 'dodOverride',

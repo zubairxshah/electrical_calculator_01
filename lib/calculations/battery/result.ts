@@ -11,8 +11,12 @@ import type {
   AppliedFactors,
   BankConfig,
   BatteryWarning,
+  ChargerResult,
   DischargeCurvePoint,
+  InstallationCheck,
   SizingVerdict,
+  VentilationResult,
+  VoltageWindowResult,
 } from '@/lib/types'
 
 export class BatterySizingError extends Error {
@@ -35,11 +39,16 @@ export interface BuildResultParams {
   recommendations: string[]
   warnings: BatteryWarning[]
   dischargeCurve: DischargeCurvePoint[]
+  voltageWindow: VoltageWindowResult
+  charger: ChargerResult | null
+  ventilation: VentilationResult
+  installationChecks: InstallationCheck[]
+  bankEnergyKWh: number
 }
 
 /** Dedupe + order the standards actually applied for this result. */
 function standardsApplied(profile: BatteryTypeSpec): string[] {
-  const base = ['IEEE 485-2020', 'IEC 60896 / IEC 62619']
+  const base = ['IEEE 485-2020', 'IEEE 946', 'IEC 62485-2 / EN 50272-2', 'IEC 60896 / IEC 62619']
   const merged = [...base, ...profile.standardReferences]
   return Array.from(new Set(merged))
 }
@@ -62,6 +71,12 @@ export function buildBatteryResult(p: BuildResultParams): BatteryCalculatorResul
     standardsApplied: standardsApplied(p.profile),
     dischargeCurve: p.dischargeCurve,
     warnings: p.warnings,
+    application: p.inputs.application ?? 'standby',
+    voltageWindow: p.voltageWindow,
+    charger: p.charger,
+    ventilation: p.ventilation,
+    installationChecks: p.installationChecks,
+    bankEnergyKWh: p.bankEnergyKWh,
     validations: p.warnings.map((w) => ({
       severity: w.severity,
       field: w.field,

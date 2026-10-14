@@ -4,7 +4,15 @@
  */
 
 import type { BatteryTypeSpec } from '@/lib/standards/batteryTypes'
-import type { BatteryCalculatorInputs, BatteryWarning, SizingVerdict } from '@/lib/types'
+import { getElectricalProfile } from '@/lib/standards/batteryReference'
+import { leadAcidTcf } from './derating'
+import type {
+  BatteryCalculatorInputs,
+  BatteryWarning,
+  ChargerResult,
+  SizingVerdict,
+  VoltageWindowResult,
+} from '@/lib/types'
 
 /** Subset of derating results the assessment needs. */
 export interface AssessmentContext {
@@ -16,6 +24,10 @@ export interface AssessmentContext {
   tempFactorValue: number
   /** over-capacity from rounding strings (sizing mode), if any */
   overCapacityPct?: number
+  /** cell count + bank voltages (015 US2) */
+  voltageWindow?: VoltageWindowResult
+  /** charger sizing (015 US4) */
+  charger?: ChargerResult | null
 }
 
 /** Safe continuous C-rate threshold by chemistry family. */
@@ -76,7 +88,7 @@ export function buildWarnings(ctx: AssessmentContext): BatteryWarning[] {
   }
 
   // DoD override above maximum (was clamped)
-  if (inputs.dodOverride != null && inputs.dodOverride > profile.depthOfDischarge.maximum / 100) {
+  if ((inputs.application ?? 'standby') === 'cycling' && inputs.dodOverride != null && inputs.dodOverride > profile.depthOfDischarge.maximum / 100) {
     warnings.push({
       type: 'dod-exceeds-max',
       severity: 'warning',
@@ -84,6 +96,45 @@ export function buildWarnings(ctx: AssessmentContext): BatteryWarning[] {
       message: `Requested DoD exceeds ${profile.name}'s maximum (${profile.depthOfDischarge.maximum}%); clamped to maximum.`,
       standardReference: 'IEEE 485-2020 §5',
       recommendation: 'Deep discharge beyond the recommended limit shortens cycle life.',
+    })
+  }
+
+  // IEEE 485 temperature table clamp (lead-acid, no override)
+  if (inputs.tempFactorOverride == null && getElectricalProfile(profile.id).usesLeadAcidTempTable && leadAcidTcf(temp).clamped) {
+    warnings.push({
+      type: 'temperature-table-clamped',
+      severity: 'warning',
+      field: 'temperature',
+      message: `${temp}°C is outside the IEEE 485 temperature correction table (−3.9…51.7°C); the nearest table value was used.`,
+      standardReference: 'IEEE 485-2020 Table 1',
+      recommendation: 'Confirm the electrolyte temperature range with the manufacturer.',
+    })
+  }
+
+  // Voltage window: float voltage must not exceed the load maximum
+  const vw = ctx.voltageWindow
+  if (vw && inputs.maxLoadVoltage != null && vw.floatBankV > inputs.maxLoadVoltage + 1e-9) {
+    warnings.push({
+      type: 'voltage-window',
+      severity: 'error',
+      field: 'maxLoadVoltage',
+      message: `${vw.cellsInSeries} cells float at ${vw.floatBankV.toFixed(1)} V, above the load maximum of ${inputs.maxLoadVoltage} V.`,
+      standardReference: 'IEEE 485-2020 (number of cells)',
+      recommendation: 'Raise the end voltage per cell (fewer cells), widen the load voltage window, or add voltage regulation.',
+    })
+  }
+
+  // Charger recharge rate above chemistry maximum
+  const charger = ctx.charger
+  const maxRate = getElectricalProfile(profile.id).maxChargeCRate
+  if (charger && charger.chargeCRate > maxRate + 1e-9) {
+    warnings.push({
+      type: 'charge-rate',
+      severity: 'warning',
+      field: 'rechargeHours',
+      message: `Recharge current C/${(1 / charger.chargeCRate).toFixed(1)} exceeds ${profile.name}'s maximum charge rate (C/${(1 / maxRate).toFixed(0)}).`,
+      standardReference: 'IEEE 946 / manufacturer charge limits',
+      recommendation: 'Allow a longer recharge time or limit the charger current.',
     })
   }
 
@@ -102,6 +153,9 @@ export function buildRecommendations(
   verdict: SizingVerdict
 ): string[] {
   const recs: string[] = []
+  if ((ctx.inputs.application ?? 'standby') === 'standby') {
+    recs.push('Standby (float) sizing per IEEE 485: full discharge to the end voltage, with design margin and end-of-life aging applied.')
+  }
   if (verdict === 'pass') {
     recs.push(`Design is sound for ${ctx.profile.name} under the stated conditions.`)
   } else if (verdict === 'marginal') {
