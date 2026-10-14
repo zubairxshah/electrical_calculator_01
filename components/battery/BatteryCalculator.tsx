@@ -12,6 +12,7 @@ import { WarningBanner } from '@/components/shared/WarningBanner'
 import { BatteryModeSwitch } from './BatteryModeSwitch'
 import { BatteryInputForm } from './BatteryInputForm'
 import { BatteryResults } from './BatteryResults'
+import { BatteryReferenceDialog } from './BatteryReferenceDialog'
 import { Button } from '@/components/ui/button'
 import { RotateCcw, Download, Loader2 } from 'lucide-react'
 import { downloadBatteryPDF } from '@/lib/pdfGenerator.battery'
@@ -20,7 +21,7 @@ export function BatteryCalculator() {
   const { inputs, result, validation, resetInputs, setMode } = useBatteryStore()
   const [exporting, setExporting] = useState(false)
 
-  const standardsUsed = ['IEEE 485-2020', 'IEC 60896 / 62619']
+  const standardsUsed = ['IEEE 485-2020', 'IEEE 946', 'IEC 62485-2', 'NEC 480 / 706']
   const hasResult = result && validation?.isValid
 
   const handleExport = () => {
@@ -45,8 +46,11 @@ export function BatteryCalculator() {
           standardsUsed={standardsUsed}
           className="p-4 md:p-6"
         >
-          <div className="mb-4">
-            <BatteryModeSwitch mode={inputs.mode} onChange={setMode} />
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="flex-1">
+              <BatteryModeSwitch mode={inputs.mode} onChange={setMode} />
+            </div>
+            <BatteryReferenceDialog />
           </div>
 
           <BatteryInputForm />

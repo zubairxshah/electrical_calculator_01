@@ -17,6 +17,7 @@ import { computeBankConfig, DEFAULT_UNIT_AH } from './bankConfig'
 import { buildDischargeCurve } from './dischargeCurve'
 import { buildWarnings, computeVerdict, buildRecommendations } from './assess'
 import { buildBatteryResult, BatterySizingError } from './result'
+import { applyVoltageWindow, buildStandardsOutputs, computeVoltageWindow } from './standardsOutputs'
 import type { BatteryCalculatorInputs, BatteryCalculatorResult } from '@/lib/types'
 
 export function sizeForRuntime(inputs: BatteryCalculatorInputs): BatteryCalculatorResult {
@@ -56,7 +57,11 @@ export function sizeForRuntime(inputs: BatteryCalculatorInputs): BatteryCalculat
   const effectiveCapacityAh = nameplateBankAh * usableFraction
   const backupTimeHours = (effectiveCapacityAh * voltage) / loadWatts // delivered by the rounded bank
 
-  const bankConfig = { ...provisional, deliveredCapacityAh: effectiveCapacityAh }
+  const voltageWindow = computeVoltageWindow(inputs)
+  const bankConfig = applyVoltageWindow({ ...provisional, deliveredCapacityAh: effectiveCapacityAh }, voltageWindow)
+  const outputs = buildStandardsOutputs(
+    inputs, profile, bankConfig, voltageWindow, target, base.efficiency.value, perUnitAh
+  )
   const appliedFactors = assembleAppliedFactors(base, peukert, exponent, peukertSource)
 
   const ctx = {
@@ -65,6 +70,8 @@ export function sizeForRuntime(inputs: BatteryCalculatorInputs): BatteryCalculat
     cRate,
     tempFactorValue: base.temperature.value,
     overCapacityPct: bankConfig.overCapacityPct,
+    voltageWindow,
+    charger: outputs.charger,
   }
   const warnings = buildWarnings(ctx)
   const verdict = computeVerdict(warnings)
@@ -84,5 +91,7 @@ export function sizeForRuntime(inputs: BatteryCalculatorInputs): BatteryCalculat
     recommendations,
     warnings,
     dischargeCurve,
+    voltageWindow,
+    ...outputs,
   })
 }

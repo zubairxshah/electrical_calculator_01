@@ -17,26 +17,14 @@ export { calculateRuntime } from './runtime'
 export { sizeForRuntime } from './sizing'
 export { BatterySizingError } from './result'
 
-// Memoization keyed on ALL inputs that affect the result (T047).
+// Memoization keyed on ALL inputs (015 D10): a sorted full serialisation, so a
+// newly added input can never be left out of the key again.
 const cache = new Map<string, BatteryCalculatorResult>()
 const CACHE_LIMIT = 100
 
 function cacheKey(i: BatteryCalculatorInputs): string {
-  return JSON.stringify([
-    i.mode,
-    i.voltage,
-    i.loadWatts,
-    i.chemistry,
-    i.ampHours ?? null,
-    i.targetBackupHours ?? null,
-    i.efficiency ?? null,
-    i.agingFactor ?? null,
-    i.temperature ?? null,
-    i.dodOverride ?? null,
-    i.cellBlockVoltage ?? null,
-    i.unitCapacityAh ?? null,
-    i.datasheetId ?? null,
-  ])
+  const record = i as Record<string, unknown>
+  return JSON.stringify(Object.keys(record).sort().map((k) => [k, record[k] ?? null]))
 }
 
 /** Single entry point the store/UI calls. */

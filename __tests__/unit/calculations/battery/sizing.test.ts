@@ -25,6 +25,9 @@ describe('sizeForRuntime — approved sizing fixtures', () => {
         agingFactor: fx.inputs.agingFactor,
         cellBlockVoltage: fx.inputs.cellBlockVoltage,
         unitCapacityAh: fx.inputs.perUnitAh,
+        application: fx.inputs.application,
+        efficiency: fx.inputs.efficiency,
+        designMargin: fx.inputs.designMargin,
         mode: 'sizing',
       }
       const r = sizeForRuntime(inputs)

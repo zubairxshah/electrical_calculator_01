@@ -25,19 +25,20 @@ function baseInputs(overrides: Partial<BatteryCalculatorInputs> = {}): BatteryCa
   return { voltage: 48, loadWatts: 480, mode: 'runtime', chemistry: 'VRLA-AGM', ...overrides }
 }
 
-describe('dodFactor', () => {
+// 015/ADR-008: DoD applies in cycling mode only (standby = 1, see application.test.ts).
+describe('dodFactor (cycling)', () => {
   it('uses chemistry recommended DoD by default', () => {
-    const f = dodFactor(baseInputs(), agm)
+    const f = dodFactor(baseInputs({ application: 'cycling' }), agm)
     expect(f.value).toBeCloseTo(0.5, 6) // AGM recommended 50%
     expect(f.source).toBe('default')
   })
   it('honors a user override and marks it user-sourced', () => {
-    const f = dodFactor(baseInputs({ dodOverride: 0.7 }), agm)
+    const f = dodFactor(baseInputs({ application: 'cycling', dodOverride: 0.7 }), agm)
     expect(f.value).toBeCloseTo(0.7, 6)
     expect(f.source).toBe('user')
   })
   it('clamps an override above the chemistry maximum', () => {
-    const f = dodFactor(baseInputs({ dodOverride: 0.95 }), agm)
+    const f = dodFactor(baseInputs({ application: 'cycling', dodOverride: 0.95 }), agm)
     expect(f.value).toBeCloseTo(0.8, 6) // AGM max 80%
   })
 })
@@ -46,9 +47,8 @@ describe('temperatureFactor', () => {
   it('is 1.0 within/above the optimal band', () => {
     expect(temperatureFactor(baseInputs({ temperature: 25 }), agm).value).toBeCloseTo(1.0, 6)
   })
-  it('derates below the optimal band by tempCoefficient', () => {
-    // AGM optimal min 20, coeff 2%/°C; at 0°C → 1 - 0.02*20 = 0.60
-    expect(temperatureFactor(baseInputs({ temperature: 0 }), agm).value).toBeCloseTo(0.6, 6)
+  it('derates lead-acid via the IEEE 485 table (015): 0°C → 1/1.3986', () => {
+    expect(temperatureFactor(baseInputs({ temperature: 0 }), agm).value).toBeCloseTo(1 / 1.3986, 3)
   })
   it('never drops below the floor', () => {
     expect(temperatureFactor(baseInputs({ temperature: -100 }), agm).value).toBeGreaterThanOrEqual(0.4)
@@ -67,9 +67,9 @@ describe('agingFactor', () => {
 })
 
 describe('efficiencyFactor', () => {
-  it('defaults to chemistry round-trip typical', () => {
-    expect(efficiencyFactor(baseInputs(), agm).value).toBeCloseTo(0.85, 6) // AGM 85%
-    expect(efficiencyFactor(baseInputs(), lfp).value).toBeCloseTo(0.95, 6) // LFP 95%
+  it('defaults to conversion efficiency, not round-trip (015/ADR-008)', () => {
+    expect(efficiencyFactor(baseInputs(), agm).value).toBeCloseTo(0.95, 6)
+    expect(efficiencyFactor(baseInputs(), lfp).value).toBeCloseTo(0.95, 6)
   })
   it('uses a user override when present', () => {
     const f = efficiencyFactor(baseInputs({ efficiency: 0.9 }), agm)
@@ -99,8 +99,8 @@ describe('manual overrides (factor table)', () => {
     const f = temperatureFactor(baseInputs({ temperature: 0, tempFactorOverride: 0.9 }), agm)
     expect(f.value).toBe(0.9)
     expect(f.source).toBe('user')
-    // derived (no override) would be 0.6 at 0°C
-    expect(derivedTemperatureFactor(0, agm)).toBeCloseTo(0.6, 6)
+    // derived (no override) at 0°C is 1/TCF from the IEEE 485 table
+    expect(derivedTemperatureFactor(0, agm)).toBeCloseTo(1 / 1.3986, 3)
   })
   it('effectivePeukertExponent uses an override over the chemistry default', () => {
     expect(effectivePeukertExponent(baseInputs(), agm).value).toBe(agm.peukertExponent)
@@ -111,8 +111,11 @@ describe('manual overrides (factor table)', () => {
 })
 
 describe('resolveBaseFactors', () => {
-  it('multiplies dod × temp × aging × efficiency (AGM @ 25°C = 0.34)', () => {
-    const r = resolveBaseFactors(baseInputs({ temperature: 25, agingFactor: 0.8 }), agm)
+  it('multiplies dod × temp × aging × efficiency (AGM @ 25°C, 011 pins = 0.34)', () => {
+    const r = resolveBaseFactors(
+      baseInputs({ temperature: 25, agingFactor: 0.8, application: 'cycling', efficiency: 0.85, designMargin: 1 }),
+      agm
+    )
     expect(r.fraction).toBeCloseTo(0.5 * 1.0 * 0.8 * 0.85, 6) // 0.34
   })
 })

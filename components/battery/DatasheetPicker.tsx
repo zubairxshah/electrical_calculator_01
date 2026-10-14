@@ -69,10 +69,17 @@ export function DatasheetPicker({ value, onSelect, onUpload, uploading }: Datash
       {onUpload && (
         <div className="pt-1">
           <Button asChild variant="outline" size="sm" className="gap-2" disabled={uploading}>
-            <label className="cursor-pointer">
-              {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+            <label className="cursor-pointer focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-1">
+              {uploading ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : <Upload className="h-4 w-4" aria-hidden="true" />}
               {uploading ? 'Reading…' : 'Upload datasheet (OCR)'}
-              <input type="file" accept="application/pdf,image/*" className="hidden" onChange={handleFile} />
+              {/* sr-only (not display:none) so keyboard users can reach the file picker */}
+              <input
+                type="file"
+                accept="application/pdf,image/*"
+                className="sr-only"
+                aria-label="Upload battery datasheet (PDF or image)"
+                onChange={handleFile}
+              />
             </label>
           </Button>
           <p className="mt-1 text-xs text-muted-foreground">

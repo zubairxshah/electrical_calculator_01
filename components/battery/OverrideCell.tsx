@@ -15,6 +15,7 @@ export function OverrideCell({
   step,
   suffix,
   className,
+  ariaLabel,
   onCommit,
 }: {
   value: number | undefined
@@ -22,6 +23,8 @@ export function OverrideCell({
   step: string
   suffix?: string
   className?: string
+  /** Accessible name (the visible row label is not programmatically linked) */
+  ariaLabel?: string
   onCommit: (v: number | undefined) => void
 }) {
   const [local, setLocal] = useState(value == null ? '' : String(value))
@@ -46,6 +49,7 @@ export function OverrideCell({
       <input
         type="text"
         inputMode="decimal"
+        aria-label={ariaLabel}
         value={local}
         placeholder={placeholder}
         step={step}

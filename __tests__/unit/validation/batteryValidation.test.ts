@@ -54,9 +54,23 @@ describe('validateBatteryInputs — bounds & safety', () => {
     const r = validateBatteryInputs(inputs({ loadWatts: 5000 }))
     expect(r.warnings.some((w) => w.field === 'loadWatts')).toBe(true)
   })
-  it('warns when DoD override exceeds chemistry maximum', () => {
-    const r = validateBatteryInputs(inputs({ dodOverride: 0.95 })) // AGM max 80%
+  it('warns when DoD override exceeds chemistry maximum (cycling)', () => {
+    const r = validateBatteryInputs(inputs({ application: 'cycling', dodOverride: 0.95 })) // AGM max 80%
     expect(r.warnings.some((w) => w.field === 'dodOverride')).toBe(true)
+  })
+  it('ignores the DoD override in standby (015: no DoD cap)', () => {
+    const r = validateBatteryInputs(inputs({ dodOverride: 0.95 }))
+    expect(r.warnings.some((w) => w.field === 'dodOverride')).toBe(false)
+  })
+  it('validates the 015 inputs', () => {
+    const bad = validateBatteryInputs(
+      inputs({ efficiency: 0.3, designMargin: 2, minLoadVoltage: 50, maxLoadVoltage: 40, endVoltagePerCell: 2.5, rechargeHours: 0, standingLoadAmps: -1, roomVolumeM3: 0, rechargeFactor: 0.9 })
+    )
+    const fields = bad.errors.map((e) => e.field)
+    for (const f of ['efficiency', 'designMargin', 'maxLoadVoltage', 'endVoltagePerCell', 'rechargeHours', 'standingLoadAmps', 'roomVolumeM3', 'rechargeFactor']) {
+      expect(fields).toContain(f)
+    }
+    expect(validateBatteryInputs(inputs({ efficiency: 0.95, designMargin: 1.1, minLoadVoltage: 42, maxLoadVoltage: 56 })).isValid).toBe(true)
   })
   it('warns on end-of-life aging factor', () => {
     const r = validateBatteryInputs(inputs({ agingFactor: 0.7 }))

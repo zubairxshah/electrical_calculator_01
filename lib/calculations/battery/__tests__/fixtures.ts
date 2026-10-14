@@ -25,6 +25,10 @@ export interface RuntimeFixture {
     chemistry: string
     temperature: number
     agingFactor: number
+    /** 015: pins the 011 method (cycling, round-trip efficiency, no design margin) */
+    application: 'cycling'
+    efficiency: number
+    designMargin: number
   }
   expected: {
     backupTimeHours: number
@@ -47,6 +51,9 @@ export interface SizingFixture {
     agingFactor: number
     cellBlockVoltage: number
     perUnitAh: number
+    application: 'cycling'
+    efficiency: number
+    designMargin: number
   }
   expected: {
     requiredCapacityAh: number
@@ -61,7 +68,7 @@ export const RUNTIME_FIXTURES: RuntimeFixture[] = [
   {
     name: 'A · VRLA-AGM @ C/20, 25°C',
     mode: 'runtime',
-    inputs: { voltage: 48, ampHours: 200, loadWatts: 480, chemistry: 'VRLA-AGM', temperature: 25, agingFactor: 0.8 },
+    inputs: { voltage: 48, ampHours: 200, loadWatts: 480, chemistry: 'VRLA-AGM', temperature: 25, agingFactor: 0.8, application: 'cycling', efficiency: 0.85, designMargin: 1 },
     // 0.50 · 1.00 · 0.85 · 0.80 · 1.0 = 0.340 → 200·48·0.340 = 3264 Wh → /480 = 6.80 h
     expected: { backupTimeHours: 6.80, effectiveCapacityAh: 68.0, dischargeRate: 0.05 },
     tolerancePct: 2,
@@ -69,23 +76,24 @@ export const RUNTIME_FIXTURES: RuntimeFixture[] = [
   {
     name: 'B · Li-Ion-LFP @ C/20, 25°C (chemistry sensitivity vs A — G1)',
     mode: 'runtime',
-    inputs: { voltage: 48, ampHours: 200, loadWatts: 480, chemistry: 'Li-Ion-LFP', temperature: 25, agingFactor: 0.8 },
+    inputs: { voltage: 48, ampHours: 200, loadWatts: 480, chemistry: 'Li-Ion-LFP', temperature: 25, agingFactor: 0.8, application: 'cycling', efficiency: 0.95, designMargin: 1 },
     // 0.80 · 1.00 · 0.95 · 0.80 · 1.0 = 0.608 → 200·48·0.608 = 5836.8 Wh → /480 = 12.16 h
     expected: { backupTimeHours: 12.16, effectiveCapacityAh: 121.6, dischargeRate: 0.05 },
     tolerancePct: 2,
   },
   {
-    name: 'C · VRLA-AGM @ C/20, 0°C (temperature correction)',
+    name: "C′ · VRLA-AGM @ C/20, 0°C (IEEE 485 temperature table — re-approved 2026-10-15, T006)",
     mode: 'runtime',
-    inputs: { voltage: 48, ampHours: 200, loadWatts: 480, chemistry: 'VRLA-AGM', temperature: 0, agingFactor: 0.8 },
-    // TempFactor = 1 - 0.02·(20-0) = 0.60 → 0.50·0.60·0.85·0.80 = 0.204 → 200·48·0.204 = 1958.4 Wh → /480 = 4.08 h
-    expected: { backupTimeHours: 4.08, effectiveCapacityAh: 40.8, dischargeRate: 0.05 },
+    inputs: { voltage: 48, ampHours: 200, loadWatts: 480, chemistry: 'VRLA-AGM', temperature: 0, agingFactor: 0.8, application: 'cycling', efficiency: 0.85, designMargin: 1 },
+    // TCF(0°C) interpolated between −1.1°C (1.43) and 1.7°C (1.35) = 1.3986 → avail 0.7150
+    // 0.50·0.7150·0.85·0.80 = 0.2431 → 200·48·0.2431 = 2333.8 Wh → /480 = 4.862 h  (011 linear model gave 4.08 h)
+    expected: { backupTimeHours: 4.862, effectiveCapacityAh: 48.62, dischargeRate: 0.05 },
     tolerancePct: 2,
   },
   {
     name: 'E · NiCd @ C/20, 25°C',
     mode: 'runtime',
-    inputs: { voltage: 48, ampHours: 200, loadWatts: 480, chemistry: 'NiCd', temperature: 25, agingFactor: 0.8 },
+    inputs: { voltage: 48, ampHours: 200, loadWatts: 480, chemistry: 'NiCd', temperature: 25, agingFactor: 0.8, application: 'cycling', efficiency: 0.75, designMargin: 1 },
     // 0.80 · 1.00 · 0.75 · 0.80 · 1.0 = 0.480 → 200·48·0.480 = 4608 Wh → /480 = 9.60 h
     expected: { backupTimeHours: 9.60, effectiveCapacityAh: 96.0, dischargeRate: 0.05 },
     tolerancePct: 2,
@@ -93,7 +101,7 @@ export const RUNTIME_FIXTURES: RuntimeFixture[] = [
   {
     name: 'F · FLA (new profile) @ C/20, 25°C',
     mode: 'runtime',
-    inputs: { voltage: 48, ampHours: 200, loadWatts: 480, chemistry: 'FLA', temperature: 25, agingFactor: 0.8 },
+    inputs: { voltage: 48, ampHours: 200, loadWatts: 480, chemistry: 'FLA', temperature: 25, agingFactor: 0.8, application: 'cycling', efficiency: 0.8, designMargin: 1 },
     // 0.50 · 1.00 · 0.80 · 0.80 · 1.0 = 0.320 → 200·48·0.320 = 3072 Wh → /480 = 6.40 h
     expected: { backupTimeHours: 6.40, effectiveCapacityAh: 64.0, dischargeRate: 0.05 },
     tolerancePct: 2,
@@ -108,6 +116,7 @@ export const SIZING_FIXTURES: SizingFixture[] = [
     inputs: {
       voltage: 48, loadWatts: 480, targetBackupHours: 6.8, chemistry: 'VRLA-AGM',
       temperature: 25, agingFactor: 0.8, cellBlockVoltage: 12, perUnitAh: 100,
+      application: 'cycling', efficiency: 0.85, designMargin: 1,
     },
     // (480·6.8) / (48·0.50·1.0·0.85·0.80·1.0) = 3264 / 16.32 = 200.0 Ah → 4S (48/12) × 2P (ceil 200/100)
     expected: { requiredCapacityAh: 200.0, cellsInSeries: 4, stringsInParallel: 2 },
@@ -124,4 +133,29 @@ export const PEUKERT_SPOTCHECKS = [
   { exponent: 1.02, cRateRatio: 4.1667, approxMultiplier: 0.972 }, // lithium — near flat
   { exponent: 1.2, cRateRatio: 4.1667, approxMultiplier: 0.752 },  // lead-acid AGM at ~C/4.8
   { exponent: 1.0, cRateRatio: 4.1667, approxMultiplier: 1.0 },    // exponent 1 → no derate
+] as const
+
+/**
+ * Standby (IEEE 485) fixtures — USER-APPROVED 2026-10-15 (015 T006, research D12).
+ * All at ≤ C/20 (Peukert = 1), aging 0.80, design margin 1.10, DoD = 1.
+ */
+export const STANDBY_SIZING_FIXTURES = [
+  {
+    name: 'S1 · VRLA-AGM standby, DC load, 25°C',
+    inputs: { voltage: 48, loadWatts: 240, targetBackupHours: 20, chemistry: 'VRLA-AGM', temperature: 25, loadType: 'dc' },
+    // 240·20/48 = 100 Ah × 1.10 / 0.80 = 137.50 Ah
+    expectedAh: 137.5,
+  },
+  {
+    name: 'S2 · VRLA-AGM standby, AC load (η 0.95), 10°C (TCF 1.19)',
+    inputs: { voltage: 48, loadWatts: 240, targetBackupHours: 20, chemistry: 'VRLA-AGM', temperature: 10, loadType: 'ac' },
+    // 240·20/(48·0.95) = 105.26 × 1.19 × 1.10 / 0.80 = 172.24 Ah
+    expectedAh: 172.24,
+  },
+  {
+    name: 'S3 · NiCd standby, DC load, 0°C (coefficient 0.97)',
+    inputs: { voltage: 48, loadWatts: 240, targetBackupHours: 20, chemistry: 'NiCd', temperature: 0, loadType: 'dc' },
+    // 100 / 0.97 × 1.10 / 0.80 = 141.75 Ah
+    expectedAh: 141.75,
+  },
 ] as const

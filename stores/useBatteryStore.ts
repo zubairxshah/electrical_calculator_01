@@ -31,10 +31,13 @@ interface BatteryStore {
   validateInputs: () => void
 }
 
-/** Default input values (canonical chemistry; efficiency left to chemistry default). */
-const defaultInputs: BatteryCalculatorInputs = {
+/** Default input values (canonical chemistry; efficiency left to the load-type default). */
+export const defaultBatteryInputs: BatteryCalculatorInputs = {
   voltage: 48,
   mode: 'runtime',
+  application: 'standby',
+  loadType: 'ac',
+  designMargin: 1.1,
   ampHours: 200,
   targetBackupHours: 4,
   loadWatts: 2000,
@@ -44,10 +47,39 @@ const defaultInputs: BatteryCalculatorInputs = {
   datasheetId: null,
 }
 
+/**
+ * Migrate persisted state.
+ * v0→v1 (011): legacy chemistry IDs, missing mode/temperature.
+ * v1→v2 (015, ADR-008): application defaults to standby; the v1 `efficiency`
+ * meant round-trip and is dropped (conversion efficiency now); minVoltage →
+ * minLoadVoltage.
+ */
+export function migrateBatteryState(persistedState: unknown, fromVersion: number) {
+  const state = persistedState as { inputs?: Partial<BatteryCalculatorInputs> } | undefined
+  const oldInputs: Partial<BatteryCalculatorInputs> = { ...(state?.inputs ?? {}) }
+  if (fromVersion < 2) {
+    delete oldInputs.efficiency
+    delete oldInputs.application
+    if (oldInputs.minVoltage != null && oldInputs.minLoadVoltage == null) {
+      oldInputs.minLoadVoltage = oldInputs.minVoltage
+    }
+    delete oldInputs.minVoltage
+  }
+  const migratedInputs: BatteryCalculatorInputs = {
+    ...defaultBatteryInputs,
+    ...oldInputs,
+    mode: (oldInputs.mode as BatteryCalculatorInputs['mode']) ?? 'runtime',
+    temperature: oldInputs.temperature ?? 25,
+    chemistry: toCanonicalChemistry(String(oldInputs.chemistry ?? 'VRLA-AGM')),
+  }
+  // Drop any persisted result (BigNumber fields don't round-trip through JSON).
+  return { inputs: migratedInputs, result: null }
+}
+
 export const useBatteryStore = create<BatteryStore>()(
   persist(
     (set, get) => ({
-      inputs: defaultInputs,
+      inputs: defaultBatteryInputs,
       result: null,
       isCalculating: false,
       validation: null,
@@ -64,7 +96,7 @@ export const useBatteryStore = create<BatteryStore>()(
       },
 
       resetInputs: () => {
-        set({ inputs: defaultInputs, result: null, validation: null })
+        set({ inputs: defaultBatteryInputs, result: null, validation: null })
       },
 
       validateInputs: () => {
@@ -85,22 +117,8 @@ export const useBatteryStore = create<BatteryStore>()(
     }),
     {
       name: 'electromate-battery',
-      version: 1,
-      // Migrate legacy persisted state (chemistry IDs + missing mode/temperature).
-      migrate: (persistedState, fromVersion) => {
-        const state = persistedState as { inputs?: Partial<BatteryCalculatorInputs> } | undefined
-        const oldInputs = state?.inputs ?? {}
-        const migratedInputs: BatteryCalculatorInputs = {
-          ...defaultInputs,
-          ...oldInputs,
-          mode: (oldInputs.mode as BatteryCalculatorInputs['mode']) ?? 'runtime',
-          temperature: oldInputs.temperature ?? 25,
-          chemistry: toCanonicalChemistry(String(oldInputs.chemistry ?? 'VRLA-AGM')),
-        }
-        // Drop any persisted result (BigNumber fields don't round-trip through JSON).
-        void fromVersion
-        return { inputs: migratedInputs, result: null }
-      },
+      version: 2,
+      migrate: migrateBatteryState,
       partialize: (state) => ({ inputs: state.inputs }),
     }
   )
